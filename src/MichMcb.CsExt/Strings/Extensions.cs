@@ -9,7 +9,6 @@ namespace MichMcb.CsExt.Strings
 	/// </summary>
 	public static class Extensions
 	{
-		public delegate void SpanCallback<T>(in ReadOnlySpan<T> span, Action stop);
 		private static readonly HashSet<char> invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 		/// <summary>
 		/// Strips any invalid filename characters from <paramref name="s"/>. If none were found, returns the original string unchanged.

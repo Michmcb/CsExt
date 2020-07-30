@@ -29,6 +29,7 @@ namespace MichMcb.CsExt.Strings
 	{
 		public static PathFragments GetFragments(in ReadOnlySpan<char> path)
 		{
+			// TODO implement splitting up the path into a bunch of ranges
 			throw new NotImplementedException("");
 		}
 	}

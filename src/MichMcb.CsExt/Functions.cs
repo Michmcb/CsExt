@@ -10,7 +10,7 @@ namespace MichMcb.CsExt
 	/// </summary>
 	public static class Functions
 	{
-		#region NoAction
+#pragma warning disable IDE0060 // Remove unused parameter
 		/// <summary>
 		/// A method that does nothing.
 		/// </summary>
@@ -23,7 +23,15 @@ namespace MichMcb.CsExt
 		/// A method that does nothing.
 		/// </summary>
 		public static void NoAction<T>(params T[] o) { }
-		#endregion
+#pragma warning restore IDE0060 // Remove unused parameter
+		public static Opt<V> None<V>([AllowNull] V val = default)
+		{
+			return new Opt<V>(val!, false);
+		}
+		public static Opt<V> Some<V>([DisallowNull] V val)
+		{
+			return new Opt<V>(val, true);
+		}
 		#region Switch
 		/// <summary>
 		/// Switches on strings, using <paramref name="comparison"/> to compare against them.
@@ -86,24 +94,6 @@ namespace MichMcb.CsExt
 				}
 			}
 			return defaultFunc();
-		}
-		#endregion
-		#region Opt
-		public static Opt<V> None<V>([AllowNull]V val = default)
-		{
-			return new Opt<V>(val!, false);
-		}
-		public static Opt<V> Some<V>([DisallowNull]V val)
-		{
-			return new Opt<V>(val, true);
-		}
-		public static Maybe<TVal, TErr> Success<TVal, TErr>([DisallowNull]TVal val, [AllowNull]TErr err)
-		{
-			return new Maybe<TVal, TErr>(val, err!, true);
-		}
-		public static Maybe<TVal, TErr> Failure<TVal, TErr>([AllowNull] TVal val, [DisallowNull] TErr err)
-		{
-			return new Maybe<TVal, TErr>(val!, err, false);
 		}
 		#endregion
 		#region Ex
