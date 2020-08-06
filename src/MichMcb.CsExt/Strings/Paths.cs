@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD2_0
+using System;
 
 namespace MichMcb.CsExt.Strings
 {
@@ -34,3 +35,4 @@ namespace MichMcb.CsExt.Strings
 		}
 	}
 }
+#endif

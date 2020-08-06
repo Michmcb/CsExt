@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MichMcb.CsExt
 {
@@ -95,7 +96,8 @@ namespace MichMcb.CsExt
 			--year;
 			return (year * 365) + year / 4 - year / 100 + year / 400;
 		}
-		internal static ArgumentOutOfRangeException? MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		[return: MaybeNull]
+		internal static ArgumentOutOfRangeException MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -106,7 +108,7 @@ namespace MichMcb.CsExt
 			{
 				return new ArgumentOutOfRangeException(nameof(year), string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString()));
 			}
-			ArgumentOutOfRangeException? ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+			var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
 			if (ex != null)
 			{
 				return ex;
@@ -122,7 +124,8 @@ namespace MichMcb.CsExt
 			}
 			return null;
 		}
-		internal static ArgumentOutOfRangeException? MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		[return: MaybeNull]
+		internal static ArgumentOutOfRangeException MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -137,7 +140,7 @@ namespace MichMcb.CsExt
 			{
 				return new ArgumentOutOfRangeException(nameof(day), string.Concat("Day must be at least 1 and, for the provided month (", month.ToString(), "), at most ", DateTime.DaysInMonth(year, month).ToString()));
 			}
-			ArgumentOutOfRangeException? ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+			var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
 			if (ex != null)
 			{
 				return ex;
@@ -158,7 +161,8 @@ namespace MichMcb.CsExt
 			}
 			return null;
 		}
-		internal static ArgumentOutOfRangeException? CheckTimeParts(int hour, int minute, int second, int millis, int tzHours, int tzMinutes)
+		[return: MaybeNull]
+		internal static ArgumentOutOfRangeException CheckTimeParts(int hour, int minute, int second, int millis, int tzHours, int tzMinutes)
 		{
 			if (hour < 0 || hour > 23)
 			{

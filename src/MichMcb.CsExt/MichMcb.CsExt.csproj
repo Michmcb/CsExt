@@ -1,10 +1,45 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <!--<Nullable>enable</Nullable>-->
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.1</Version>
+    <Version>0.2</Version>
+    <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will mostly try and keep it up to date with the latest .NET releases. I will (probably) document any breaking changes and whatnot.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>Ghost.png</PackageIcon>
+    <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
+    <PackageReleaseNotes>Initial Release</PackageReleaseNotes>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
+    <RepositoryType>git</RepositoryType>
+    <Authors>Michael McBride</Authors>
+    <Product />
+    <Company />
+    <Copyright></Copyright>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+    <None Include="Ghost.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" Condition="'$(TargetFramework)'=='netstandard2.0'" />
+  </ItemGroup>
 </Project>

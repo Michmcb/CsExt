@@ -1,8 +1,16 @@
-﻿namespace MichMcb.CsExt
+﻿#if !NETSTANDARD2_0
+namespace MichMcb.CsExt
 {
 	using MichMcb.CsExt.Strings;
 	using System;
+	using System.Diagnostics.CodeAnalysis;
 	using System.Globalization;
+
+	/*
+TODO notes for a ZonedDateTime are written here
+MaxMillis is this in hex: 0001 1EFA E44C B3FF
+3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
+60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
 
 	/// <summary>
 	/// Represents a UTC Date Time, as milliseconds since 0001-01-01 00:00:00.000.
@@ -42,7 +50,7 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day)
 		{
-			ArgumentOutOfRangeException? ex = Dates.MillisFromParts(year, month, day, 0, 0, 0, 0, 0, 0, out long ms);
+			var ex = Dates.MillisFromParts(year, month, day, 0, 0, 0, 0, 0, 0, out long ms);
 			if (ex != null)
 			{
 				throw ex;
@@ -55,7 +63,7 @@
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second) : this(year, month, day, hour, minute, second, 0) { }
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			ArgumentOutOfRangeException? ex = Dates.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
+			var ex = Dates.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
 			if (ex != null)
 			{
 				throw ex;
@@ -290,17 +298,20 @@ Add remainder, adding 2 if it would end on a weekend day
 		public UtcDateTime Truncate(DateTimePart truncateTo)
 		{
 			// TruncateTo means that the part in question is the smallest part that should not be truncated
-			return truncateTo switch
+#pragma warning disable IDE0066 // Convert switch statement to expression
+			switch (truncateTo)
+#pragma warning restore IDE0066 // Convert switch statement to expression
 			{
-				DateTimePart.Year => new UtcDateTime(Year, 1, 1),
-				DateTimePart.Month => new UtcDateTime(TotalMilliseconds - (Day * Dates.MillisPerDay) + Dates.MillisPerDay - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
-				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
-				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
-				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - Second * Dates.MillisPerSecond - Millisecond),
-				DateTimePart.Second => new UtcDateTime(TotalMilliseconds - Millisecond),
-				DateTimePart.Millisecond => this,
-				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
-			};
+				case DateTimePart.Year: return new UtcDateTime(Year, 1, 1);
+				case DateTimePart.Month: return new UtcDateTime(TotalMilliseconds - (Day * Dates.MillisPerDay) + Dates.MillisPerDay - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
+				case DateTimePart.Day: return new UtcDateTime(TotalMilliseconds - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
+				case DateTimePart.Hour: return new UtcDateTime(TotalMilliseconds - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
+				case DateTimePart.Minute: return new UtcDateTime(TotalMilliseconds - Second * Dates.MillisPerSecond - Millisecond);
+				case DateTimePart.Second: return new UtcDateTime(TotalMilliseconds - Millisecond);
+				case DateTimePart.Millisecond: return this;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart");
+			}
 		}
 		/// <summary>
 		/// Creates a new instance, as the number of <paramref name="days"/> elapsed since 0001-01-01 00:00:00.
@@ -308,7 +319,7 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// </summary>
 		public static UtcDateTime FromDays(int days, int hour = 0, int minute = 0, int second = 0, int millis = 0)
 		{
-			ArgumentOutOfRangeException? ex = Dates.CheckTimeParts(hour, minute, second, millis, 0, 0);
+			var ex = Dates.CheckTimeParts(hour, minute, second, millis, 0, 0);
 			if (ex != null)
 			{
 				throw ex;
@@ -369,7 +380,7 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
 		public string ToIso8601String(TimeSpan timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormatUtc)
 		{
-			string? err = ValidateAsFormat(format);
+			var err = ValidateAsFormat(format);
 			if (err != null)
 			{
 				throw new ArgumentException(err, nameof(format));
@@ -402,6 +413,8 @@ Add remainder, adding 2 if it would end on a weekend day
 
 			// The longest possible string is 2010-12-30T13:30:20.123+10:00, which is 29 characters long
 			Span<char> str = stackalloc char[29];
+			// Part of the reason we use our own custom implementation instead of int.TryFormat is because we want to target 2.0
+			// and 2.0 doesn't have int.TryFormat
 			int i = 0;
 			int written = 0;
 			if ((format & Iso8601Parts.Year) == Iso8601Parts.Year)
@@ -515,7 +528,8 @@ Add remainder, adding 2 if it would end on a weekend day
 		{
 			return Parse.Iso8601StringAsUtcDateTime(str, assumeMissingTimeZoneAs);
 		}
-		private static string? ValidateAsFormat(Iso8601Parts format)
+		[return: MaybeNull]
+		private static string ValidateAsFormat(Iso8601Parts format)
 		{
 			switch (format & Iso8601Parts.Mask_Date)
 			{
@@ -558,13 +572,13 @@ Add remainder, adding 2 if it would end on a weekend day
 			}
 			return null;
 		}
-		public override bool Equals(object? obj)
+		public override bool Equals([AllowNull]object obj)
 		{
 			return obj is UtcDateTime time && Equals(time);
 		}
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(TotalMilliseconds);
+			return TotalMilliseconds.GetHashCode();
 		}
 		/// <summary>
 		/// Returns true if this instance and <paramref name="other"/> refer to the same point in time.
@@ -681,3 +695,4 @@ Add remainder, adding 2 if it would end on a weekend day
 		}
 	}
 }
+#endif

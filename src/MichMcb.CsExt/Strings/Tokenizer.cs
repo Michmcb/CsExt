@@ -31,7 +31,7 @@ namespace MichMcb.CsExt.Strings
 				// We have to keep going until we find the delimiting character.
 				if (line[i] == delimitingChar)
 				{
-					tokens.Add(line[from..i]);
+					tokens.Add(line.Substring(from, i - from));
 					// And now, we need to find the next delimiting char. To do that, just skip whitespace.
 					// Plus though, if we ended on a quote, jump 1 character ahead. Otherwise, we won't move forwards!
 					if (delimitingChar != ' ')
@@ -66,12 +66,15 @@ namespace MichMcb.CsExt.Strings
 		}
 		private static char GetDelimiter(char c)
 		{
-			return c switch
+			switch (c)
 			{
-				'"' => '"',
-				'\'' => '\'',
-				_ => ' ',
-			};
+				case '"':
+					return '"';
+				case '\'':
+					return '\'';
+				default:
+					return ' ';
+			}
 		}
 	}
 }

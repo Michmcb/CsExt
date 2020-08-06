@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NETSTANDARD2_0
+using System;
 using System.Globalization;
 
 namespace MichMcb.CsExt.Strings
@@ -153,7 +154,7 @@ namespace MichMcb.CsExt.Strings
 			Range lxTzHours = default;
 			Range lxTzMinutes = default;
 			char tzChar = default;
-			#region DatePart
+#region DatePart
 			if (s.Length >= 4)
 			{
 				lxYear = 0..4;
@@ -278,9 +279,9 @@ namespace MichMcb.CsExt.Strings
 			{
 				goto success;
 			}
-			#endregion
+#endregion
 
-			#region TimePart
+#region TimePart
 			// TIME
 			// If we're not at the end of the string yet, we are parsing the time, so we need a T
 			if (s[end] != 'T')
@@ -393,9 +394,9 @@ namespace MichMcb.CsExt.Strings
 				parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
-			#endregion
+#endregion
 
-			#region TimezonePart
+#region TimezonePart
 			// Now, we should be on either a Z, +, or -
 			bool parseTimezone = false;
 			switch (s[end])
@@ -450,7 +451,7 @@ namespace MichMcb.CsExt.Strings
 					return "Timezone minutes part was not 2 characters long, it was: " + (end - s.Length).ToString();
 				}
 			}
-		#endregion
+#endregion
 
 		success:
 			return new LexedIso8601(lxYear, lxMonth, lxDay, lxHour, lxMinute, lxSecond, lxMillis, tzChar, lxTzHours, lxTzMinutes, parts);
@@ -471,3 +472,4 @@ namespace MichMcb.CsExt.Strings
 		}
 	}
 }
+#endif

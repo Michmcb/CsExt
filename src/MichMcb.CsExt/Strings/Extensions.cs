@@ -25,7 +25,11 @@ namespace MichMcb.CsExt.Strings
 					newStr[i++] = c;
 				}
 			}
+#if NETSTANDARD2_0
+			return new string(newStr.Slice(0, i).ToArray());
+#else
 			return new string(newStr.Slice(0, i));
+#endif
 		}
 		public static string EnsureStartsWith(this string s, char start)
 		{
@@ -59,6 +63,17 @@ namespace MichMcb.CsExt.Strings
 			}
 			return s;
 		}
+#if NETSTANDARD2_0
+		public static bool StartsWith(this string s, char c)
+		{
+			return s.Length >= 1 && s[0] == c;
+		}
+		public static bool EndsWith(this string s, char c)
+		{
+			return s.Length >= 1 && s[s.Length - 1] == c;
+		}
+#endif
+#if !NETSTANDARD2_0
 		public static ICollection<Range> Split(in this ReadOnlySpan<char> str, char separator, StringSplitOptions options = StringSplitOptions.None)
 		{
 			List<Range> ranges = new List<Range>();
@@ -87,5 +102,6 @@ namespace MichMcb.CsExt.Strings
 			}
 			return ranges;
 		}
+#endif
 	}
 }

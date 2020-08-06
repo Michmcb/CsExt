@@ -49,11 +49,13 @@ namespace MichMcb.CsExt
 		/// <summary>
 		/// Gets the value, or <paramref name="ifNone"/> if <see cref="Ok"/> is false.
 		/// </summary>
-		public TVal ValueOr(TVal ifNone) => Ok ? value : ifNone;
+		[return: NotNullIfNotNull("ifNone")]
+		public TVal ValueOr([AllowNull]TVal ifNone) => Ok ? value : ifNone;
 		/// <summary>
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
-		public TErr ErrorOr(TErr ifNone) => Ok ? error : ifNone;
+		[return: NotNullIfNotNull("ifNone")]
+		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? error : ifNone;
 #pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
 		/// <summary>
 		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
@@ -92,14 +94,14 @@ namespace MichMcb.CsExt
 		/// </summary>
 		public static implicit operator Maybe<TVal, TErr>([DisallowNull]TVal value)
 		{
-			return new Maybe<TVal, TErr>(value, default!, true);
+			return new Maybe<TVal, TErr>(value, default, true);
 		}
 		/// <summary>
 		/// Equivalent to new Maybe(default, <paramref name="error"/>, true);
 		/// </summary>
 		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error)
 		{
-			return new Maybe<TVal, TErr>(default!, error, false);
+			return new Maybe<TVal, TErr>(default, error, false);
 		}
 		/// <summary>
 		/// Calls ToString() on the value if <see cref="Ok"/> is true, otherwise calls ToString() on the error.

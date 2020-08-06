@@ -24,7 +24,8 @@ namespace MichMcb.CsExt
 		/// <summary>
 		/// Returns Val if Ok is true. Otherwise, returns <paramref name="ifNone"/>.
 		/// </summary>
-		public TVal ValueOr(TVal ifNone) => Ok ? Value : ifNone;
+		[return: NotNullIfNotNull("ifNone")]
+		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? Value : ifNone;
 		/// <summary>
 		/// Returns HasValue, sets <paramref name="val"/> to Value, and <paramref name="errMsg"/> to ErrMsg
 		/// </summary>
@@ -67,11 +68,11 @@ namespace MichMcb.CsExt
 		}
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(Value);
+			return Value.GetHashCode();
 		}
 		public override bool Equals(object obj)
 		{
-			return Value!.Equals(obj);
+			return Value.Equals(obj);
 		}
 		public static bool operator ==(Opt<TVal> left, Opt<TVal> right)
 		{

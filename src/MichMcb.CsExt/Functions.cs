@@ -1,9 +1,9 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-
-namespace MichMcb.CsExt
+﻿namespace MichMcb.CsExt
 {
+	using System;
+	using System.Diagnostics.CodeAnalysis;
+	using System.Threading.Tasks;
+
 	/// <summary>
 	/// A class which has many static helper functions to create the Opt and Ex types.
 	/// Intended that you have a "using static MichMcb.CsExt.Functions;" to be able to use these easily.
@@ -26,7 +26,7 @@ namespace MichMcb.CsExt
 #pragma warning restore IDE0060 // Remove unused parameter
 		public static Opt<V> None<V>([AllowNull] V val = default)
 		{
-			return new Opt<V>(val!, false);
+			return new Opt<V>(val, false);
 		}
 		public static Opt<V> Some<V>([DisallowNull] V val)
 		{
@@ -106,7 +106,7 @@ namespace MichMcb.CsExt
 			try
 			{
 				action();
-				return new Ex<Ex1>(true, default!);
+				return new Ex<Ex1>(true, default);
 			}
 			catch (Ex1 e) { return new Ex<Ex1>(false, e); }
 		}
@@ -119,7 +119,7 @@ namespace MichMcb.CsExt
 			try
 			{
 				await action();
-				return new Ex<Ex1>(true, default!);
+				return new Ex<Ex1>(true, default);
 			}
 			catch (Ex1 e) { return new Ex<Ex1>(false, e); }
 		}
