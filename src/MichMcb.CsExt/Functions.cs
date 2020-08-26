@@ -2,8 +2,6 @@
 {
 	using System;
 	using System.Diagnostics.CodeAnalysis;
-	using System.Threading.Tasks;
-
 	/// <summary>
 	/// A class which has many static helper functions to create the Opt and Ex types.
 	/// Intended that you have a "using static MichMcb.CsExt.Functions;" to be able to use these easily.
@@ -94,108 +92,6 @@
 				}
 			}
 			return defaultFunc();
-		}
-		#endregion
-		#region Ex
-		/// <summary>
-		/// Executes <paramref name="action"/> and catches an exception of type <typeparamref name="Ex1"/>.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		public static Ex<Ex1> Try<Ex1>(Action action) where Ex1 : Exception
-		{
-			try
-			{
-				action();
-				return new Ex<Ex1>(true, default);
-			}
-			catch (Ex1 e) { return new Ex<Ex1>(false, e); }
-		}
-		/// <summary>
-		/// Executes <paramref name="action"/> and catches an exception of type <typeparamref name="Ex1"/>.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		public static async Task<Ex<Ex1>> TryAsync<Ex1>(Func<Task> action) where Ex1 : Exception
-		{
-			try
-			{
-				await action();
-				return new Ex<Ex1>(true, default);
-			}
-			catch (Ex1 e) { return new Ex<Ex1>(false, e); }
-		}
-		/// <summary>
-		/// Executes <paramref name="action"/> and catches an exception of type <typeparamref name="Ex1"/>, invoking <paramref name="handler1"/>.
-		/// Returns true if no exception was thrown, false if an exception was thrown.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		/// <param name="handler1">The handler for exceptions of type <typeparamref name="Ex1"/></param>
-		public static bool TryCatch<Ex1>(Action action, Action<Ex1> handler1) where Ex1 : Exception
-		{
-			try
-			{
-				action();
-				return true;
-			}
-			catch (Ex1 e)
-			{
-				handler1(e);
-				return false;
-			}
-		}
-		/// <summary>
-		/// Executes <paramref name="action"/>, invoking <paramref name="log"/> in the when clause of the catch handler.
-		/// Useful to preserve the stack trace for logging purposes.
-		/// <paramref name="log"/> should return false to allow the exception to be raised. If it returns true, it will swallow the exception.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		/// <param name="log">The function to log the exception</param>
-		public static void TryLog<Ex1>(Action action, Func<Ex1, bool> log) where Ex1 : Exception
-		{
-			try
-			{
-				action();
-			}
-			catch (Ex1 e) when (log(e)) { }
-		}
-
-		/// <summary>
-		/// Executes <paramref name="action"/> and catches an exception of any of the types provided.
-		/// The exception returned is typed as Exception. Mainly useful if you only care an exception occurred, but you don't care what actually happened.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		public static Ex<Exception> Try<Ex1, Ex2>(Action action) where Ex1 : Exception where Ex2 : Exception
-		{
-			try
-			{
-				action();
-				return new Ex<Exception>(true, NoException.Inst);
-			}
-			catch (Ex1 e) { return new Ex<Exception>(false, e); }
-			catch (Ex2 e) { return new Ex<Exception>(false, e); }
-		}
-		/// <summary>
-		/// Executes <paramref name="action"/> and catches an exception of any of the types provided. Handles any caught exception with <paramref name="handler"/>.
-		/// Returns true if no exception was thrown, false if an exception was thrown.
-		/// </summary>
-		/// <param name="action">The action to attempt</param>
-		/// <param name="handler">The handler for all exceptions</param>
-		public static bool TryCatchAll<Ex1, Ex2>(Action action, Action<Exception> handler) where Ex1 : Exception where Ex2 : Exception
-		{
-			try
-			{
-				action();
-				return true;
-			}
-			catch (Ex1 e)
-			{
-				handler(e);
-				return false;
-			}
-			catch (Ex2 e)
-			{
-				handler(e);
-				return false;
-			}
 		}
 		#endregion
 	}

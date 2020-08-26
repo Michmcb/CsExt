@@ -1,0 +1,404 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MichMcb.CsExt</name>
+    </assembly>
+    <members>
+        <member name="T:MichMcb.CsExt.Data.BitConvert">
+            <summary>
+            Converts primitive types into little or big endian.
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.Data.Crc32">
+            <summary>
+            Calculates the CRC32 hash of a block of data
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Data.Crc32.checksumTable">
+            <summary>
+            Lookup table to optimize the algorithm.
+            0xEDB88320 is the generator polynomial (modulo 2) for the reversed CRC32 algorithm.
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.UnixEpochMillis">
+            <summary>
+            1970-01-01 00:00:00, represented as milliseconds elapsed since 0001-01-01 00:00:00
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.MaxMillis">
+            <summary>
+            9999-12-31 23:59:59.999, represented as milliseconds elapsed since 0001-01-01 00:00:00
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.DaysPer4Years">
+            <summary>
+            Every 4 years, there's 1 leap year.
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.DaysPer100Years">
+            <summary>
+            In 100 years, there's 24 leap years and 76 non-leap years (a year divisible by 100 is NOT a leap year)
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.DaysPer400Years">
+            <summary>
+            In 400 years, there's 97 leap years and 303 non-leap years (a year divisible by 400 IS a leap year)
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Dates.TotalDaysFromStartYearToMonth">
+            <summary>
+            The total number of days in all months, no leap years
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Dates.DateTimeFromUnixTimeSeconds(System.Int64)">
+            <summary>
+            Converts a Unix time expressed as the number of <paramref name="seconds"/> that have elapsed since 1970-01-01 00:00:00
+            </summary>
+            <param name="seconds">The seconds</param>
+        </member>
+        <member name="M:MichMcb.CsExt.Dates.ToUnixTimeSeconds(System.DateTime@)">
+            <summary>
+            Converts a DateTime to seconds that have elapsed since 1970-01-01 00:00:00
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Dates.DateTimeFromUnixTimeMilliseconds(System.Int64)">
+            <summary>
+            Converts a Unix time expressed as the number of <paramref name="milliseconds"/> that have elapsed since 1970-01-01 00:00:00
+            </summary>
+            <param name="milliseconds">The seconds</param>
+        </member>
+        <member name="M:MichMcb.CsExt.Dates.ToUnixTimeMilliseconds(System.DateTime@)">
+            <summary>
+            Converts a DateTime to milliseconds that have elapsed since 1970-01-01 00:00:00
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.Functions">
+            <summary>
+            A class which has many static helper functions to create the Opt and Ex types.
+            Intended that you have a "using static MichMcb.CsExt.Functions;" to be able to use these easily.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.NoAction">
+            <summary>
+            A method that does nothing.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.NoAction``1(``0)">
+            <summary>
+            A method that does nothing.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.NoAction``1(``0[])">
+            <summary>
+            A method that does nothing.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.Switch``1(System.String,System.StringComparison,``0,System.ValueTuple{System.String,``0}[])">
+            <summary>
+            Switches on strings, using <paramref name="comparison"/> to compare against them.
+            Equivalent to a loop that compares against each string, breaking on the first match.
+            If no match is found, returns <paramref name="defaultValue"/>.
+            </summary>
+            <typeparam name="TResult">The type of the result</typeparam>
+            <param name="switchOn">The string to switch on</param>
+            <param name="comparison">The StringComparison to use</param>
+            <param name="defaultValue">The value to return when no match is found</param>
+            <param name="cases">Tuples representing the possible values and return values</param>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.Switch(System.String,System.StringComparison,System.Action,System.ValueTuple{System.String,System.Action}[])">
+            <summary>
+            Switches on strings, using <paramref name="comparison"/> to compare against them.
+            Equivalent to a loop that compares against each string, breaking on the first match.
+            If no match is found, invokes <paramref name="defaultAction"/>.
+            </summary>
+            <param name="switchOn">The string to switch on</param>
+            <param name="comparison">The StringComparison to use</param>
+            <param name="defaultAction">The Action to invoke when no match is found</param>
+            <param name="cases">Tuples representing the possible values and invocations</param>
+        </member>
+        <member name="M:MichMcb.CsExt.Functions.Switch``1(System.String,System.StringComparison,System.Func{``0},System.ValueTuple{System.String,System.Func{``0}}[])">
+            <summary>
+            Switches on strings, using <paramref name="comparison"/> to compare against them.
+            Equivalent to a loop that compares against each string, breaking on the first match.
+            If no match is found, invokes <paramref name="defaultFunc"/>.
+            </summary>
+            <param name="switchOn">The string to switch on</param>
+            <param name="comparison">The StringComparison to use</param>
+            <param name="defaultFunc">The Action to invoke when no match is found</param>
+            <param name="cases">Tuples representing the possible values and invocations</param>
+        </member>
+        <member name="T:MichMcb.CsExt.Iso8601Parts">
+            <summary>
+            Specifies different parts of an ISO-8601 string.
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.None">
+            <summary>
+            Nothing.
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_ExtendedFormatUtc">
+            <summary>
+            A good default format: "yyyy-MM-ddTHH:mm:ss.sssZ"
+            This is known in ISO-8601 as "Extended Format"
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_ExtendedFormatFullTz">
+            <summary>
+            yyyy-MM-ddTHH:mm:ss.sss+00:00
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_BasicFormatUtc">
+            <summary>
+            Everything, except without separators: "yyyyMMddTHHmmss.sssZ"
+            This is known in ISO-8601 as "Basic Format"
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_BasicFormatFullTz">
+            <summary>
+            yyyyMMddTHHmmss.sss+00:00
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateTimeWithoutMillisUtc">
+            <summary>
+            yyyy-MM-ddTHH:mm:ssZ
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateTimeWithoutMillisFullTz">
+            <summary>
+            yyyy-MM-ddTHH:mm:ss+00:00
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateTimeWithoutMillisUtcNoSeparators">
+            <summary>
+            yyyyMMddTHHmmssZ
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateTimeWithoutMillisFullTzNoSeparators">
+            <summary>
+            yyyyMMddTHHmmss+0000
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateOnly">
+            <summary>
+            yyyy-MM-dd Note that this may cause data loss.
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateOnlyWithoutSeparators">
+            <summary>
+            yyyyMMdd
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_DateOrdinal">
+            <summary>
+            yyyy-ddd
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Format_VcfUnknownYear">
+            <summary>
+            --MM-dd
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Mask_Separators">
+            <summary>
+            A mask to get only Separator-specific parts
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Mask_Date">
+            <summary>
+            A mask to get only Date-specific parts
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Mask_Time">
+            <summary>
+            A mask to get only Time-specific parts
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Mask_Tz">
+            <summary>
+            A mask to get only Timezone designator specific parts
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.YearMonth">
+            <summary>
+            Year and month only. This must be combined with at least Separator_Date (because yyyyMM can be confused with yyMMdd)
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.YearDay">
+            <summary>
+            Year and Ordinal days (i.e. 1~366)
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Tz_Utc">
+            <summary>
+            Timezone designator will be "Z", indicating UTC
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Tz_Hour">
+            <summary>
+            Timezone designator will be +/- HH
+            </summary>
+        </member>
+        <member name="F:MichMcb.CsExt.Iso8601Parts.Tz_HourMinute">
+            <summary>
+            Timezone designator will be +/- HH:mm
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.Maybe`2">
+            <summary>
+            A way of returning either a Value or an Error. Provides methods to safely get either the Value or Error.
+            You can also use this type directly if an if statement; it evaluates to true/false based on the value of <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/>.
+            If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is true, then only <typeparamref name="TVal"/> is valid.
+            If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is false, then only <typeparamref name="TErr"/> is valid.
+            </summary>
+            <typeparam name="TVal">The Type on success.</typeparam>
+            <typeparam name="TErr">The Type on failure.</typeparam>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.#ctor(`0,`1,System.Boolean)">
+            <summary>
+            Creates a new instance. Either <paramref name="value"/> or <paramref name="error"/> may be null, but not both.
+            You don't need to use this; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
+            </summary>
+            <param name="value">The success value.</param>
+            <param name="error">The failure value.</param>
+            <param name="ok">If true, success. If false, failure.</param>
+        </member>
+        <member name="P:MichMcb.CsExt.Maybe`2.Ok">
+            <summary>
+            If true, has a <typeparamref name="TVal"/>, otherwise has a <typeparamref name="TErr"/>.
+            When this instance is used in an If statement, it produces this value.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.ValueOr(`0)">
+            <summary>
+            Gets the value, or <paramref name="ifNone"/> if <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is false.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.ErrorOr(`1)">
+            <summary>
+            Gets the error, or <paramref name="ifNone"/> if <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is true.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.HasValue(`0@)">
+            <summary>
+            If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
+            Otherwise, val is set to the default value for <typeparamref name="TVal"/> and returns false.
+            </summary>
+            <param name="val"></param>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.HasError(`1@)">
+            <summary>
+            If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is false, sets <paramref name="error"/> to the Value for this instance and returns true.
+            Otherwise, val is set to the default value for <typeparamref name="TErr"/> and returns false.
+            </summary>
+            <param name="val"></param>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.Success(`0@,`1@)">
+            <summary>
+            Returns the value of <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/>. If true, then <paramref name="val"/> is set. Otherwise, <paramref name="error"/> is set.
+            </summary>
+            <param name="val">If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is true, the value. Otherwise, the default value for <typeparamref name="TVal"/>.</param>
+            <param name="error">If <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is false, the error. Otherwise, the default value for <typeparamref name="TErr"/>.</param>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.op_Implicit(`0)~MichMcb.CsExt.Maybe{`0,`1}">
+            <summary>
+            Equivalent to new Maybe(<paramref name="value"/>, default, true);
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.op_Implicit(`1)~MichMcb.CsExt.Maybe{`0,`1}">
+            <summary>
+            Equivalent to new Maybe(default, <paramref name="error"/>, true);
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Maybe`2.ToString">
+            <summary>
+            Calls ToString() on the value if <see cref="P:MichMcb.CsExt.Maybe`2.Ok"/> is true, otherwise calls ToString() on the error.
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.MultiDisposer">
+            <summary>
+            A class which disposes multiple things when it itself is disposed of
+            </summary>
+        </member>
+        <member name="P:MichMcb.CsExt.MultiDisposer.Disposables">
+            <summary>
+            The objects which will be disposed of when this object is disposed
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.Nil">
+            <summary>
+            Can be used instead of void to represent no return type.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Nil.Equals(System.Object)">
+            <summary>
+            Always returns false
+            </summary>
+            <returns>false</returns>
+        </member>
+        <member name="M:MichMcb.CsExt.Nil.GetHashCode">
+            <summary>
+            Always returns 0
+            </summary>
+            <returns>0</returns>
+        </member>
+        <member name="M:MichMcb.CsExt.Nil.ToString">
+            <summary>
+            Always returns string.Empty
+            </summary>
+            <returns>string.Empty</returns>
+        </member>
+        <member name="M:MichMcb.CsExt.Nil.op_Equality(MichMcb.CsExt.Nil,MichMcb.CsExt.Nil)">
+            <summary>
+            Always returns true
+            </summary>
+            <returns>true</returns>
+        </member>
+        <member name="M:MichMcb.CsExt.Nil.op_Inequality(MichMcb.CsExt.Nil,MichMcb.CsExt.Nil)">
+            <summary>
+            Always returns true
+            </summary>
+            <returns>true</returns>
+        </member>
+        <member name="M:MichMcb.CsExt.Opt`1.ValueOr(`0)">
+            <summary>
+            Returns Val if Ok is true. Otherwise, returns <paramref name="ifNone"/>.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Opt`1.HasValue(`0@)">
+            <summary>
+            Returns HasValue, sets <paramref name="val"/> to Value, and <paramref name="errMsg"/> to ErrMsg
+            </summary>
+            <param name="val"></param>
+        </member>
+        <member name="M:MichMcb.CsExt.Opt`1.Do(System.Action{`0})">
+            <summary>
+            Executes <paramref name="hasVal"/> is HasVal is true.
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Opt`1.Do(System.Action{`0},System.Action)">
+            <summary>
+            Executes <paramref name="hasVal"/> is HasVal is true.
+            Otherwise, executes <paramref name="noVal"/>.
+            </summary>
+        </member>
+        <member name="T:MichMcb.CsExt.Strings.Extensions">
+            <summary>
+            Provides extension methods for strings and ReadOnlySpan&lt;char&gt;s
+            </summary>
+        </member>
+        <member name="M:MichMcb.CsExt.Strings.Extensions.StripInvalidFilenameChars(System.String)">
+            <summary>
+            Strips any invalid filename characters from <paramref name="s"/>. If none were found, returns the original string unchanged.
+            </summary>
+            <param name="s"></param>
+        </member>
+        <member name="M:MichMcb.CsExt.Strings.Tokenizer.TokenizeQuotedStrings(System.String)">
+            <summary>
+            Turns the string into tokens. Delimited based on spaces, "double quotes", or 'single quotes'.
+            If you don't terminate the last pair of quotes ("like this), then the last token will be to the end of the string, including any whitespace or newlines
+            </summary>
+            <param name="line">The string to split into tokens</param>
+        </member>
+    </members>
+</doc>

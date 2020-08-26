@@ -39,7 +39,7 @@ namespace MichMcb.CsExt.Strings
 		{
 			ReadOnlySpan<char> ts = str.Trim();
 			Maybe<LexedIso8601, string> rLex = LexIso8601(ts);
-			if (!rLex.Get(out LexedIso8601 luthor, out string errMsg))
+			if (!rLex.Success(out LexedIso8601 luthor, out string errMsg))
 			{
 				return errMsg;
 			}
@@ -126,7 +126,7 @@ namespace MichMcb.CsExt.Strings
 		{
 			// TODO don't be so hacky; perhaps move the parsing into the Lexed struct, so we can just call its methods, or change the parsing of the lexed ranges to produce integers instead keeping in mind we may have microseconds and 100-nanosecond ticks of accuracy.
 			Maybe<UtcDateTime, string> r = Iso8601StringAsUtcDateTime(str, assumeMissingTimeZoneAs);
-			if (r.Get(out UtcDateTime val, out string? err))
+			if (r.Success(out UtcDateTime val, out string? err))
 			{
 				return (DateTime)val;
 			}

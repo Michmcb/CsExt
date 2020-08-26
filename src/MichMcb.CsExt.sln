@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MichMcb.CsExt.Test", "MichM
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MichMcb.CsExt", "MichMcb.CsExt\MichMcb.CsExt.csproj", "{AAE82F1C-C3AB-4268-AAA3-2A502EECDFEA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MichMcb.ConsoleExt", "MichMcb.ConsoleExt\MichMcb.ConsoleExt.csproj", "{C969083A-FAB4-408F-BC6E-19E3CF06672E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MichMcb.CsExt.Benchmark", "MichMcb.CsExt.Benchmark\MichMcb.CsExt.Benchmark.csproj", "{FF507C22-5814-4F26-948A-9E9F5AB94EDC}"
 EndProject
 Global

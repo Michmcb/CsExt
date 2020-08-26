@@ -1,8 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace MichMcb.CsExt
+﻿namespace MichMcb.CsExt
 {
+	using System;
+	using System.Diagnostics.CodeAnalysis;
+
 	/// <summary>
 	/// A way of returning either a Value or an Error. Provides methods to safely get either the Value or Error.
 	/// You can also use this type directly if an if statement; it evaluates to true/false based on the value of <see cref="Ok"/>.
@@ -55,7 +55,7 @@ namespace MichMcb.CsExt
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? error : ifNone;
+		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone : error;
 #pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
 		/// <summary>
 		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
@@ -82,7 +82,7 @@ namespace MichMcb.CsExt
 		/// </summary>
 		/// <param name="val">If <see cref="Ok"/> is true, the value. Otherwise, the default value for <typeparamref name="TVal"/>.</param>
 		/// <param name="error">If <see cref="Ok"/> is false, the error. Otherwise, the default value for <typeparamref name="TErr"/>.</param>
-		public bool Get([NotNullWhen(true)] out TVal val, [NotNullWhen(false)] out TErr error)
+		public bool Success([NotNullWhen(true)] out TVal val, [NotNullWhen(false)] out TErr error)
 		{
 			val = value;
 			error = this.error;

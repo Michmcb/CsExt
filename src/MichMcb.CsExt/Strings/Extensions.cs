@@ -35,7 +35,7 @@ namespace MichMcb.CsExt.Strings
 		{
 			if (!s.StartsWith(start))
 			{
-				return start.ToString() + s;
+				return start + s;
 			}
 			return s;
 		}
@@ -51,7 +51,7 @@ namespace MichMcb.CsExt.Strings
 		{
 			if (!s.EndsWith(end))
 			{
-				return s + end.ToString();
+				return s + end;
 			}
 			return s;
 		}

@@ -19,12 +19,5 @@ namespace MichMcb.CsExt.Test
 			Assert.Equal(default, x.Value);
 
 		}
-		[Fact]
-		public void Ex()
-		{
-			int d = 0;
-			Ex<DivideByZeroException> ex = Try<DivideByZeroException>(() => { int x = 1 / d; x += 1; });
-			TryCatch<DivideByZeroException>(() => { int x = 1 / d; x += 1; }, e => Console.WriteLine(e.ToString()));
-		}
 	}
 }
