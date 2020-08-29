@@ -5,7 +5,11 @@
 	/// </summary>
 	public readonly struct Nil
 	{
-		public static Nil Inst = new Nil();
+		/// <summary>
+		/// An instance.
+		/// It's the same as new Nil();
+		/// </summary>
+		public readonly static Nil Inst = new Nil();
 		/// <summary>
 		/// Always returns false
 		/// </summary>
@@ -32,7 +36,7 @@
 		}
 #pragma warning disable IDE0060 // Remove unused parameter
 		/// <summary>
-		/// Always returns true
+		/// Always returns true.
 		/// </summary>
 		/// <returns>true</returns>
 		public static bool operator ==(Nil left, Nil right)
@@ -40,12 +44,12 @@
 			return true;
 		}
 		/// <summary>
-		/// Always returns true
+		/// Always returns false.
 		/// </summary>
-		/// <returns>true</returns>
+		/// <returns>false</returns>
 		public static bool operator !=(Nil left, Nil right)
 		{
-			return true;
+			return false;
 		}
 #pragma warning restore IDE0060 // Remove unused parameter
 	}

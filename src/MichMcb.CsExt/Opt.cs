@@ -5,7 +5,7 @@ namespace MichMcb.CsExt
 {
 	public readonly struct Opt<TVal>
 	{
-		public Opt([DisallowNull] TVal value, bool ok)
+		internal Opt([DisallowNull] TVal value, bool ok)
 		{
 			if (ok && value == null)
 			{

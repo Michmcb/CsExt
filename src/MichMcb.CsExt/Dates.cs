@@ -1,8 +1,7 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
+﻿
 namespace MichMcb.CsExt
 {
+	using System;
 	public static class Dates
 	{
 		private const int DaysToUnixEpoch = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
@@ -63,7 +62,6 @@ namespace MichMcb.CsExt
 			{
 				y100 = 3; // Adjustment
 			}
-
 			totalDays -= DaysPer100Years * y100;
 			int y4 = totalDays / DaysPer4Years;
 			totalDays -= DaysPer4Years * y4;
@@ -96,8 +94,7 @@ namespace MichMcb.CsExt
 			--year;
 			return (year * 365) + year / 4 - year / 100 + year / 400;
 		}
-		[return: MaybeNull]
-		internal static ArgumentOutOfRangeException MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		internal static ArgumentOutOfRangeException? MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -124,8 +121,7 @@ namespace MichMcb.CsExt
 			}
 			return null;
 		}
-		[return: MaybeNull]
-		internal static ArgumentOutOfRangeException MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		internal static ArgumentOutOfRangeException? MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -161,8 +157,7 @@ namespace MichMcb.CsExt
 			}
 			return null;
 		}
-		[return: MaybeNull]
-		internal static ArgumentOutOfRangeException CheckTimeParts(int hour, int minute, int second, int millis, int tzHours, int tzMinutes)
+		internal static ArgumentOutOfRangeException? CheckTimeParts(int hour, int minute, int second, int millis, int tzHours, int tzMinutes)
 		{
 			if (hour < 0 || hour > 23)
 			{
