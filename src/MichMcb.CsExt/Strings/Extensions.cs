@@ -1,26 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace MichMcb.CsExt.Strings
+﻿namespace MichMcb.CsExt.Strings
 {
+	using System;
+	using System.Collections.Generic;
+	using System.IO;
+
 	/// <summary>
 	/// Provides extension methods for strings and ReadOnlySpan&lt;char&gt;s
 	/// </summary>
 	public static class Extensions
 	{
-		private static readonly HashSet<char> invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
 		/// <summary>
-		/// Strips any invalid filename characters from <paramref name="s"/>. If none were found, returns the original string unchanged.
+		/// A hash set containing the results of <see cref="Path.GetInvalidFileNameChars"/>.
 		/// </summary>
-		/// <param name="s"></param>
-		public static string StripInvalidFilenameChars(this string s)
+		public static readonly HashSet<char> invalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
+		/// <summary>
+		/// Strips any invalid filename characters from <paramref name="s"/>.
+		/// </summary>
+		/// <param name="s">The string to remove invalid filename chars from.</param>
+		/// <returns>A new string with invalid filename chars removed.</returns>
+		public static string StripInvalidFileNameChars(this string s)
 		{
 			Span<char> newStr = stackalloc char[s.Length];
 			int i = 0;
 			foreach (char c in s)
 			{
-				if (!invalidChars.Contains(c))
+				if (!invalidFileNameChars.Contains(c))
 				{
 					newStr[i++] = c;
 				}

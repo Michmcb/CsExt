@@ -1,23 +1,37 @@
-﻿using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-
-namespace MichMcb.Threads
+﻿namespace MichMcb.Threads
 {
+	using System.Diagnostics;
+	using System.Threading;
+	using System.Threading.Tasks;
+	/// <summary>
+	/// Allows things to happen once every period of time.
+	/// Doesn't use anything disposable.
+	/// </summary>
 	public sealed class Cooldown
 	{
 		private int currentWaitTime;
 		private readonly Stopwatch stopwatch;
+		/// <summary>
+		/// Creates a new instance that is currently off cooldown, and so will not cause any delay on the first wait.
+		/// </summary>
 		public Cooldown()
 		{
 			stopwatch = new Stopwatch();
 		}
+		/// <summary>
+		/// Creates a new instance that's currently cooling down, so the first wait will cause a delay of <paramref name="initialCooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="initialCooldown">The initial cooldown in milliseconds.</param>
 		public Cooldown(int initialCooldown)
 		{
 			currentWaitTime = initialCooldown;
 			stopwatch = Stopwatch.StartNew();
 		}
-		public void Proc(int cooldown)
+		/// <summary>
+		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		public void Wait(int cooldown)
 		{
 			int waitingTime;
 			lock (stopwatch)
@@ -41,7 +55,11 @@ namespace MichMcb.Threads
 				Thread.Sleep(waitingTime);
 			}
 		}
-		public Task ProcAsync(int cooldown)
+		/// <summary>
+		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		public Task WaitAsync(int cooldown)
 		{
 			int waitingTime;
 			lock (stopwatch)

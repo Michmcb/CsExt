@@ -37,4 +37,8 @@
   <ItemGroup>
     <PackageReference Include="System.Memory" Version="4.5.4" Condition="'$(TargetFramework)'=='netstandard2.0'" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="IO\" />
+  </ItemGroup>
 </Project>
