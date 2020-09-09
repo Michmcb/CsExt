@@ -5,12 +5,13 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.2.2</Version>
+    <Version>0.3</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will mostly try and keep it up to date with the latest .NET releases. I will (probably) document any breaking changes and whatnot.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Added the XML documentation for real this time; apparently it's the &lt;GenerateDocumentationFile&gt; element</PackageReleaseNotes>
+    <PackageReleaseNotes>- Added Base64 maker with the ability to specify custom Base64 character sets
+- Added a StringEscaper which can write strings and escape them at the same time</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -18,8 +19,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.2.2.0</AssemblyVersion>
-    <FileVersion>0.2.2.0</FileVersion>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
+    <FileVersion>0.3.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
