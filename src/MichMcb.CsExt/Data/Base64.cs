@@ -83,6 +83,7 @@
 			}
 		}
 		// TODO possible overflow for excessively large base64 strings
+		// TODO Encode to streams for Base64
 		public static int BytesNeeded(int base64Length)
 		{
 			int needed = Math.DivRem(base64Length * 3, 4, out int remainder);

@@ -3,6 +3,10 @@
 	using System;
 	using System.Diagnostics.CodeAnalysis;
 
+	/// <summary>
+	/// Returns a value along with a success/failure boolean.
+	/// </summary>
+	/// <typeparam name="TVal">The value to return.</typeparam>
 	public readonly struct Opt<TVal>
 	{
 		internal Opt([DisallowNull] TVal val, bool ok)
@@ -14,12 +18,44 @@
 			Val = val;
 			Ok = ok;
 		}
+		/// <summary>
+		/// The value
+		/// </summary>
 		public TVal Val { get; }
+		/// <summary>
+		/// Success or failure
+		/// </summary>
 		public bool Ok { get; }
+		/// <summary>
+		/// Same as <see cref="Ok"/>
+		/// </summary>
+		/// <param name="o"></param>
+		/// <returns>Value of <see cref="Ok"/></returns>
 		public static bool operator true(Opt<TVal> o) => o.Ok;
+		/// <summary>
+		/// Opposite of <see cref="Ok"/>
+		/// </summary>
+		/// <param name="o"></param>
+		/// <returns>Opposite of <see cref="Ok"/></returns>
 		public static bool operator false(Opt<TVal> o) => !o.Ok;
+		/// <summary>
+		/// Works on the values of <see cref="Ok"/>
+		/// </summary>
+		/// <param name="lhs"></param>
+		/// <param name="rhs"></param>
+		/// <returns></returns>
 		public static bool operator &(Opt<TVal> lhs, Opt<TVal> rhs) => lhs.Ok && rhs.Ok;
+		/// <summary>
+		/// Works on the values of <see cref="Ok"/>
+		/// </summary>
+		/// <param name="lhs"></param>
+		/// <param name="rhs"></param>
+		/// <returns></returns>
 		public static bool operator |(Opt<TVal> lhs, Opt<TVal> rhs) => lhs.Ok || rhs.Ok;
+		/// <summary>
+		/// Returns <see cref="Ok"/>
+		/// </summary>
+		/// <param name="opt"><see cref="Ok"/></param>
 		public static implicit operator bool(Opt<TVal> opt) => opt.Ok;
 		/// <summary>
 		/// Returns Val if Ok is true. Otherwise, returns <paramref name="ifNone"/>.
@@ -27,7 +63,7 @@
 		[return: NotNullIfNotNull("ifNone")]
 		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? Val : ifNone;
 		/// <summary>
-		/// Returns HasValue, sets <paramref name="val"/> to Val, and <paramref name="errMsg"/> to ErrMsg
+		/// Returns <see cref="Ok"/>, and sets <paramref name="val"/> to <see cref="Val"/>.
 		/// </summary>
 		/// <param name="val"></param>
 		public bool HasValue([NotNullWhen(true)] out TVal val)
@@ -69,61 +105,14 @@
 		{
 			return new Opt<TVal>(value, true);
 		}
+		/// <summary>
+		/// Calls ToString() on <see cref="Val"/>.
+		/// If Val is null, returns <see cref="string.Empty"/>.
+		/// </summary>
+		/// <returns></returns>
 		public override string ToString()
 		{
-			return Val?.ToString() ?? "";
-		}
-		public override int GetHashCode()
-		{
-			return Val.GetHashCode();
-		}
-		public override bool Equals(object obj)
-		{
-			return Val.Equals(obj);
-		}
-		public static bool operator ==(Opt<TVal> left, Opt<TVal> right)
-		{
-			if (left.Val == null)
-			{
-				if (right.Val == null)
-				{
-					// Both null
-					return true;
-				}
-				else
-				{
-					// Left null, Right not null
-					return false;
-				}
-			}
-			if (right.Val == null)
-			{
-				// Left not null, Right null
-				return false;
-			}
-			return left.Val.Equals(right.Val);
-		}
-		public static bool operator !=(Opt<TVal> left, Opt<TVal> right)
-		{
-			if (left.Val == null)
-			{
-				if (right.Val == null)
-				{
-					// Both null
-					return false;
-				}
-				else
-				{
-					// Left null, Right not null
-					return true;
-				}
-			}
-			if (right.Val == null)
-			{
-				// Left not null, Right null
-				return true;
-			}
-			return !left.Val.Equals(right.Val);
+			return Val?.ToString() ?? string.Empty;
 		}
 	}
 }

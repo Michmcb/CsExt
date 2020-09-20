@@ -186,16 +186,18 @@ namespace MichMcb.CsExt
 			return null;
 		}
 		/// <summary>
-		/// Converts a Unix time expressed as the number of <paramref name="seconds"/> that have elapsed since 1970-01-01 00:00:00
+		/// Converts a Unix time expressed as the number of <paramref name="seconds"/> that have elapsed since 1970-01-01 00:00:00 UTC.
 		/// </summary>
-		/// <param name="seconds">The seconds</param>
+		/// <param name="seconds">The seconds.</param>
+		/// <returns>A DateTime with a Kind of Utc.</returns>
 		public static DateTime DateTimeFromUnixTimeSeconds(long seconds)
 		{
 			return new DateTime(seconds * TimeSpan.TicksPerSecond + UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
-		/// Converts a DateTime to seconds that have elapsed since 1970-01-01 00:00:00
+		/// Converts a DateTime to seconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
 		/// </summary>
+		/// <returns>The number of seconds</returns>
 		public static long ToUnixTimeSeconds(this in DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc
@@ -203,16 +205,18 @@ namespace MichMcb.CsExt
 				: ((dt.ToUniversalTime().Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond);
 		}
 		/// <summary>
-		/// Converts a Unix time expressed as the number of <paramref name="milliseconds"/> that have elapsed since 1970-01-01 00:00:00
+		/// Converts a Unix time expressed as the number of <paramref name="milliseconds"/> that have elapsed since 1970-01-01 00:00:00 UTC.
 		/// </summary>
-		/// <param name="milliseconds">The seconds</param>
+		/// <param name="milliseconds">The milliseconds</param>
+		/// <returns>A DateTime with a Kind of Utc</returns>
 		public static DateTime DateTimeFromUnixTimeMilliseconds(long milliseconds)
 		{
 			return new DateTime(milliseconds * TimeSpan.TicksPerMillisecond + UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
-		/// Converts a DateTime to milliseconds that have elapsed since 1970-01-01 00:00:00
+		/// Converts a DateTime to milliseconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
 		/// </summary>
+		/// <returns>The number of milliseconds</returns>
 		public static long ToUnixTimeMilliseconds(this in DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc

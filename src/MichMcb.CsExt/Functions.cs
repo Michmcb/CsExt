@@ -31,7 +31,7 @@
 		/// <returns>A new <see cref="Opt{TVal}"/> that evaluates to false, and has the value <paramref name="val"/>.</returns>
 		public static Opt<V> None<V>([AllowNull] V val = default)
 		{
-			return new Opt<V>(val, false);
+			return new Opt<V>(val!, false);
 		}
 		/// <summary>
 		/// Returns a new <see cref="Opt{TVal}"/> instance, with the default value for <typeparamref name="V"/>.
@@ -42,7 +42,7 @@
 		/// <returns>A new <see cref="Opt{TVal}"/> that evaluates to true, and has the value <paramref name="val"/>.</returns>
 		public static Opt<V> Some<V>(V val)
 		{
-			return new Opt<V>(val, true);
+			return new Opt<V>(val!, true);
 		}
 		#region Switch
 		/// <summary>

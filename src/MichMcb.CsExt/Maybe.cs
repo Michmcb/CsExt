@@ -108,7 +108,7 @@
 		/// </summary>
 		public override string ToString()
 		{
-			return Ok ? value?.ToString() ?? "" : error?.ToString() ?? "";
+			return Ok ? value?.ToString() ?? string.Empty : error?.ToString() ?? string.Empty;
 		}
 		public override bool Equals(object obj)
 		{
@@ -118,15 +118,5 @@
 		{
 			throw new InvalidOperationException("You cannot get HashCodes of Maybe instances");
 		}
-#pragma warning disable IDE0060 // Remove unused parameter
-		public static bool operator ==(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right)
-		{
-			throw new InvalidOperationException("You cannot compare Maybe instances");
-		}
-		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right)
-		{
-			throw new InvalidOperationException("You cannot compare Maybe instances");
-		}
-#pragma warning restore IDE0060 // Remove unused parameter
 	}
 }
