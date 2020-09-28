@@ -7,11 +7,10 @@ namespace MichMcb.CsExt
 	using System.Globalization;
 
 	/*
-TODO notes for a ZonedDateTime are written here
-MaxMillis is this in hex: 0001 1EFA E44C B3FF
-3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
-60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
-
+	TODO notes for a ZonedDateTime are written here
+	MaxMillis is this in hex: 0001 1EFA E44C B3FF
+	3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
+	60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
 	/// <summary>
 	/// Represents a UTC Date Time, as milliseconds since 0001-01-01 00:00:00.000.
 	/// Unlike <see cref="DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.

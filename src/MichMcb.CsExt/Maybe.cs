@@ -16,23 +16,26 @@
 		private readonly TVal value;
 		private readonly TErr error;
 		/// <summary>
-		/// Creates a new instance. Either <paramref name="value"/> or <paramref name="error"/> may be null, but not both.
-		/// You don't need to use this; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
+		/// Creates a new instance with <paramref name="value"/>, and the value of <paramref name="ok"/>.
+		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
 		/// </summary>
 		/// <param name="value">The success value.</param>
-		/// <param name="error">The failure value.</param>
 		/// <param name="ok">If true, success. If false, failure.</param>
-		public Maybe([DisallowNull] TVal value, [DisallowNull]TErr error, bool ok)
+		public Maybe(TVal value, bool ok = true)
 		{
-			if (ok && value == null)
-			{
-				throw new ArgumentNullException(nameof(value), "Can't make a Maybe from a null value when ok is true");
-			}
-			if (!ok && error == null)
-			{
-				throw new ArgumentNullException(nameof(error), "Can't make a Maybe from a null error when ok is false");
-			}
 			this.value = value;
+			error = default;
+			Ok = ok;
+		}
+		/// <summary>
+		/// Creates a new instance with <paramref name="value"/>, and the value of <paramref name="error"/>.
+		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
+		/// </summary>
+		/// <param name="error">The error value.</param>
+		/// <param name="ok">If true, success. If false, failure.</param>
+		public Maybe(TErr error, bool ok = false)
+		{
+			value = default;
 			this.error = error;
 			Ok = ok;
 		}
@@ -41,16 +44,11 @@
 		/// When this instance is used in an If statement, it produces this value.
 		/// </summary>
 		public bool Ok { get; }
-		public static bool operator true(Maybe<TVal, TErr> o) => o.Ok;
-		public static bool operator false(Maybe<TVal, TErr> o) => !o.Ok;
-		public static bool operator &(Maybe<TVal, TErr> lhs, Maybe<TVal, TErr> rhs) => lhs.Ok && rhs.Ok;
-		public static bool operator |(Maybe<TVal, TErr> lhs, Maybe<TVal, TErr> rhs) => lhs.Ok || rhs.Ok;
-		public static implicit operator bool(Maybe<TVal, TErr> opt) => opt.Ok;
 		/// <summary>
 		/// Gets the value, or <paramref name="ifNone"/> if <see cref="Ok"/> is false.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TVal ValueOr([AllowNull]TVal ifNone) => Ok ? value : ifNone;
+		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? value : ifNone;
 		/// <summary>
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
@@ -92,16 +90,16 @@
 		/// <summary>
 		/// Equivalent to new Maybe(<paramref name="value"/>, default, true);
 		/// </summary>
-		public static implicit operator Maybe<TVal, TErr>([DisallowNull]TVal value)
+		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TVal value)
 		{
-			return new Maybe<TVal, TErr>(value, default, true);
+			return new Maybe<TVal, TErr>(value, true);
 		}
 		/// <summary>
 		/// Equivalent to new Maybe(default, <paramref name="error"/>, true);
 		/// </summary>
 		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error)
 		{
-			return new Maybe<TVal, TErr>(default, error, false);
+			return new Maybe<TVal, TErr>(error, false);
 		}
 		/// <summary>
 		/// Calls ToString() on the value if <see cref="Ok"/> is true, otherwise calls ToString() on the error.
