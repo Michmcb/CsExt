@@ -16,14 +16,14 @@
 		/// of characters which can escape that string.
 		/// </summary>
 		/// <param name="escapeSequences">Escape sequences for certain characters.</param>
-		public StringEscaper(IReadOnlyDictionary<char, string> escapeSequences)
+		public StringEscaper(IDictionary<char, string> escapeSequences)
 		{
 			CharEscapeSequences = escapeSequences;
 		}
 		/// <summary>
 		/// The escape sequences used.
 		/// </summary>
-		public IReadOnlyDictionary<char, string> CharEscapeSequences { get; }
+		public IDictionary<char, string> CharEscapeSequences { get; }
 		/// <summary>
 		/// Writes <paramref name="str"/> to <paramref name="target"/>. If any characters are found that need to be escaped, then the escape
 		/// sequence is written instead of the character.
@@ -101,6 +101,30 @@
 			return w;
 		}
 		/// <summary>
+		/// Equivalent of calling <see cref="WriteEscapedString(in ReadOnlySpan{char}, StringBuilder)"/> and calling <see cref="StringBuilder.ToString()"/>.
+		/// </summary>
+		/// <param name="str">The string to write to escape.</param>
+		/// <returns>The escaped string</returns>
+		public string EscapeString(in ReadOnlySpan<char> str)
+		{
+			StringBuilder sb = new StringBuilder();
+			WriteEscapedString(str, sb);
+			return sb.ToString();
+		}
+		///// <summary>
+		///// Replaces disallowed characters with pretty similar looking characters.
+		///// For example, / and \ are replaced by a ⧸ (big solidus) and ⧹ (big reverse solidus).
+		///// </summary>
+		///// <returns></returns>
+		//public static StringEscaper WindowsFilenames()
+		//{
+		//	return new StringEscaper(new Dictionary<char, string>()
+		//	{
+		//		{ '/', "⧸" },
+		//		{ '\\', "⧹" }
+		//	});
+		//}
+		/// <summary>
 		/// Creates a new instance which can escape JSON Property names and strings.
 		/// Won't use any unicode escapes (i.e. \u1C2A)
 		/// </summary>
@@ -133,8 +157,11 @@
 		}
 		/// <summary>
 		/// Creates a new instance which can escape XML and HTML text and attribute values.
+		/// Single quotes (') should only be escaped as &amp;apos; if the purpose is HTML5 or XML. If you're writing HTML4 or lower (or just want a slightly shorter escape sequence),
+		/// <paramref name="singleQuoteAsApos"/> should be false.
 		/// </summary>
-		public static StringEscaper XmlBodyAndAttribute()
+		/// <param name="singleQuoteAsApos">If true, ' is escaped to &amp;apos;. Otherwise, ' is escaped to &amp;#39;.</param>
+		public static StringEscaper XmlBodyAndAttribute(bool singleQuoteAsApos = true)
 		{
 			return new StringEscaper(new Dictionary<char, string>()
 			{
@@ -142,7 +169,7 @@
 				{ '<', "&lt;" },
 				{ '>', "&gt;" },
 				{ '"', "&quot;" },
-				{ '\'', "&#39;" },
+				{ '\'', singleQuoteAsApos ? "&apos;" : "&#39;" },
 			});
 		}
 	}

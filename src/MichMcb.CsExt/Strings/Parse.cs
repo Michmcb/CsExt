@@ -31,13 +31,13 @@ namespace MichMcb.CsExt.Strings
 		/// <code>UTC: 2010-07-15T07:11:39Z or 20100715T071139.123Z</code>
 		/// <code>Ordinal Date: 2010-197 or 2010197</code>
 		/// </summary>
+		/// <param name="str">The string to parse</param>
 		/// <param name="assumeMissingTimeZoneAs">If the string is missing a timezone designator, then it uses this. If null, local time is used if a timezone designator is missing.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
 		public static Maybe<UtcDateTime, string> Iso8601StringAsUtcDateTime(in ReadOnlySpan<char> str, TimeSpan? assumeMissingTimeZoneAs = null)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
-			Maybe<LexedIso8601, string> rLex = LexIso8601(ts);
-			if (!rLex.Success(out LexedIso8601 luthor, out string errMsg))
+			if (!LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
 			{
 				return errMsg;
 			}

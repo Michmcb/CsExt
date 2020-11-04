@@ -24,7 +24,7 @@
 		public Maybe(TVal value, bool ok = true)
 		{
 			this.value = value;
-			error = default;
+			error = default!;
 			Ok = ok;
 		}
 		/// <summary>
@@ -35,7 +35,7 @@
 		/// <param name="ok">If true, success. If false, failure.</param>
 		public Maybe(TErr error, bool ok = false)
 		{
-			value = default;
+			value = default!;
 			this.error = error;
 			Ok = ok;
 		}
@@ -59,7 +59,6 @@
 		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
 		/// Otherwise, val is set to the default value for <typeparamref name="TVal"/> and returns false.
 		/// </summary>
-		/// <param name="val"></param>
 		public bool HasValue([NotNullWhen(true)] out TVal val)
 		{
 			val = value;
@@ -69,7 +68,6 @@
 		/// If <see cref="Ok"/> is false, sets <paramref name="error"/> to the Value for this instance and returns true.
 		/// Otherwise, val is set to the default value for <typeparamref name="TErr"/> and returns false.
 		/// </summary>
-		/// <param name="val"></param>
 		public bool HasError([NotNullWhen(true)] out TErr error)
 		{
 			error = this.error;
@@ -85,6 +83,17 @@
 			val = value;
 			error = this.error;
 			return Ok;
+		}
+		/// <summary>
+		/// Does the opposite of <see cref="Success(out TVal, out TErr)"/>.
+		/// </summary>
+		/// <param name="val">If <see cref="Ok"/> is true, the value. Otherwise, the default value for <typeparamref name="TVal"/>.</param>
+		/// <param name="error">If <see cref="Ok"/> is false, the error. Otherwise, the default value for <typeparamref name="TErr"/>.</param>
+		public bool Failure([NotNullWhen(false)] out TVal val, [NotNullWhen(true)] out TErr error)
+		{
+			val = value;
+			error = this.error;
+			return !Ok;
 		}
 #pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
 		/// <summary>

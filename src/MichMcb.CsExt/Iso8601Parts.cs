@@ -46,7 +46,7 @@
 		/// </summary>
 		Format_DateTimeWithoutMillisFullTzNoSeparators = YearMonthDay | HourMinuteSecond | Tz_HourMinute,
 		/// <summary>
-		/// yyyy-MM-dd Note that this may cause data loss.
+		/// yyyy-MM-dd
 		/// </summary>
 		Format_DateOnly = YearMonthDay | Separator_Date,
 		/// <summary>

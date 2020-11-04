@@ -13,7 +13,7 @@
 	{
 		private static readonly char[] invalidCharss = Path.GetInvalidFileNameChars();
 		private static readonly HashSet<char> invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
-		private string str = @"This file| has bad chars?!!?";
+		private readonly string str = @"This file| has bad chars?!!?";
 
 
 		[Benchmark]

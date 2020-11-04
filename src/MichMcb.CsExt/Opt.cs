@@ -53,11 +53,6 @@
 		/// <returns></returns>
 		public static bool operator |(Opt<TVal> lhs, Opt<TVal> rhs) => lhs.Ok || rhs.Ok;
 		/// <summary>
-		/// Returns <see cref="Ok"/>
-		/// </summary>
-		/// <param name="opt"><see cref="Ok"/></param>
-		public static implicit operator bool(Opt<TVal> opt) => opt.Ok;
-		/// <summary>
 		/// Returns Val if Ok is true. Otherwise, returns <paramref name="ifNone"/>.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]

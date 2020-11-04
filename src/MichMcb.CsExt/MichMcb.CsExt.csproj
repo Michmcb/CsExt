@@ -5,13 +5,18 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.3.2</Version>
+    <Version>0.4</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will mostly try and keep it up to date with the latest .NET releases. I will (probably) document any breaking changes and whatnot.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Removed Base64; System.Buffers.Text is 10x faster, use that instead and, if needed, use a StringEscaper to switch the +/ characters out (can also remove padding like this too)
-- Changed ctors for Maybe&lt;TVal, TErr&gt; to only allow providing one or the other since that's the intended use for it; either success or failure, not both</PackageReleaseNotes>
+    <PackageReleaseNotes>- StripInvalidFileNameChars only allocates a new string if there are actually chars to strip
+- String.Truncate extension method (exists for Span and ReadOnlySpan too)
+- BitConvert no longer requires a Span, it takes ReadOnlySpan where appropriate, and they are passed with "in" now as well
+- BitConvert can also parse ushort/uint/ulong now from a little/big endian span of bytes
+- XML doco
+- Crc32Stream added, to calculate a CRC32 on a stream as it's read/written
+- Failure method for Maybe, which works just like Success but in reverse</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -19,8 +24,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.3.2.0</AssemblyVersion>
-    <FileVersion>0.3.2.0</FileVersion>
+    <AssemblyVersion>0.4.0.0</AssemblyVersion>
+    <FileVersion>0.4.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

@@ -55,11 +55,11 @@
 		/// <param name="comparison">The StringComparison to use</param>
 		/// <param name="defaultValue">The value to return when no match is found</param>
 		/// <param name="cases">Tuples representing the possible values and return values</param>
-		public static TResult Switch<TResult>(string switchOn, StringComparison comparison, TResult defaultValue, params (string val, TResult result)[] cases)
+		public static TResult Switch<TResult>(string? switchOn, StringComparison comparison, TResult defaultValue, params (string val, TResult result)[] cases)
 		{
 			foreach ((string val, TResult result) in cases)
 			{
-				if (switchOn.Equals(val, comparison))
+				if (string.Equals(switchOn, val, comparison))
 				{
 					return result;
 				}
@@ -75,11 +75,11 @@
 		/// <param name="comparison">The StringComparison to use</param>
 		/// <param name="defaultAction">The Action to invoke when no match is found</param>
 		/// <param name="cases">Tuples representing the possible values and invocations</param>
-		public static void Switch(string switchOn, StringComparison comparison, Action defaultAction, params (string val, Action action)[] cases)
+		public static void Switch(string? switchOn, StringComparison comparison, Action defaultAction, params (string val, Action action)[] cases)
 		{
 			foreach ((string val, Action action) in cases)
 			{
-				if (switchOn.Equals(val, comparison))
+				if (string.Equals(switchOn, val, comparison))
 				{
 					action();
 					return;
@@ -96,13 +96,13 @@
 		/// <param name="comparison">The StringComparison to use</param>
 		/// <param name="defaultFunc">The Action to invoke when no match is found</param>
 		/// <param name="cases">Tuples representing the possible values and invocations</param>
-		public static TResult Switch<TResult>(string switchOn, StringComparison comparison, Func<TResult> defaultFunc, params (string val, Func<TResult> func)[] cases)
+		public static TResult Switch<TResult>(string? switchOn, StringComparison comparison, Func<TResult> defaultFunc, params (string val, Func<TResult> func)[] cases)
 		{
 			foreach ((string val, Func<TResult> func) in cases)
 			{
-				if (switchOn.Equals(val, comparison))
+				if (string.Equals(switchOn, val, comparison))
 				{
-					return func();
+						return func();
 				}
 			}
 			return defaultFunc();
