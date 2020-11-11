@@ -14,10 +14,25 @@ namespace MichMcb.CsExt
 		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		public const long MaxMillis = 315537897599999;
+		/// <summary>
+		/// Milliseconds in a second
+		/// </summary>
 		public const long MillisPerSecond = 1000;
+		/// <summary>
+		/// Milliseconds in a minute
+		/// </summary>
 		public const long MillisPerMinute = MillisPerSecond * 60;
+		/// <summary>
+		/// Milliseconds in an hour
+		/// </summary>
 		public const long MillisPerHour = MillisPerMinute * 60;
+		/// <summary>
+		/// Milliseconds in an hour
+		/// </summary>
 		public const long MillisPerDay = MillisPerHour * 24;
+		/// <summary>
+		/// Days in a non-leap year
+		/// </summary>
 		public const int DaysPerYear = 365;
 		/// <summary>
 		/// Every 4 years, there's 1 leap year.

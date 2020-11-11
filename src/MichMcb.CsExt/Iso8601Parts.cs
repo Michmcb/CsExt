@@ -15,36 +15,54 @@
 		/// A good default format: "yyyy-MM-ddTHH:mm:ss.sssZ"
 		/// This is known in ISO-8601 as "Extended Format"
 		/// </summary>
-		Format_ExtendedFormatUtc = YearMonthDay | HourMinuteSecondMillis | Tz_Utc | Separator_All,
+		Format_ExtendedFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss.sss+00:00
 		/// </summary>
-		Format_ExtendedFormatFullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute | Separator_All,
+		Format_ExtendedFormat_FullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute | Separator_All,
+		/// <summary>
+		/// yyyy-MM-ddTHH:mm:ss.sss
+		/// </summary>
+		Format_ExtendedFormat_LocalTz = YearMonthDay | HourMinuteSecondMillis | Separator_All,
+		/// <summary>
+		/// yyyy-MM-ddTHH:mm:ssZ
+		/// </summary>
+		Format_ExtendedFormat_NoMillis_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc | Separator_All,
+		/// <summary>
+		/// yyyy-MM-ddTHH:mm:ss+00:00
+		/// </summary>
+		Format_ExtendedFormat_NoMillis_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute | Separator_All,
+		/// <summary>
+		/// yyyy-MM-ddTHH:mm:ss
+		/// </summary>
+		Format_ExtendedFormat_NoMillis_LocalTz = YearMonthDay | HourMinuteSecond | Separator_All,
+
 		/// <summary>
 		/// Everything, except without separators: "yyyyMMddTHHmmss.sssZ"
 		/// This is known in ISO-8601 as "Basic Format"
 		/// </summary>
-		Format_BasicFormatUtc = YearMonthDay | HourMinuteSecondMillis | Tz_Utc,
+		Format_BasicFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc,
 		/// <summary>
 		/// yyyyMMddTHHmmss.sss+00:00
 		/// </summary>
-		Format_BasicFormatFullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute,
+		Format_BasicFormat_FullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute,
 		/// <summary>
-		/// yyyy-MM-ddTHH:mm:ssZ
+		/// yyyyMMddTHHmmss.sss
 		/// </summary>
-		Format_DateTimeWithoutMillisUtc = YearMonthDay | HourMinuteSecond | Tz_Utc | Separator_All,
-		/// <summary>
-		/// yyyy-MM-ddTHH:mm:ss+00:00
-		/// </summary>
-		Format_DateTimeWithoutMillisFullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute | Separator_All,
+		Format_BasicFormat_LocalTz = YearMonthDay | HourMinuteSecondMillis,
 		/// <summary>
 		/// yyyyMMddTHHmmssZ
 		/// </summary>
-		Format_DateTimeWithoutMillisUtcNoSeparators = YearMonthDay | HourMinuteSecond | Tz_Utc,
+		Format_BasicFormat_NoMillis_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc,
 		/// <summary>
 		/// yyyyMMddTHHmmss+0000
 		/// </summary>
-		Format_DateTimeWithoutMillisFullTzNoSeparators = YearMonthDay | HourMinuteSecond | Tz_HourMinute,
+		Format_BasicFormat_NoMillis_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute,
+		/// <summary>
+		/// yyyyMMddTHHmmss+0000
+		/// </summary>
+		Format_BasicFormat_NoMillis_LocalTz = YearMonthDay | HourMinuteSecond,
+
 		/// <summary>
 		/// yyyy-MM-dd
 		/// </summary>

@@ -36,7 +36,7 @@
 			int w = 0;
 			foreach (char c in str)
 			{
-				if (!CharEscapeSequences.TryGetValue(c, out string seq))
+				if (!CharEscapeSequences.TryGetValue(c, out string? seq))
 				{
 					++w;
 					target.Write(c);
@@ -61,7 +61,7 @@
 			int w = 0;
 			foreach (char c in str)
 			{
-				if (!CharEscapeSequences.TryGetValue(c, out string seq))
+				if (!CharEscapeSequences.TryGetValue(c, out string? seq))
 				{
 					++w;
 					target.Append(c);
@@ -86,7 +86,7 @@
 			int w = 0;
 			foreach (char c in str)
 			{
-				if (!CharEscapeSequences.TryGetValue(c, out string seq))
+				if (!CharEscapeSequences.TryGetValue(c, out string? seq))
 				{
 					target[w++] = c;
 				}

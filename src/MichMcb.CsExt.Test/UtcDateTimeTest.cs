@@ -179,15 +179,15 @@
 			UtcDateTime dt = new UtcDateTime(2020, 6, 5, 3, 0, 52, 012);
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToString());
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc());
-			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormatFullTz));
-			Assert.Equal("20200605T030052.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_BasicFormatUtc));
-			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormatUtc));
+			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_FullTz));
+			Assert.Equal("20200605T030052.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_BasicFormat_UtcTz));
+			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_UtcTz));
 			Assert.Equal("2020-06-05", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOnly));
 			Assert.Equal("20200605", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOnlyWithoutSeparators));
 			Assert.Equal("2020-157", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOrdinal));
 			Assert.Equal("--06-05", dt.ToIso8601StringUtc(Iso8601Parts.Format_VcfUnknownYear));
 
-			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateTimeWithoutMillisUtc));
+			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_NoMillis_UtcTz));
 			Assert.Equal("20200605T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Tz_Utc | Iso8601Parts.Separator_Time));
 
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc());

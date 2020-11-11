@@ -1,8 +1,8 @@
 ﻿#if !NETSTANDARD2_0
-using System;
-
 namespace MichMcb.CsExt.Strings
 {
+	using System;
+
 	internal readonly struct LexedIso8601
 	{
 		internal readonly Range Year;

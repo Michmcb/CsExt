@@ -347,27 +347,31 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
 		public override string ToString()
 		{
-			return ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormatUtc);
+			return ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormat_UtcTz);
 		}
 		/// <summary>
 		/// Formats this instance as an ISO-8601 string, from the perspective of UTC, according to the rules specified by <paramref name="format"/>.
 		/// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
 		/// </summary>
 		/// <param name="format">How to format the string. By default, this is ISO-8601 extended, with UTC timezone designator</param>
+		/// <param name="dateSeparator">The separator placed between year/month/day</param>
+		/// <param name="timeSeparator">The separator placed between hour/minute/second</param>
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601StringUtc(Iso8601Parts format = Iso8601Parts.Format_ExtendedFormatUtc)
+		public string ToIso8601StringUtc(Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz, char dateSeparator = '-', char timeSeparator = ':')
 		{
-			return ToIso8601String(TimeSpan.Zero, format);
+			return ToIso8601String(TimeSpan.Zero, format, dateSeparator, timeSeparator);
 		}
 		/// <summary>
 		/// Formats this instance as an ISO-8601 string, from the perspective of the local timezone, according to the rules specified by <paramref name="format"/>.
 		/// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
 		/// </summary>
 		/// <param name="format">How to format the string. By default, this is ISO-8601 extended, with full timzone designator</param>
+		/// <param name="dateSeparator">The separator placed between year/month/day</param>
+		/// <param name="timeSeparator">The separator placed between hour/minute/second</param>
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601StringLocal(Iso8601Parts format = Iso8601Parts.Format_ExtendedFormatFullTz)
+		public string ToIso8601StringLocal(Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_FullTz, char dateSeparator = '-', char timeSeparator = ':')
 		{
-			return ToIso8601String(TimeZoneInfo.Local.BaseUtcOffset, format);
+			return ToIso8601String(TimeZoneInfo.Local.BaseUtcOffset, format, dateSeparator, timeSeparator);
 		}
 		/// <summary>
 		/// Formats this UtcDateTime as an ISO-8601 string, according to the rules specified by <paramref name="format"/>.
@@ -376,8 +380,10 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// </summary>
 		/// <param name="format">How to format the string. By default, this is ISO-8601 extended (Everything, with separators, and UTC timezone)</param>
 		/// <param name="timezone">If <paramref name="format"/> specifies hours/minutes for the Timezone designator, it use this timezone</param>
+		/// <param name="dateSeparator">The separator placed between year/month/day</param>
+		/// <param name="timeSeparator">The separator placed between hour/minute/second</param>
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601String(TimeSpan timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormatUtc)
+		public string ToIso8601String(TimeSpan timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz, char dateSeparator = '-', char timeSeparator = ':')
 		{
 			var err = ValidateAsFormat(format);
 			if (err != null)
@@ -422,14 +428,14 @@ Add remainder, adding 2 if it would end on a weekend day
 				i += 4;
 				if (seps)
 				{
-					str[i++] = '-';
+					str[i++] = dateSeparator;
 				}
 			}
 			else
 			{
 				// If no year, write --. This is primarily used for VCF format for birthdays, when the year is unknown (--MM-dd or --MMdd)
-				str[i++] = '-';
-				str[i++] = '-';
+				str[i++] = dateSeparator;
+				str[i++] = dateSeparator;
 			}
 			if ((format & Iso8601Parts.Month) == 0 && ((format & Iso8601Parts.Day) == Iso8601Parts.Day))
 			{
@@ -449,7 +455,7 @@ Add remainder, adding 2 if it would end on a weekend day
 				{
 					if (seps)
 					{
-						str[i++] = '-';
+						str[i++] = dateSeparator;
 					}
 					day.TryFormat(str.Slice(i), out written, format: "00", CultureInfo.InvariantCulture);
 					i += 2;
@@ -469,7 +475,7 @@ Add remainder, adding 2 if it would end on a weekend day
 				{
 					if (seps)
 					{
-						str[i++] = ':';
+						str[i++] = timeSeparator;
 					}
 					minute.TryFormat(str.Slice(i), out written, format: "00", CultureInfo.InvariantCulture);
 					i += 2;
@@ -478,7 +484,7 @@ Add remainder, adding 2 if it would end on a weekend day
 				{
 					if (seps)
 					{
-						str[i++] = ':';
+						str[i++] = timeSeparator;
 					}
 					second.TryFormat(str.Slice(i), out written, format: "00", CultureInfo.InvariantCulture);
 					i += 2;
