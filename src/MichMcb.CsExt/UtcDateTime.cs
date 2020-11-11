@@ -525,13 +525,104 @@ Add remainder, adding 2 if it would end on a weekend day
 			return new string(str.Slice(0, i));
 		}
 		/// <summary>
-		/// Calls <see cref="Parse.Iso8601StringAsUtcDateTime(in ReadOnlySpan{char}, TimeSpan?)"/>
+		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond; further accuracy is truncated.
+		/// All parsed ISO-8601 strings are interpreted as UTC.
+		/// Any leading or trailing whitespace is ignored.
+		/// Valid ISO-8601 strings are, for example...
+		/// <code>Date Only: 2010-07-15 or 20100715</code>
+		/// <code>Year and Month: 2010-07 but NOT 201007 (dates may be ambiguous with yyMMdd)</code>
+		/// <code>With Timezone: 2010-07-15T07:21:39.123+10:00 or 20100715T072139.123+10:00</code>
+		/// <code>UTC: 2010-07-15T07:11:39Z or 20100715T071139.123Z</code>
+		/// <code>Ordinal Date: 2010-197 or 2010197</code>
 		/// </summary>
+		/// <param name="str">The string to parse</param>
 		/// <param name="assumeMissingTimeZoneAs">If the string is missing a timezone designator, then it uses this. If null, local time is used if a timezone designator is missing.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan? assumeMissingTimeZoneAs = null)
 		{
-			return Parse.Iso8601StringAsUtcDateTime(str, assumeMissingTimeZoneAs);
+			ReadOnlySpan<char> ts = str.Trim();
+			if (!Parse.LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
+			{
+				return errMsg;
+			}
+			int year = int.Parse(str[luthor.Year]);
+			int month = 0, day = 1, hour = 0, minute = 0, second = 0, millis = 0;
+			if ((luthor.PartsFound & Iso8601Parts.Month) == Iso8601Parts.Month)
+			{
+				month = int.Parse(str[luthor.Month]);
+			}
+			if ((luthor.PartsFound & Iso8601Parts.Day) == Iso8601Parts.Day)
+			{
+				day = int.Parse(str[luthor.Day]);
+			}
+			if ((luthor.PartsFound & Iso8601Parts.Hour) == Iso8601Parts.Hour)
+			{
+				hour = int.Parse(str[luthor.Hour]);
+			}
+			if ((luthor.PartsFound & Iso8601Parts.Minute) == Iso8601Parts.Minute)
+			{
+				minute = int.Parse(str[luthor.Minute]);
+			}
+			if ((luthor.PartsFound & Iso8601Parts.Second) == Iso8601Parts.Second)
+			{
+				second = int.Parse(str[luthor.Second]);
+			}
+			if ((luthor.PartsFound & Iso8601Parts.Millis) == Iso8601Parts.Millis)
+			{
+				// Only parse the first 3 characters of milliseconds, since that's the highest degree of accuracy we allow for
+				(int offset, int length) = luthor.Millis.GetOffsetAndLength(str.Length);
+				millis = int.Parse(str.Slice(offset, length > 3 ? 3 : length));
+			}
+			int tzHours = 0;
+			int tzMinutes = 0;
+			switch (luthor.TimezoneChar)
+			{
+				case 'Z':
+					break;
+				case '-':
+				case '+':
+					{
+						if ((luthor.PartsFound & Iso8601Parts.Tz_Hour) == Iso8601Parts.Tz_Hour)
+						{
+							tzHours = int.Parse(str[luthor.TimezoneHours]);
+						}
+						if ((luthor.PartsFound & Iso8601Parts.Tz_Minute) == Iso8601Parts.Tz_Minute)
+						{
+							tzMinutes = int.Parse(str[luthor.TimezoneMinutes]);
+						}
+						// The offsets mean that this time has already had the offset added. Therefore if it's +10:00, we need to subtract 10 so the result is in UTC, or add 10 if it's -10:00
+						if (luthor.TimezoneChar == '+')
+						{
+							tzHours = -tzHours;
+							tzMinutes = -tzMinutes;
+						}
+					}
+					break;
+				case '\0':
+					// No timezone means as should assume local time, or whatever they tell us
+					TimeSpan tzSpan = assumeMissingTimeZoneAs ?? TimeZoneInfo.Local.BaseUtcOffset;
+					tzHours = -tzSpan.Hours;
+					tzMinutes = -tzSpan.Minutes;
+					break;
+			}
+			ArgumentOutOfRangeException? ex;
+			if ((luthor.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
+			{
+				ex = Dates.MillisFromParts_OrdinalDays(year, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
+				if (ex == null)
+				{
+					return new UtcDateTime(ms);
+				}
+			}
+			else
+			{
+				ex = Dates.MillisFromParts(year, month, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
+				if (ex == null)
+				{
+					return new UtcDateTime(ms);
+				}
+			}
+			return ex.Message;
 		}
 		[return: MaybeNull]
 		private static string ValidateAsFormat(Iso8601Parts format)
