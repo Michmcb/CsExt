@@ -1,4 +1,4 @@
-﻿namespace MichMcb.Threads
+﻿namespace MichMcb.CsExt.Threads
 {
 	using System.Diagnostics;
 	using System.Threading;
@@ -7,31 +7,27 @@
 	/// Allows things to happen once every period of time.
 	/// Doesn't use anything disposable.
 	/// </summary>
-	public sealed class Cooldown
+	public sealed class FixedCooldown
 	{
 		private int currentWaitTime;
 		private readonly Stopwatch stopwatch;
 		/// <summary>
 		/// Creates a new instance that is currently off cooldown, and so will not cause any delay on the first wait.
 		/// </summary>
-		public Cooldown()
+		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		public FixedCooldown(int cooldown)
 		{
 			stopwatch = new Stopwatch();
+			Cooldown = cooldown;
 		}
 		/// <summary>
-		/// Creates a new instance that's currently cooling down, so the first wait will cause a delay of <paramref name="initialCooldown"/> milliseconds.
+		/// The cooldown, in milliseconds.
 		/// </summary>
-		/// <param name="initialCooldown">The initial cooldown in milliseconds.</param>
-		public Cooldown(int initialCooldown)
-		{
-			currentWaitTime = initialCooldown;
-			stopwatch = Stopwatch.StartNew();
-		}
+		public int Cooldown { get; set; }
 		/// <summary>
 		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
 		/// </summary>
-		/// <param name="cooldown">The cooldown, in milliseconds.</param>
-		public void Wait(int cooldown)
+		public void Wait()
 		{
 			int waitingTime;
 			lock (stopwatch)
@@ -43,7 +39,7 @@
 			if (waitingTime <= 0)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
-				currentWaitTime = cooldown;
+				currentWaitTime = Cooldown;
 			}
 			else
 			{
@@ -51,15 +47,14 @@
 				// Specifically, the new wait time should be the 
 				// e.g. If we've only waited 2/5 seconds but we want another 5 second proc, then the current caller needs to wait 3 seconds (waitingTime), and the next Proc will have to wait for 3 + 5 seconds.
 				// The waiting time compounds for every thing that wants to use this. We add on the cooldown plus the waiting time we're doling out
-				currentWaitTime = cooldown + waitingTime;
+				currentWaitTime = Cooldown + waitingTime;
 				Thread.Sleep(waitingTime);
 			}
 		}
 		/// <summary>
 		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
 		/// </summary>
-		/// <param name="cooldown">The cooldown, in milliseconds.</param>
-		public Task WaitAsync(int cooldown)
+		public Task WaitAsync()
 		{
 			int waitingTime;
 			lock (stopwatch)
@@ -71,7 +66,7 @@
 			if (waitingTime <= 0)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
-				currentWaitTime = cooldown;
+				currentWaitTime = Cooldown;
 				return Task.CompletedTask;
 			}
 			else
@@ -80,7 +75,7 @@
 				// Specifically, the new wait time should be the 
 				// e.g. If we've only waited 2/5 seconds but we want another 5 second proc, then the current caller needs to wait 3 seconds (waitingTime), and the next Proc will have to wait for 3 + 5 seconds.
 				// The waiting time compounds for every thing that wants to use this. We add on the cooldown plus the waiting time we're doling out
-				currentWaitTime = cooldown + waitingTime;
+				currentWaitTime = Cooldown + waitingTime;
 				return Task.Delay(waitingTime);
 			}
 		}

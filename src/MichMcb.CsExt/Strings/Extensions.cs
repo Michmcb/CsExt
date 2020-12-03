@@ -155,6 +155,85 @@
 			}
 			return ranges;
 		}
+		/// <summary>
+		/// Returns substrings of <paramref name="str"/>, where each substring is no longer than <paramref name="maxLineLength"/>.
+		/// This will try to avoid breaking in the middle of a word, preferring to break in whitespace instead.
+		/// </summary>
+		/// <param name="str">The string.</param>
+		/// <param name="maxLineLength">The maximum length of the lines</param>
+		/// <returns>A collection of substrings.</returns>
+		public static ICollection<string> Lines(this string str, int maxLineLength)
+		{
+			ICollection<Range> ranges = Lines(str.AsSpan(), maxLineLength);
+			string[] lines = new string[ranges.Count];
+			int i = 0;
+			foreach (Range r in ranges)
+			{
+				lines[i++] = str[r];
+			}
+			return lines;
+		}
+		/// <summary>
+		/// Returns ranges of <paramref name="str"/>, where each slice is no longer than <paramref name="maxLineLength"/>.
+		/// This will try to avoid breaking in the middle of a word, preferring to break in whitespace instead.
+		/// </summary>
+		/// <param name="str">The string.</param>
+		/// <param name="maxLineLength">The maximum length of the lines</param>
+		/// <returns>A collection of <see cref="Range"/> which can be used to take slices of <paramref name="str"/>.</returns>
+		public static ICollection<Range> Lines(in this ReadOnlySpan<char> str, int maxLineLength)
+		{
+			List<Range> lineBreaks = new List<Range>();
+			int currentIndex;
+			int prevIndex = 0;
+			while (str.Length >= prevIndex)
+			{
+				currentIndex = prevIndex + maxLineLength;
+				if (currentIndex < str.Length)
+				{
+					char c = str[currentIndex];
+					if (char.IsWhiteSpace(c))
+					{
+						// We can break at this char
+						lineBreaks.Add(prevIndex..currentIndex);
+						prevIndex = currentIndex + 1;
+					}
+					else
+					{
+						// If not, then we need to search backwards for a whitespace character.
+						// If we don't find any, then just split up this word.
+						currentIndex = LastIndexOfWhitespace(str, currentIndex, prevIndex);
+						if (currentIndex != -1)
+						{
+							lineBreaks.Add(prevIndex..currentIndex);
+							prevIndex = currentIndex + 1;
+						}
+						else
+						{
+							lineBreaks.Add(prevIndex..currentIndex);
+							prevIndex += maxLineLength;
+						}
+					}
+				}
+				else
+				{
+					lineBreaks.Add(prevIndex..str.Length);
+					prevIndex = currentIndex;
+				}
+			}
+			return lineBreaks;
+
+			static int LastIndexOfWhitespace(in ReadOnlySpan<char> str, int start, int finish)
+			{
+				for (int i = start; i >= finish; i--)
+				{
+					if (char.IsWhiteSpace(str[i]))
+					{
+						return i;
+					}
+				}
+				return -1;
+			}
+		}
 #endif
 	}
 }

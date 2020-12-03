@@ -1,14 +1,14 @@
-﻿using System;
-using System.IO;
-
-namespace MichMcb.CsExt.Data
+﻿namespace MichMcb.CsExt.Data
 {
+	using System;
+	using System.IO;
+
 	/// <summary>
 	/// Calculates the CRC32 hash of a block of data.
 	/// </summary>
 	public static class Crc32
 	{
-		// TODO use SSe4 CRC32 intrinsics to calculate the CRC32, if we have it available.
+		// TODO use Sse4 CRC32 intrinsics to calculate the CRC32, if we have it available.
 		/// <summary>
 		/// The initial value a CRC32 starts with.
 		/// Also to finalize a CRC32, you need to flip its bytes: <code>~crc32</code>

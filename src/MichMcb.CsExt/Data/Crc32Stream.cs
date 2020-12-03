@@ -1,7 +1,7 @@
-﻿using System.IO;
-
-namespace MichMcb.CsExt.Data
+﻿namespace MichMcb.CsExt.Data
 {
+	using System.IO;
+
 	/// <summary>
 	/// Calculates the CRC32 hash of data that's written to or read from it.
 	/// Seeking this stream will reset its CRC32.

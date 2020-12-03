@@ -1,7 +1,7 @@
-﻿using System.Threading.Tasks;
-
-namespace MichMcb.CsExt.Workflow
+﻿namespace MichMcb.CsExt.Workflow
 {
+	using System.Threading.Tasks;
+
 	public interface IAsyncWorkAcceptor<TObj>
 	{
 		Task AcceptAsync(TObj obj);

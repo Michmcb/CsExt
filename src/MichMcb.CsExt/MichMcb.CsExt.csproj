@@ -5,14 +5,17 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.4.1</Version>
+    <Version>0.4.2</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will mostly try and keep it up to date with the latest .NET releases. I will (probably) document any breaking changes and whatnot.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Targets net5.0
-- Renamed some Is8601 formats to be better descriptive and easier to read
-- UtcDateTime when turned into an Iso8601 string can specify custom separators. Technically it isn't Iso-8601 anymore, but it can be useful for filenames which prohibit a :</PackageReleaseNotes>
+    <PackageReleaseNotes>- Removed BitConvert; use System.Buffers.Binary.BinaryPrimitives instead
+- Added a method to break a string into multiple lines
+- Removed Tokenizer; it's in my CommandLineFluent package if still needed
+- Split Cooldown into FixedCooldown and VariableCooldown. Fixed always uses the same milliseconds Variable takes the milliseconds as an argument.
+- Added a method to split a string into lines, each of a max length
+	 </PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -20,8 +23,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.4.1.0</AssemblyVersion>
-    <FileVersion>0.4.1.0</FileVersion>
+    <AssemblyVersion>0.4.2.0</AssemblyVersion>
+    <FileVersion>0.4.2.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

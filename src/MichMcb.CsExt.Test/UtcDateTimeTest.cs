@@ -51,7 +51,7 @@
 			UtcDateTime converted = (UtcDateTime)new DateTime(2001, 1, 1, 15, 10, 10, DateTimeKind.Utc);
 			Assert.Equal(new UtcDateTime(2001, 1, 1, 15, 10, 10), converted);
 
-			// HACK I live in +10:00, no DST ever applied (thank goodness, screw DST)
+			// I live in +10:00, no DST ever applied (thank goodness, screw DST)
 			converted = (UtcDateTime)new DateTime(2001, 1, 1, 15, 10, 10, DateTimeKind.Local);
 			Assert.Equal(new UtcDateTime(2001, 1, 1, 5, 10, 10), converted);
 
@@ -249,16 +249,16 @@
 			Random rng = new Random();
 			for (int year = 1; year <= 9999; year++)
 			{
-				for (int month = 2; month <= 12; month++)
+				for (int month = 1; month <= 12; month++)
 				{
 					int daysInMonth = DateTime.DaysInMonth(year, month);
 					for (int day = 1; day <= daysInMonth; day++)
 					{
 						// Takes too long to do all the hours/mins/secs/millis, so just use a random value for each one
 						int hour = rng.Next(0, 24);
-						int minute = rng.Next(0, 24);
-						int second = rng.Next(0, 24);
-						int millis = rng.Next(0, 24);
+						int minute = rng.Next(0, 60);
+						int second = rng.Next(0, 60);
+						int millis = rng.Next(0, 1000);
 
 						UtcDateTime dt = new UtcDateTime(year, month, day, hour, minute, second, millis);
 						dt.Deconstruct(out int y, out int mon, out int d, out int h, out int min, out int s, out int ms);
