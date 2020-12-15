@@ -1,7 +1,9 @@
-﻿
-namespace MichMcb.CsExt
+﻿namespace MichMcb.CsExt
 {
 	using System;
+	/// <summary>
+	/// A helper class for Dates.
+	/// </summary>
 	public static class Dates
 	{
 		private const int DaysToUnixEpoch = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
@@ -52,14 +54,19 @@ namespace MichMcb.CsExt
 		internal static readonly int[] TotalDaysFromStartYearToMonth = new int[] { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 		internal static readonly int[] TotalDaysFromStartLeapYearToMonth = new int[] { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
+		/// <summary>
+		/// Calculates an hour/minute/second/millisecond given <paramref name="ms"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
+		/// </summary>
 		public static void CalcTimeParts(long ms, out int hour, out int minute, out int second, out int millis)
 		{
-			// Number of milliseconds elapsed since 0001-01-01
 			hour = (int)(ms / MillisPerHour % 24);
 			minute = (int)(ms / MillisPerMinute % 60);
 			second = (int)(ms / MillisPerSecond % 60);
 			millis = (int)(ms % MillisPerSecond);
 		}
+		/// <summary>
+		/// Calculates an year/month/dayhour/minute/second/millisecond given <paramref name="ms"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
+		/// </summary>
 		public static void CalcDateTimeParts(long ms, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis)
 		{
 			CalcTimeParts(ms, out hour, out minute, out second, out millis);

@@ -6,6 +6,8 @@ namespace System.Diagnostics.CodeAnalysis
 	internal sealed class AllowNullAttribute : Attribute	{	}
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property, Inherited = false)]
 	internal sealed class DisallowNullAttribute : Attribute {	}
+	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.ReturnValue, Inherited = false)]
+	internal sealed class MaybeNullAttribute : Attribute { }
 	[AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
 	internal sealed class NotNullWhenAttribute : Attribute {
 		internal NotNullWhenAttribute(bool returnValue) { }
@@ -17,12 +19,4 @@ namespace System.Diagnostics.CodeAnalysis
 	}
 }
 #pragma warning restore IDE0060 // Remove unused parameter
-
-//namespace System
-//{
-//	public static class Shims
-//	{
-//		
-//	}
-//}
 #endif

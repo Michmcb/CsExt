@@ -60,6 +60,9 @@ namespace MichMcb.CsExt
 		/// Creates a new UtcDateTime instance, with the millisecond part set to 0
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second) : this(year, month, day, hour, minute, second, 0) { }
+		/// <summary>
+		/// Creates a new instance with the lot.
+		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
 			var ex = Dates.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
@@ -297,20 +300,17 @@ Add remainder, adding 2 if it would end on a weekend day
 		public UtcDateTime Truncate(DateTimePart truncateTo)
 		{
 			// TruncateTo means that the part in question is the smallest part that should not be truncated
-#pragma warning disable IDE0066 // Convert switch statement to expression
-			switch (truncateTo)
-#pragma warning restore IDE0066 // Convert switch statement to expression
+			return truncateTo switch
 			{
-				case DateTimePart.Year: return new UtcDateTime(Year, 1, 1);
-				case DateTimePart.Month: return new UtcDateTime(TotalMilliseconds - (Day * Dates.MillisPerDay) + Dates.MillisPerDay - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
-				case DateTimePart.Day: return new UtcDateTime(TotalMilliseconds - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
-				case DateTimePart.Hour: return new UtcDateTime(TotalMilliseconds - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond);
-				case DateTimePart.Minute: return new UtcDateTime(TotalMilliseconds - Second * Dates.MillisPerSecond - Millisecond);
-				case DateTimePart.Second: return new UtcDateTime(TotalMilliseconds - Millisecond);
-				case DateTimePart.Millisecond: return this;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart");
-			}
+				DateTimePart.Year => new UtcDateTime(Year, 1, 1),
+				DateTimePart.Month => new UtcDateTime(TotalMilliseconds - (Day * Dates.MillisPerDay) + Dates.MillisPerDay - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
+				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (Hour * Dates.MillisPerHour) - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
+				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (Minute * Dates.MillisPerMinute) - (Second * Dates.MillisPerSecond) - Millisecond),
+				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - Second * Dates.MillisPerSecond - Millisecond),
+				DateTimePart.Second => new UtcDateTime(TotalMilliseconds - Millisecond),
+				DateTimePart.Millisecond => this,
+				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
+			};
 		}
 		/// <summary>
 		/// Creates a new instance, as the number of <paramref name="days"/> elapsed since 0001-01-01 00:00:00.
@@ -318,12 +318,10 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// </summary>
 		public static UtcDateTime FromDays(int days, int hour = 0, int minute = 0, int second = 0, int millis = 0)
 		{
-			var ex = Dates.CheckTimeParts(hour, minute, second, millis, 0, 0);
-			if (ex != null)
-			{
-				throw ex;
-			}
-			return new UtcDateTime(days * Dates.MillisPerDay + hour * Dates.MillisPerHour + minute * Dates.MillisPerMinute + second * Dates.MillisPerSecond + millis);
+			ArgumentOutOfRangeException? ex = Dates.CheckTimeParts(hour, minute, second, millis, 0, 0);
+			return ex != null
+				? throw ex
+				: new UtcDateTime(days * Dates.MillisPerDay + hour * Dates.MillisPerHour + minute * Dates.MillisPerMinute + second * Dates.MillisPerSecond + millis);
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
@@ -341,6 +339,149 @@ Add remainder, adding 2 if it would end on a weekend day
 		{
 			return new UtcDateTime(milliseconds + Dates.UnixEpochMillis);
 		}
+		//public bool TryFormat(Span<char> destination, out int charsWritten, TimeSpan timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz, char dateSeparator = '-', char timeSeparator = ':')
+		//{
+		//	// First we have to calculate the number of characters required
+		//	var err = ValidateAsFormat(format);
+		//	if (err != null)
+		//	{
+		//		throw new ArgumentException(err, nameof(format));
+		//	}
+		//	bool seps = (format & Iso8601Parts.Separator_Date) == Iso8601Parts.Separator_Date;
+
+		//	Iso8601Parts ftz = format & Iso8601Parts.Mask_Tz;
+		//	long tzOffsetMs;
+		//	// TODO When omitting Time, treat this instance as midnight in whatever timezone they pass; or local or UTC, whatever.
+		//	// When we aren't writing the time, and timezone designator is absent, we still offset to the local timezone...
+		//	// which can cause the date to change. The thing is, when we write just the Date that technically causes data loss.
+		//	// So when we write the date, I guess what we're saying is that we mean this date in our local timezone. In that case, we should not offset it at all
+		//	switch (ftz)
+		//	{
+		//		default:
+		//		case 0:
+		//			// No timezone designator; that means we need to write it as local time.
+		//			tzOffsetMs = TimeZoneInfo.Local.BaseUtcOffset.Ticks / TimeSpan.TicksPerMillisecond;
+		//			break;
+		//		case Iso8601Parts.Tz_Hour:
+		//		case Iso8601Parts.Tz_HourMinute:
+		//			// Write a timezone designator; use the timezone we were given
+		//			tzOffsetMs = timezone.Ticks / TimeSpan.TicksPerMillisecond;
+		//			break;
+		//		case Iso8601Parts.Tz_Utc: // UTC timezone, 0 ms offset
+		//			tzOffsetMs = 0;
+		//			break;
+		//	}
+		//	Dates.CalcDateTimeParts(TotalMilliseconds + tzOffsetMs, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
+
+		//	// The longest possible string is 2010-12-30T13:30:20.123+10:00, which is 29 characters long
+		//	charsWritten = 0;
+		//	int written = 0;
+		//	if ((format & Iso8601Parts.Year) == Iso8601Parts.Year)
+		//	{
+		//		Formatting.Write2Digits(year, destination, 0);
+		//		if (!year.TryFormat(destination, out _, format: "0000", CultureInfo.InvariantCulture))
+		//		{
+		//			return false;
+		//		}
+		//		charsWritten += 4;
+		//		if (seps)
+		//		{
+		//			destination[charsWritten++] = dateSeparator;
+		//		}
+		//	}
+		//	else
+		//	{
+		//		// If no year, write --. This is primarily used for VCF format for birthdays, when the year is unknown (--MM-dd or --MMdd)
+		//		destination[charsWritten++] = dateSeparator;
+		//		destination[charsWritten++] = dateSeparator;
+		//	}
+		//	if ((format & Iso8601Parts.Month) == 0 && ((format & Iso8601Parts.Day) == Iso8601Parts.Day))
+		//	{
+		//		// Month and no Day is the ordinal format; we need to turn months into days and add that together with day to get the number to write
+		//		int[] totalDaysFromStartYearToMonth = DateTime.IsLeapYear(year) ? Dates.TotalDaysFromStartLeapYearToMonth : Dates.TotalDaysFromStartYearToMonth;
+		//		(totalDaysFromStartYearToMonth[month - 1] + day).TryFormat(destination.Slice(charsWritten), out _, format: "000", CultureInfo.InvariantCulture);
+		//		charsWritten += 3;
+		//	}
+		//	else
+		//	{
+		//		if ((format & Iso8601Parts.Month) == Iso8601Parts.Month)
+		//		{
+		//			month.TryFormat(destination.Slice(charsWritten), out _, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//		}
+		//		if ((format & Iso8601Parts.Day) == Iso8601Parts.Day)
+		//		{
+		//			if (seps)
+		//			{
+		//				destination[charsWritten++] = dateSeparator;
+		//			}
+		//			day.TryFormat(destination.Slice(charsWritten), out _, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//		}
+		//	}
+
+		//	if ((format & Iso8601Parts.Mask_Time) != 0)
+		//	{
+		//		seps = (format & Iso8601Parts.Separator_Time) == Iso8601Parts.Separator_Time;
+		//		destination[charsWritten++] = 'T';
+		//		if ((format & Iso8601Parts.Hour) == Iso8601Parts.Hour)
+		//		{
+		//			hour.TryFormat(destination.Slice(charsWritten), out _, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//		}
+		//		if ((format & Iso8601Parts.Minute) == Iso8601Parts.Minute)
+		//		{
+		//			if (seps)
+		//			{
+		//				destination[charsWritten++] = timeSeparator;
+		//			}
+		//			minute.TryFormat(destination.Slice(charsWritten), out written, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//		}
+		//		if ((format & Iso8601Parts.Second) == Iso8601Parts.Second)
+		//		{
+		//			if (seps)
+		//			{
+		//				destination[charsWritten++] = timeSeparator;
+		//			}
+		//			second.TryFormat(destination.Slice(charsWritten), out written, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//		}
+		//		if ((format & Iso8601Parts.Millis) == Iso8601Parts.Millis)
+		//		{
+		//			destination[charsWritten++] = '.';
+		//			ms.TryFormat(destination.Slice(charsWritten), out written, format: "000", CultureInfo.InvariantCulture);
+		//			charsWritten += 3;
+		//		}
+		//	}
+
+		//	switch (ftz)
+		//	{
+		//		case Iso8601Parts.Tz_Utc:
+		//			destination[charsWritten++] = 'Z';
+		//			break;
+		//		case Iso8601Parts.Tz_Hour:
+		//			destination[charsWritten++] = tzOffsetMs >= 0 ? '+' : '-';
+		//			int tz = Math.Abs(timezone.Hours);
+		//			tz.TryFormat(destination.Slice(charsWritten), out written, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//			break;
+		//		case Iso8601Parts.Tz_HourMinute:
+		//			destination[charsWritten++] = tzOffsetMs >= 0 ? '+' : '-';
+		//			tz = Math.Abs(timezone.Hours);
+		//			tz.TryFormat(destination.Slice(charsWritten), out written, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//			if ((format & Iso8601Parts.Separator_Tz) == Iso8601Parts.Separator_Tz)
+		//			{
+		//				destination[charsWritten++] = ':';
+		//			}
+		//			tz = Math.Abs(timezone.Minutes);
+		//			tz.TryFormat(destination.Slice(charsWritten), out written, format: "00", CultureInfo.InvariantCulture);
+		//			charsWritten += 2;
+		//			break;
+		//	}
+		//	return true;
+		//}
 		/// <summary>
 		/// Formats this instance as an ISO-8601 string using Extended Format with UTC as the Timezone Designator. i.e. 2010-12-30T13:30:20.123Z
 		/// </summary>
@@ -385,7 +526,7 @@ Add remainder, adding 2 if it would end on a weekend day
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
 		public string ToIso8601String(TimeSpan timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz, char dateSeparator = '-', char timeSeparator = ':')
 		{
-			var err = ValidateAsFormat(format);
+			string? err = ValidateAsFormat(format);
 			if (err != null)
 			{
 				throw new ArgumentException(err, nameof(format));
@@ -393,27 +534,25 @@ Add remainder, adding 2 if it would end on a weekend day
 			bool seps = (format & Iso8601Parts.Separator_Date) == Iso8601Parts.Separator_Date;
 
 			Iso8601Parts ftz = format & Iso8601Parts.Mask_Tz;
-			long tzOffsetMs;
 			// TODO When omitting Time, treat this instance as midnight in whatever timezone they pass; or local or UTC, whatever. 
 			// When we aren't writing the time, and timezone designator is absent, we still offset to the local timezone...
 			// which can cause the date to change. The thing is, when we write just the Date that technically causes data loss.
 			// So when we write the date, I guess what we're saying is that we mean this date in our local timezone. In that case, we should not offset it at all
-			switch (ftz)
+			long tzOffsetMs = ftz switch
 			{
-				default:
-				case 0:
-					// No timezone designator; that means we need to write it as local time.
-					tzOffsetMs = TimeZoneInfo.Local.BaseUtcOffset.Ticks / TimeSpan.TicksPerMillisecond;
-					break;
-				case Iso8601Parts.Tz_Hour:
-				case Iso8601Parts.Tz_HourMinute:
-					// Write a timezone designator; use the timezone we were given
-					tzOffsetMs = timezone.Ticks / TimeSpan.TicksPerMillisecond;
-					break;
-				case Iso8601Parts.Tz_Utc: // UTC timezone, 0 ms offset
-					tzOffsetMs = 0;
-					break;
-			}
+				// Writing a timezone designator; use the timezone we were given
+				Iso8601Parts.Tz_Hour or Iso8601Parts.Tz_HourMinute => timezone.Ticks / TimeSpan.TicksPerMillisecond,
+				// UTC timezone, 0 ms offset
+				Iso8601Parts.Tz_Utc => 0,
+				// No timezone designator; that means we need to write it as local time.
+				_ or 0 => TimeZoneInfo.Local.BaseUtcOffset.Ticks / TimeSpan.TicksPerMillisecond
+			};
+			tzOffsetMs = ftz switch
+			{
+				Iso8601Parts.Tz_Hour or Iso8601Parts.Tz_HourMinute => timezone.Ticks / TimeSpan.TicksPerMillisecond,
+				Iso8601Parts.Tz_Utc => 0,
+				_ => TimeZoneInfo.Local.BaseUtcOffset.Ticks / TimeSpan.TicksPerMillisecond,
+			};
 			Dates.CalcDateTimeParts(TotalMilliseconds + tzOffsetMs, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
 
 			// The longest possible string is 2010-12-30T13:30:20.123+10:00, which is 29 characters long
@@ -541,7 +680,7 @@ Add remainder, adding 2 if it would end on a weekend day
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan? assumeMissingTimeZoneAs = null)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
-			if (!Parse.LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
+			if (!LexedIso8601.LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
 			{
 				return errMsg;
 			}
@@ -625,7 +764,7 @@ Add remainder, adding 2 if it would end on a weekend day
 			return ex.Message;
 		}
 		[return: MaybeNull]
-		private static string ValidateAsFormat(Iso8601Parts format)
+		private static string? ValidateAsFormat(Iso8601Parts format)
 		{
 			switch (format & Iso8601Parts.Mask_Date)
 			{
@@ -668,10 +807,19 @@ Add remainder, adding 2 if it would end on a weekend day
 			}
 			return null;
 		}
+		/// <summary>
+		/// Returns true of <paramref name="obj"/> is a <see cref="UtcDateTime"/> and they refer to the same point in time.
+		/// </summary>
+		/// <param name="obj">The object to compare to.</param>
+		/// <returns>True if equal, false if not.</returns>
 		public override bool Equals([AllowNull]object obj)
 		{
 			return obj is UtcDateTime time && Equals(time);
 		}
+		/// <summary>
+		/// Calls <see cref="GetHashCode"/> on <see cref="TotalMilliseconds"/>.
+		/// </summary>
+		/// <returns>A hashcode.</returns>
 		public override int GetHashCode()
 		{
 			return TotalMilliseconds.GetHashCode();
@@ -702,93 +850,69 @@ Add remainder, adding 2 if it would end on a weekend day
 		}
 		/// <summary>
 		/// If this instance is later than <paramref name="other"/>, returns 1.
-		/// If this instance is earlier, returns -1.
+		/// If this instance is earlier than <paramref name="other"/>, returns -1.
 		/// If they are the same point in time, returns 0.
 		/// </summary>
 		public int CompareTo(UtcDateTime other)
 		{
-			if (TotalMilliseconds > other.TotalMilliseconds)
-			{
-				return 1;
-			}
-			if (TotalMilliseconds < other.TotalMilliseconds)
-			{
-				return -1;
-			}
-			return 0;
+			return TotalMilliseconds > other.TotalMilliseconds ? 1 : TotalMilliseconds < other.TotalMilliseconds ? -1 : 0;
 		}
-		public static bool operator ==(in UtcDateTime left, in UtcDateTime right)
-		{
-			return left.TotalMilliseconds == right.TotalMilliseconds;
-		}
-		public static bool operator !=(in UtcDateTime left, in UtcDateTime right)
-		{
-			return left.TotalMilliseconds != right.TotalMilliseconds;
-		}
-		public static bool operator <(UtcDateTime left, UtcDateTime right)
-		{
-			return left.CompareTo(right) < 0;
-		}
-		public static bool operator <=(UtcDateTime left, UtcDateTime right)
-		{
-			return left.CompareTo(right) <= 0;
-		}
-		public static bool operator >(UtcDateTime left, UtcDateTime right)
-		{
-			return left.CompareTo(right) > 0;
-		}
-		public static bool operator >=(UtcDateTime left, UtcDateTime right)
-		{
-			return left.CompareTo(right) >= 0;
-		}
-		public static UtcDateTime operator +(UtcDateTime left, TimeSpan right)
-		{
-			return new UtcDateTime(left.TotalMilliseconds + right.Ticks / TimeSpan.TicksPerMillisecond);
-		}
-		public static TimeSpan operator -(UtcDateTime left, UtcDateTime right)
-		{
-			return new TimeSpan((left.TotalMilliseconds - right.TotalMilliseconds) * TimeSpan.TicksPerMillisecond);
-		}
+		/// <summary>
+		/// Returns true if <paramref name="left"/> and <paramref name="right"/> refer to the same point in time, false otherwise.
+		/// </summary>
+		public static bool operator ==(in UtcDateTime left, in UtcDateTime right) => left.TotalMilliseconds == right.TotalMilliseconds;
+		/// <summary>
+		/// Returns true if <paramref name="left"/> and <paramref name="right"/> refer to different point in time, false otherwise.
+		/// </summary>
+		public static bool operator !=(in UtcDateTime left, in UtcDateTime right) => left.TotalMilliseconds != right.TotalMilliseconds;
+		/// <summary>
+		/// Returns true if <paramref name="left"/> is earlier than <paramref name="right"/>, false otherwise.
+		/// </summary>
+		public static bool operator <(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) < 0;
+		/// <summary>
+		/// Returns true if <paramref name="left"/> is earlier than or the same point in time as <paramref name="right"/>, false otherwise.
+		/// </summary>
+		public static bool operator <=(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) <= 0;
+		/// <summary>
+		/// Returns true if <paramref name="left"/> is later than <paramref name="right"/>, false otherwise.
+		/// </summary>
+		public static bool operator >(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) > 0;
+		/// <summary>
+		/// Returns true if <paramref name="left"/> is later than or the same point in time as <paramref name="right"/>, false otherwise.
+		/// </summary>
+		public static bool operator >=(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) >= 0;
+		/// <summary>
+		/// Adds <paramref name="right"/> to <paramref name="left"/>. Any sub-millisecond precision of <paramref name="right"/> is truncated.
+		/// </summary>
+		public static UtcDateTime operator +(UtcDateTime left, TimeSpan right) => new UtcDateTime(left.TotalMilliseconds + right.Ticks / TimeSpan.TicksPerMillisecond);
+		/// <summary>
+		/// Returns the difference between <paramref name="left"/> and <paramref name="right"/>.
+		/// </summary>
+		public static TimeSpan operator -(UtcDateTime left, UtcDateTime right) => new TimeSpan((left.TotalMilliseconds - right.TotalMilliseconds) * TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// Converts this UtcDateTime instance to a DateTime instance, with a DateTimeKind of Utc
 		/// </summary>
-		public static explicit operator DateTime(UtcDateTime utcDateTime)
-		{
-			return new DateTime(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
-		}
+		public static explicit operator DateTime(UtcDateTime utcDateTime) => new DateTime(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
 		/// <summary>
 		/// Converts this UtcDateTime instance to a DateTimeOffset instance, with an Offset of TimeSpan.Zero
 		/// </summary>
-		public static explicit operator DateTimeOffset(UtcDateTime utcDateTime)
-		{
-			return new DateTimeOffset(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, TimeSpan.Zero);
-		}
+		public static explicit operator DateTimeOffset(UtcDateTime utcDateTime) => new DateTimeOffset(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, TimeSpan.Zero);
 		/// <summary>
-		/// Creates a new instance from the provided <paramref name="dateTime"/>. If <paramref name="dateTime"/>.DateTimeKind is Unspecified, an InvalidCastException is thrown.
+		/// Creates a new instance from the provided <paramref name="dateTime"/>. If <paramref name="dateTime"/>.DateTimeKind is Unspecified, an <see cref="ArgumentException"/> is thrown.
 		/// </summary>
 		public static explicit operator UtcDateTime(DateTime dateTime)
 		{
-			if (dateTime.Kind == DateTimeKind.Unspecified)
-			{
-				throw new InvalidCastException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() to fix this if you know what the kind should be.");
-			}
-			if (dateTime.Kind == DateTimeKind.Utc)
-			{
-				return new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond);
-			}
-			else
-			{
-				return new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond);
-			}
+			return dateTime.Kind == DateTimeKind.Unspecified
+				? throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() to fix this if you know what the kind should be.", nameof(dateTime))
+				: dateTime.Kind == DateTimeKind.Utc
+					? new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond)
+					: new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
 		/// Creates a new instance from the provided <paramref name="dateTimeOffset"/>, interpreting <paramref name="dateTimeOffset"/> as if its Offset were Zero.
 		/// To be specific, <paramref name="dateTimeOffset"/>.Offset is subtracted from <paramref name="dateTimeOffset"/> to make the offset Zero, and then that is converted to a UtcDateTime.
 		/// </summary>
-		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset)
-		{
-			return new UtcDateTime((dateTimeOffset.Ticks - dateTimeOffset.Offset.Ticks) / TimeSpan.TicksPerMillisecond);
-		}
+		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset) => new UtcDateTime((dateTimeOffset.Ticks - dateTimeOffset.Offset.Ticks) / TimeSpan.TicksPerMillisecond);
 	}
 }
 #endif

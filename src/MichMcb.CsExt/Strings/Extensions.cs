@@ -5,7 +5,7 @@
 	using System.IO;
 
 	/// <summary>
-	/// Provides extension methods for strings and ReadOnlySpan&lt;char&gt;s
+	/// Provides extension methods for <see cref="string"/> and <see cref="ReadOnlySpan{T}"/>s of <see cref="char"/>.
 	/// </summary>
 	public static class Extensions
 	{

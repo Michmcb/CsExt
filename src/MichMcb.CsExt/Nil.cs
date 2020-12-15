@@ -39,18 +39,12 @@
 		/// Always returns true.
 		/// </summary>
 		/// <returns>true</returns>
-		public static bool operator ==(Nil left, Nil right)
-		{
-			return true;
-		}
+		public static bool operator ==(Nil left, Nil right) => true;
 		/// <summary>
 		/// Always returns false.
 		/// </summary>
 		/// <returns>false</returns>
-		public static bool operator !=(Nil left, Nil right)
-		{
-			return false;
-		}
+		public static bool operator !=(Nil left, Nil right) => false;
 #pragma warning restore IDE0060 // Remove unused parameter
 	}
 }

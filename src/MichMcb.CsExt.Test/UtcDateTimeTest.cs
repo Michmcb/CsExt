@@ -6,11 +6,6 @@
 	{
 		// TODO get as much coverage as possible on the methods and properties
 
-		//private readonly ITestOutputHelper output;
-		//public UtcDateTimeTest(ITestOutputHelper output)
-		//{
-		//	this.output = output;
-		//}
 		[Fact]
 		public void PublicConstAndStaticFieldsCorrect()
 		{

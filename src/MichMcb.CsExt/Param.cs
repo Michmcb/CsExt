@@ -7,7 +7,7 @@
 	public static class Param
 	{
 		/// <summary>
-		/// Throws an <see cref="ArgumentNullException"/> if <see cref="arg"/> is null.
+		/// Throws an <see cref="ArgumentNullException"/> if <paramref name="arg"/> is null.
 		/// </summary>
 		public static void NotNull<T>(T arg, string paramName, string msg) where T : class
 		{
