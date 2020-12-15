@@ -8,6 +8,8 @@
 		{
 			//BenchmarkRunner.Run<CharOrString>();
 			//BenchmarkRunner.Run<HashSetVsArray>();
+			//BenchmarkRunner.Run<ArrListAdd>();
+			//BenchmarkRunner.Run<ArrListIterate>();
 			Console.WriteLine("Enter to exit");
 			Console.ReadLine();
 		}
