@@ -11,6 +11,9 @@
 	public sealed class MultiDisposer : IDisposable
 	{
 		private readonly Stack<IDisposable> disposables;
+		/// <summary>
+		/// Creates a new instance with an empty stack
+		/// </summary>
 		public MultiDisposer()
 		{
 			disposables = new Stack<IDisposable>();

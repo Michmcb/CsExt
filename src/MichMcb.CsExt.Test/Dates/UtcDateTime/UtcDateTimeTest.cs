@@ -1,8 +1,9 @@
-﻿namespace MichMcb.CsExt.Test
+﻿namespace MichMcb.CsExt.Dates.UtcDateTime.Test
 {
+	using MichMcb.CsExt.Dates;
 	using System;
 	using Xunit;
-	public sealed  class UtcDateTimeTest
+	public sealed class UtcDateTimeTest
 	{
 		// TODO get as much coverage as possible on the methods and properties
 
@@ -24,9 +25,9 @@
 			{
 				daysPer400Years += DateTime.IsLeapYear(i) ? 366 : 365;
 			}
-			Assert.Equal(Dates.DaysPer4Years, daysPer4Years);
-			Assert.Equal(Dates.DaysPer100Years, daysPer100Years);
-			Assert.Equal(Dates.DaysPer400Years, daysPer400Years);
+			Assert.Equal(DateUtil.DaysPer4Years, daysPer4Years);
+			Assert.Equal(DateUtil.DaysPer100Years, daysPer100Years);
+			Assert.Equal(DateUtil.DaysPer400Years, daysPer400Years);
 
 			long epochDays = 0;
 			for (int i = 1; i < 1970; i++)
@@ -34,11 +35,11 @@
 				epochDays += DateTime.IsLeapYear(i) ? 366 : 365;
 			}
 
-			Assert.Equal(Dates.UnixEpochMillis, UtcDateTime.UnixEpoch.TotalMilliseconds);
+			Assert.Equal(DateUtil.UnixEpochMillis, UtcDateTime.UnixEpoch.TotalMilliseconds);
 			UtcDateTime minValue = new UtcDateTime();
 			Assert.Equal(0, minValue.TotalMilliseconds);
 			Assert.Equal(0, UtcDateTime.MinValue.TotalMilliseconds);
-			Assert.Equal(Dates.MaxMillis, UtcDateTime.MaxValue.TotalMilliseconds);
+			Assert.Equal(DateUtil.MaxMillis, UtcDateTime.MaxValue.TotalMilliseconds);
 		}
 		[Fact]
 		public void FromDotNetDateTimes()

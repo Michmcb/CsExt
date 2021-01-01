@@ -25,7 +25,7 @@
 		/// </summary>
 		public int Cooldown { get; set; }
 		/// <summary>
-		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <see cref="Cooldown"/> milliseconds.
 		/// </summary>
 		public void Wait()
 		{
@@ -52,7 +52,7 @@
 			}
 		}
 		/// <summary>
-		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <see cref="Cooldown"/> milliseconds.
 		/// </summary>
 		public Task WaitAsync()
 		{

@@ -1,4 +1,4 @@
-﻿namespace MichMcb.CsExt
+﻿namespace MichMcb.CsExt.Dates
 {
 	public enum DateTimePart
 	{

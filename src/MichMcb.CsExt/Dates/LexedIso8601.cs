@@ -1,35 +1,40 @@
-﻿#if !NETSTANDARD2_0
-namespace MichMcb.CsExt.Strings
+﻿namespace MichMcb.CsExt.Dates
 {
 	using System;
+#if NETSTANDARD2_0
+	using static MichMcb.CsExt.Shim;
+#endif
 	/// <summary>
 	/// A lexer which picks out the ranges in an ISO-8601 string. This can then turned into a UTC Date Time.
 	/// The ranges are guaranteed to be able to be parsed as integers.
 	/// </summary>
 	public readonly struct LexedIso8601
 	{
-		public readonly Range Year;
-		public readonly Range Month;
-		public readonly Range Day;
-		public readonly Range Hour;
-		public readonly Range Minute;
-		public readonly Range Second;
-		public readonly Range Millis;
+		/// <summary>
+		/// The portion of the
+		/// </summary>
+		public readonly OffLen Year;
+		public readonly OffLen Month;
+		public readonly OffLen Day;
+		public readonly OffLen Hour;
+		public readonly OffLen Minute;
+		public readonly OffLen Second;
+		public readonly OffLen Millis;
 		/// <summary>
 		/// The timezone character. It can be Z, +, -, or \0 (if no timezone char was found)
 		/// </summary>
 		public readonly char TimezoneChar;
-		public readonly Range TimezoneHours;
-		public readonly Range TimezoneMinutes;
+		public readonly OffLen TimezoneHours;
+		public readonly OffLen TimezoneMinutes;
 		/// <summary>
 		/// The parts found in the lexed string. Note that if a portion is too small to have separators, it's detected as not having them.
 		/// </summary>
 		public readonly Iso8601Parts PartsFound;
-		internal LexedIso8601(Range year, Range month, Range day, Range hour, Range minute, Range second, Range millis, char timezoneChar, Range timezoneHours, Range timezoneMinutes, Iso8601Parts partsFound)
+		internal LexedIso8601(OffLen year, OffLen month, OffLen day, OffLen hour, OffLen minute, OffLen second, OffLen millis, char timezoneChar, OffLen timezoneHours, OffLen timezoneMinutes, Iso8601Parts partsFound)
 		{
 			if (timezoneChar != '\0' && timezoneChar != 'Z' && timezoneChar != '+' && timezoneChar != '-')
 			{
-				throw new ArgumentOutOfRangeException(nameof(timezoneChar), "Timezone Character must be either Z, +, -, or \\0");
+				throw new ArgumentOutOfRangeException(nameof(timezoneChar), "Timezone Character must be either Z, +, -, or \\0 (zero)");
 			}
 			Year = year;
 			Month = month;
@@ -52,28 +57,32 @@ namespace MichMcb.CsExt.Strings
 		public static Maybe<LexedIso8601, string> LexIso8601(in ReadOnlySpan<char> s)
 		{
 			// We always require a Year, so start it as that
-			Range lxYear;
-			Range lxDay = default;
-			Range lxMonth = default;
-			Range lxHour = default;
-			Range lxMinute = default;
-			Range lxSecond = default;
-			Range lxMillis = default;
-			Range lxTzHours = default;
-			Range lxTzMinutes = default;
+			OffLen lxYear;
+			OffLen lxDay = default;
+			OffLen lxMonth = default;
+			OffLen lxHour = default;
+			OffLen lxMinute = default;
+			OffLen lxSecond = default;
+			OffLen lxMillis = default;
+			OffLen lxTzHours = default;
+			OffLen lxTzMinutes = default;
 			char tzChar = default;
 			#region DatePart
 			if (s.Length >= 4)
 			{
-				lxYear = new Range(0, 4);
-				if (!IsRangeAllLatinDigits(s[lxYear]))
+				lxYear = new(0, 4);
+				if (!IsRangeAllLatinDigits(lxYear.Slice(s)))
 				{
-					return "Year is not all latin digits: " + new string(s[lxYear]);
+#if !NETSTANDARD2_0
+					return string.Concat("Year is not all latin digits: ", lxYear.Slice(s));
+#else
+					return StringConcat("Year is not all latin digits: ".AsSpan(), lxYear.Slice(s));
+#endif
 				}
 			}
 			else
 			{
-				return "Years part was not 4 characters long, it was: " + s.Length.ToString();
+				return string.Concat("Years part was not 4 digits long, it was: ", s.Length);
 			}
 			// If that is the end of the string, that's no good, we need more than just the year
 			if (s.Length == 4)
@@ -94,10 +103,14 @@ namespace MichMcb.CsExt.Strings
 				if (s.Length >= end + 1 && s[end] >= '0' && s[end] <= '9' && (s.Length == end + 1 || s.Length >= end + 2 && s[end + 1] == 'T'))
 				{
 					// To capture all 3 digits, shift end forwards by 1
-					lxDay = start..++end;
-					if (!IsRangeAllLatinDigits(s[lxDay]))
+					lxDay = OffLen.StartEnd(start, ++end);
+					if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
 					{
-						return "Ordinal Day is not all latin digits: " + new string(s[lxDay]);
+#if !NETSTANDARD2_0
+						return string.Concat("Ordinal Day is not all latin digits: ", lxDay.Slice(s));
+#else
+						return StringConcat("Ordinal Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+#endif
 					}
 					// Since there's only 1 separator in this case, be sneaky and set them to be the same so our check for consistent separators doesn't fail
 					sep2 = sep1;
@@ -105,24 +118,24 @@ namespace MichMcb.CsExt.Strings
 				}
 				else
 				{
-					lxMonth = start..end;
-					if (!IsRangeAllLatinDigits(s[lxMonth]))
+					lxMonth = OffLen.StartEnd(start, end);
+					if (!IsRangeAllLatinDigits(lxMonth.Slice(s)))
 					{
-						if (s[lxMonth][0] == 'W')
-						{
-							return "ISO-8601 weeks are not supported: " + new string(s[lxMonth]);
-						}
-						else
-						{
-							return "Month is not all latin digits: " + new string(s[lxMonth]);
-						}
+						return lxMonth.Slice(s)[0] == 'W'
+#if !NETSTANDARD2_0
+							? string.Concat("ISO-8601 weeks are not supported: ", lxMonth.Slice(s))
+							: string.Concat("Month is not all latin digits: ", lxMonth.Slice(s));
+#else
+							? StringConcat("ISO-8601 weeks are not supported: ".AsSpan(), lxMonth.Slice(s))
+							: StringConcat("Month is not all latin digits: ".AsSpan(), lxMonth.Slice(s));
+#endif
 					}
 					parts = Iso8601Parts.YearMonth;
 				}
 			}
 			else
 			{
-				return "Months part was not 2 characters long, it was: " + (end - s.Length).ToString();
+				return string.Concat("Months part was not 2 digits long, it was: ", end - s.Length);
 			}
 			// There's a few different possibilities here. If we parsed Year/Month, it may the end of the string, or T, or days.
 			// Or if we parsed Year/Day, only the end of string or T is valid.
@@ -144,16 +157,20 @@ namespace MichMcb.CsExt.Strings
 						end += 2;
 						if (s.Length >= end)
 						{
-							lxDay = start..end;
-							if (!IsRangeAllLatinDigits(s[lxDay]))
+							lxDay = OffLen.StartEnd(start, end);
+							if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
 							{
-								return "Day is not all latin digits: " + new string(s[lxDay]);
+#if !NETSTANDARD2_0
+								return string.Concat("Day is not all latin digits: ", lxDay.Slice(s));
+#else
+								return StringConcat("Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+#endif
 							}
 							parts |= Iso8601Parts.Day;
 						}
 						else
 						{
-							return "Days part was not 2 characters long, it was: " + (end - s.Length).ToString();
+							return string.Concat("Days part was not 2 digits long, it was: ", end - s.Length);
 						}
 					}
 					else
@@ -187,14 +204,14 @@ namespace MichMcb.CsExt.Strings
 			{
 				goto success;
 			}
-			#endregion
+#endregion
 
-			#region TimePart
+#region TimePart
 			// TIME
 			// If we're not at the end of the string yet, we are parsing the time, so we need a T
 			if (s[end] != 'T')
 			{
-				return "Date and Time separator T was expected at" + end.ToString();
+				return string.Concat("Date and Time separator T was expected at", end);
 			}
 			sep1 = sep2 = false;
 			// Hours
@@ -203,16 +220,20 @@ namespace MichMcb.CsExt.Strings
 
 			if (s.Length >= end)
 			{
-				lxHour = start..end;
-				if (!IsRangeAllLatinDigits(s[lxHour]))
+				lxHour = OffLen.StartEnd(start, end);
+				if (!IsRangeAllLatinDigits(lxHour.Slice(s)))
 				{
-					return "Hour is not all latin digits: " + new string(s[lxHour]);
+#if !NETSTANDARD2_0
+					return string.Concat("Hour is not all latin digits: ", lxHour.Slice(s));
+#else
+					return StringConcat("Hour is not all latin digits: ".AsSpan(), lxHour.Slice(s));
+#endif
 				}
 				parts |= Iso8601Parts.Hour;
 			}
 			else
 			{
-				return "Hours part was not 2 characters long, it was: " + (end - s.Length).ToString();
+				return string.Concat("Hours part was not 2 digits long, it was: ", end - s.Length);
 			}
 			if (s.Length == end)
 			{
@@ -228,16 +249,20 @@ namespace MichMcb.CsExt.Strings
 			end += 2;
 			if (s.Length >= end)
 			{
-				lxMinute = start..end;
-				if (!IsRangeAllLatinDigits(s[lxMinute]))
+				lxMinute = OffLen.StartEnd(start, end);
+				if (!IsRangeAllLatinDigits(lxMinute.Slice(s)))
 				{
-					return "Minute is not all latin digits: " + new string(s[lxMinute]);
+#if !NETSTANDARD2_0
+					return string.Concat("Minute is not all latin digits: ", lxMinute.Slice(s));
+#else
+					return StringConcat("Minute is not all latin digits: ".AsSpan(), lxMinute.Slice(s));
+#endif
 				}
 				parts |= Iso8601Parts.Minute;
 			}
 			else
 			{
-				return "Minutes part was not 2 characters long, it was: " + (end - s.Length).ToString();
+				return string.Concat("Minutes part was not 2 digits long, it was: ", end - s.Length);
 
 			}
 			if (s.Length == end)
@@ -256,16 +281,20 @@ namespace MichMcb.CsExt.Strings
 			end += 2;
 			if (s.Length >= end)
 			{
-				lxSecond = start..end;
-				if (!IsRangeAllLatinDigits(s[lxSecond]))
+				lxSecond = OffLen.StartEnd(start, end);
+				if (!IsRangeAllLatinDigits(lxSecond.Slice(s)))
 				{
-					return "Second is not all latin digits: " + new string(s[lxSecond]);
+#if !NETSTANDARD2_0
+					return string.Concat("Second is not all latin digits: ", lxSecond.Slice(s));
+#else
+					return StringConcat("Second is not all latin digits: ".AsSpan(), lxSecond.Slice(s));
+#endif
 				}
 				parts |= Iso8601Parts.Second;
 			}
 			else
 			{
-				return "Seconds part was not 2 characters long, it was: " + (end - s.Length).ToString();
+				return string.Concat("Seconds part was not 2 digits long, it was: ", end - s.Length);
 
 			}
 			// Possibly inconsistent separators at this point, so check that
@@ -293,7 +322,7 @@ namespace MichMcb.CsExt.Strings
 					return "Milliseconds separator was found but no milliseconds were found";
 				}
 				// We know this range is all digits, so that's all good
-				lxMillis = start..end;
+				lxMillis = OffLen.StartEnd(start, end);
 				parts |= Iso8601Parts.Millis;
 			}
 			// No timezone, exit
@@ -302,9 +331,9 @@ namespace MichMcb.CsExt.Strings
 				parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
-			#endregion
+#endregion
 
-			#region TimezonePart
+#region TimezonePart
 			// Now, we should be on either a Z, +, or -
 			bool parseTimezone = false;
 			switch (s[end])
@@ -320,7 +349,11 @@ namespace MichMcb.CsExt.Strings
 					parseTimezone = true;
 					break;
 				default:
-					return "Timezone designator was not valid, it was: " + new string(s[end..]);
+#if !NETSTANDARD2_0
+					return string.Concat("Timezone designator was not valid, it was: ", s[end..]);
+#else
+					return StringConcat("Timezone designator was not valid, it was: ".AsSpan(), s.Slice(end));
+#endif
 			}
 			if (parseTimezone)
 			{
@@ -329,12 +362,12 @@ namespace MichMcb.CsExt.Strings
 				end += 2;
 				if (s.Length >= end)
 				{
-					lxTzHours = start..end;
+					lxTzHours = OffLen.StartEnd(start, end);
 					parts |= Iso8601Parts.Tz_Hour;
 				}
 				else
 				{
-					return "Timezone hours part was not 2 characters long, it was: " + (end - s.Length).ToString();
+					return string.Concat("Timezone hours part was not 2 digits long, it was: ", end - s.Length);
 				}
 				// This is OK; just hours for a Timezone is acceptable
 				if (s.Length == end)
@@ -351,15 +384,15 @@ namespace MichMcb.CsExt.Strings
 				end += 2;
 				if (s.Length >= end)
 				{
-					lxTzMinutes = start..end;
+					lxTzMinutes = OffLen.StartEnd(start, end);
 					parts |= Iso8601Parts.Tz_HourMinute | (sep1 ? Iso8601Parts.Separator_Tz : 0);
 				}
 				else
 				{
-					return "Timezone minutes part was not 2 characters long, it was: " + (end - s.Length).ToString();
+					return string.Concat("Timezone minutes part was not 2 digits long, it was: ", end - s.Length);
 				}
 			}
-		#endregion
+#endregion
 
 		success:
 			return new LexedIso8601(lxYear, lxMonth, lxDay, lxHour, lxMinute, lxSecond, lxMillis, tzChar, lxTzHours, lxTzMinutes, parts);
@@ -380,4 +413,3 @@ namespace MichMcb.CsExt.Strings
 		}
 	}
 }
-#endif
