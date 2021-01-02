@@ -12,7 +12,7 @@
 	/// Unlike <see cref="DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.
 	/// Also, this has less accuracy; it's only accurate to the millisecond, instead of 100-nanosecond ticks. In practice this shouldn't be a problem since
 	/// DateTime.Now isn't that precise, typically it's only precise to 1~35 milliseconds.
-	/// This can be explicitly cast to and from <see cref="DateTime"/> (unless Kind is Unspecified), and <see cref="DateTimeOffset"/>.
+	/// This can be cast to and from <see cref="DateTime"/> (unless Kind is Unspecified), and <see cref="DateTimeOffset"/>.
 	/// </summary>
 	public readonly partial struct UtcDateTime : IEquatable<UtcDateTime>, IComparable<UtcDateTime>
 	{

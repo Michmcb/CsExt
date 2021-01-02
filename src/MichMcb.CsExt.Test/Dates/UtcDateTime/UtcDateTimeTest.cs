@@ -187,22 +187,22 @@
 			Assert.Equal("20200605T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Tz_Utc | Iso8601Parts.Separator_Time));
 
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc());
-			Assert.Equal("2020-06-05T13", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All));
 			Assert.Equal("2020-06-05T03Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
 			Assert.Equal("2020-06-05T03+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
 			Assert.Equal("2020-06-05T03+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
 
-			Assert.Equal("2020-06-05T13:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All));
 			Assert.Equal("2020-06-05T03:00Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
 			Assert.Equal("2020-06-05T03:00+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
 			Assert.Equal("2020-06-05T03:00+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
 
-			Assert.Equal("2020-06-05T13:00:52", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00:52", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All));
 			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
 			Assert.Equal("2020-06-05T03:00:52+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
 			Assert.Equal("2020-06-05T03:00:52+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
 
-			Assert.Equal("2020-06-05T13:00:52.012", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00:52.012", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All));
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
 			Assert.Equal("2020-06-05T03:00:52.012+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
 			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
