@@ -295,6 +295,20 @@
 			};
 		}
 		/// <summary>
+		/// Returns the number of seconds elapsed since 1970-01-01 00:00:00.
+		/// </summary>
+		public long ToUnixEpochSeconds()
+		{
+			return (TotalMilliseconds - DateUtil.UnixEpochMillis) / DateUtil.MillisPerSecond;
+		}
+		/// <summary>
+		/// Returns the number of milliseconds elapsed since 1970-01-01 00:00:00.
+		/// </summary>
+		public long ToUnixEpochMilliseconds()
+		{
+			return TotalMilliseconds - DateUtil.UnixEpochMillis;
+		}
+		/// <summary>
 		/// Creates a new instance, as the number of <paramref name="days"/> elapsed since 0001-01-01 00:00:00.
 		/// Optionally allows specifying the hour/minute/second/millisecond
 		/// </summary>

@@ -82,6 +82,18 @@ namespace MichMcb.CsExt.Data
 			return Upper8.ToString("X8") + Lower8.ToString("X8");
 		}
 		/// <summary>
+		/// Returns a hexadecimal string.
+		/// </summary>
+		/// <param name="leading0x">If true, has a leading 0x. False otherwise.</param>
+		/// <param name="uppercase">Uppercase or lowercase.</param>
+		/// <returns>Hex string representing this</returns>
+		public string? ToString(bool leading0x, bool uppercase)
+		{
+			return uppercase
+				? (leading0x ? "0x" : string.Empty) + Upper8.ToString("X8") + Lower8.ToString("X8")
+				: (leading0x ? "0x" : string.Empty) + Upper8.ToString("x8") + Lower8.ToString("x8");
+		}
+		/// <summary>
 		/// Does the same thing as <see cref="Equals(Md5)"/>.
 		/// </summary>
 		/// <param name="left">Left hand side.</param>

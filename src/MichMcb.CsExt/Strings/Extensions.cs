@@ -110,10 +110,22 @@
 			return s.Length > length ? s.Slice(0, length) : s;
 		}
 #if NETSTANDARD2_0
+		/// <summary>
+		/// Checks if the string starts with <paramref name="c"/>.
+		/// </summary>
+		/// <param name="s">The string.</param>
+		/// <param name="c">The character.</param>
+		/// <returns>True if string starts with <paramref name="c"/>, false otherwise.</returns>
 		public static bool StartsWith(this string s, char c)
 		{
 			return s.Length >= 1 && s[0] == c;
 		}
+		/// <summary>
+		/// Checks if the string ends with <paramref name="c"/>.
+		/// </summary>
+		/// <param name="s">The string.</param>
+		/// <param name="c">The character.</param>
+		/// <returns>True if string ends with <paramref name="c"/>, false otherwise.</returns>
 		public static bool EndsWith(this string s, char c)
 		{
 			return s.Length >= 1 && s[s.Length - 1] == c;
@@ -129,24 +141,34 @@
 		/// <returns>A collection of <see cref="Range"/> which can be used to take slices of <paramref name="str"/>.</returns>
 		public static ICollection<Range> Split(in this ReadOnlySpan<char> str, char separator, StringSplitOptions options = StringSplitOptions.None)
 		{
-			List<Range> ranges = new List<Range>();
+			List<Range> ranges = new();
 			int from;
 			int to = -1;
+			bool removeEmptyEntries = (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries;
 			while (true)
 			{
 				from = to + 1;
-				to = str[from..].IndexOf(separator);
-				if (to != -1)
+				if (from >= str.Length)
 				{
-					if (options == StringSplitOptions.None || to - from >= 0)
+					if (!removeEmptyEntries)
 					{
-						ranges.Add(from..to);
+						ranges.Add(from..);
+					}
+					break;
+				}
+				int index = str[from..].IndexOf(separator);
+				if (index != -1)
+				{
+					// If index is 0, that means we have an empty entry.
+					if (index != 0 || !removeEmptyEntries)
+					{
+						ranges.Add(from..(to = from + index));
 					}
 				}
 				else
 				{
-					// Last one
-					if (options == StringSplitOptions.None || from == str.Length - 1)
+					// Last one. However if from is str.Length - 1, it's an empty entry
+					if (from != (str.Length - 1) || !removeEmptyEntries)
 					{
 						ranges.Add(from..);
 					}

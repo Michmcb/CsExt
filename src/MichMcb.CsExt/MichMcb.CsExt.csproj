@@ -5,15 +5,14 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.5.1</Version>
+    <Version>0.6</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will keep it up to date with the latest .NET releases.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- UtcDateTime.TryParseIso8601String is now available in .netstandard2.0
-- Timezone passed to UtcDateTime.ToIso8601StringWithTimeZone or UtcDateTime.TryFormat is now always used if the timezone designator is not UTC. If writing unqualified, it still uses timezone, unlike before when it always used TimeZoneInfo.Local.BaseUtcOffset.
-- UtcDateTime.ToIso8601StringLocal added, to write strings without a timezone designator, from the perspective of local time.
-- UtcDateTime.ToIso8601StringUtc no longer writes strings from the perspective of the local UTC offset when the Timezone designator is omitted. If you want to omit the timezone designator, use ToIso8601StringLocal.</PackageReleaseNotes>
+    <PackageReleaseNotes>- IntRng and UIntRng, faster alternatives to Random. Random number quality is as good as Random.
+- UtcDateTime has methods to convert to UnixTimeSeconds and UnixTimeMilliseconds
+- Couple more ToString() methods on Md5, allowing uppercase or lowercase and including/omitting leading 0x</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -21,8 +20,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.5.1.0</AssemblyVersion>
-    <FileVersion>0.5.1.0</FileVersion>
+    <AssemblyVersion>0.6.0.0</AssemblyVersion>
+    <FileVersion>0.6.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
