@@ -1,12 +1,11 @@
 ﻿namespace MichMcb.CsExt.Dates.UtcDateTime.Test
 {
 	using MichMcb.CsExt.Dates;
+	using MichMcb.CsExt.Rng;
 	using System;
 	using Xunit;
 	public sealed class UtcDateTimeTest
 	{
-		// TODO get as much coverage as possible on the methods and properties
-
 		[Fact]
 		public void PublicConstAndStaticFieldsCorrect()
 		{
@@ -230,7 +229,7 @@
 		[Fact]
 		public void Truncate()
 		{
-			UtcDateTime dt = new UtcDateTime(2020, 7, 14, 16, 24, 59, 129);
+			UtcDateTime dt = new(2020, 7, 14, 16, 24, 59, 129);
 			Assert.Equal(dt, dt.Truncate(DateTimePart.Millisecond));
 			Assert.Equal(new UtcDateTime(2020, 7, 14, 16, 24, 59), dt.Truncate(DateTimePart.Second));
 			Assert.Equal(new UtcDateTime(2020, 7, 14, 16, 24, 0), dt.Truncate(DateTimePart.Minute));
@@ -242,7 +241,7 @@
 		[Fact]
 		public void DatesSurviveRoundTrip()
 		{
-			Random rng = new Random();
+			IntRng rng = new();
 			for (int year = 1; year <= 9999; year++)
 			{
 				for (int month = 1; month <= 12; month++)

@@ -7,12 +7,12 @@
 	using System.IO;
 	using System.Linq;
 
-	[SimpleJob(RuntimeMoniker.NetCoreApp31)]
+	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
 	[RPlotExporter]
 	public class HashSetVsArray
 	{
 		private static readonly char[] invalidCharss = Path.GetInvalidFileNameChars();
-		private static readonly HashSet<char> invalidChars = new HashSet<char>(Path.GetInvalidFileNameChars());
+		private static readonly HashSet<char> invalidChars = new(Path.GetInvalidFileNameChars());
 		private readonly string str = @"This file| has bad chars?!!?";
 
 

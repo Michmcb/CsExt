@@ -12,7 +12,7 @@
 		/// <summary>
 		/// A hash set containing the results of <see cref="Path.GetInvalidFileNameChars"/>.
 		/// </summary>
-		public static readonly HashSet<char> invalidFileNameChars = new HashSet<char>(Path.GetInvalidFileNameChars());
+		public static readonly HashSet<char> invalidFileNameChars = new(Path.GetInvalidFileNameChars());
 		/// <summary>
 		/// Strips any invalid filename characters from <paramref name="s"/>.
 		/// </summary>
@@ -204,7 +204,7 @@
 		/// <returns>A collection of <see cref="Range"/> which can be used to take slices of <paramref name="str"/>.</returns>
 		public static ICollection<Range> Lines(in this ReadOnlySpan<char> str, int maxLineLength)
 		{
-			List<Range> lineBreaks = new List<Range>();
+			List<Range> lineBreaks = new();
 			int currentIndex;
 			int prevIndex = 0;
 			while (str.Length >= prevIndex)

@@ -63,10 +63,8 @@
 		/// <param name="val"></param>
 		public bool HasValue([NotNullWhen(true)] out TVal val)
 		{
-#pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
 			val = Val;
 			return Ok;
-#pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
 		}
 		/// <summary>
 		/// Executes <paramref name="hasVal"/> is HasVal is true.
@@ -96,10 +94,7 @@
 		/// <summary>
 		/// Equivalent to new Opt(<paramref name="value"/>, true);
 		/// </summary>
-		public static implicit operator Opt<TVal>([DisallowNull] TVal value)
-		{
-			return new Opt<TVal>(value, true);
-		}
+		public static implicit operator Opt<TVal>([DisallowNull] TVal value) => new(value, true);
 		/// <summary>
 		/// Calls ToString() on <see cref="Val"/>.
 		/// If Val is null, returns <see cref="string.Empty"/>.

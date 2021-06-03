@@ -240,7 +240,7 @@
 						break;
 				}
 			}
-			
+
 			return length;
 		}
 		/// <summary>
@@ -317,13 +317,13 @@
 			millis = (int)(ms % MillisPerSecond);
 		}
 		/// <summary>
-		/// Calculates an year/month/dayhour/minute/second/millisecond given <paramref name="ms"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
+		/// Calculates a year/month/day/hour/minute/second/millisecond given <paramref name="ms"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
 		/// </summary>
 		public static void CalcDateTimeParts(long ms, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis)
 		{
 			CalcTimeParts(ms, out hour, out minute, out second, out millis);
 			// Credit where it's due; most of this code is written by myself.
-			// However, the two Adjusments and the optimization of (totalDays >> 5) + 1 comes from the .NET Source for DateTime
+			// However, the two Adjustments and the optimization of (totalDays >> 5) + 1 comes from the .NET Source for DateTime
 
 			// We know the total number of days easily.
 			// totalDays is the number of days since 0001-01-01
@@ -468,7 +468,7 @@
 		/// Converts a DateTime to seconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
 		/// </summary>
 		/// <returns>The number of seconds</returns>
-		public static long ToUnixTimeSeconds(this in DateTime dt)
+		public static long ToUnixTimeSeconds(this DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc
 				? ((dt.Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond)
@@ -487,11 +487,30 @@
 		/// Converts a DateTime to milliseconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
 		/// </summary>
 		/// <returns>The number of milliseconds</returns>
-		public static long ToUnixTimeMilliseconds(this in DateTime dt)
+		public static long ToUnixTimeMilliseconds(this DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc
 				? ((dt.Ticks - UnixEpochTicks) / TimeSpan.TicksPerMillisecond)
 				: ((dt.ToUniversalTime().Ticks - UnixEpochTicks) / TimeSpan.TicksPerMillisecond);
+		}
+		/// <summary>
+		/// Returns a truncated instance so that it is only accurate to the part specified by <paramref name="truncateTo"/>.
+		/// For example, if <paramref name="truncateTo"/> is Minute, then Seconds and Milliseconds are set to zero.
+		/// Truncating days or months will cause them to be truncated to 1.
+		/// </summary>
+		public static DateTime Truncate(this DateTime dt, DateTimePart truncateTo)
+		{
+			return truncateTo switch
+			{
+				DateTimePart.Year => new(dt.Year, 1, 1, 0, 0, 0, dt.Kind),
+				DateTimePart.Month => new(dt.Year, dt.Month, 1, 0, 0, 0, dt.Kind),
+				DateTimePart.Day => dt.AddTicks(-dt.Ticks % TimeSpan.TicksPerDay),
+				DateTimePart.Hour => dt.AddTicks(-dt.Ticks % TimeSpan.TicksPerHour),
+				DateTimePart.Minute => dt.AddTicks(-dt.Ticks % TimeSpan.TicksPerMinute),
+				DateTimePart.Second => dt.AddTicks(-dt.Ticks % TimeSpan.TicksPerSecond),
+				DateTimePart.Millisecond => dt.AddTicks(-dt.Ticks % TimeSpan.TicksPerMillisecond),
+				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
+			};
 		}
 	}
 }

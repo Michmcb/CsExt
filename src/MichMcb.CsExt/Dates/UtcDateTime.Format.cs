@@ -200,7 +200,7 @@
 		/// <param name="timezone">If writing a non-UTC timezone designator or unqualified, writes the time with this offset. If null, uses UTC offset of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this no used (and <see cref="TimeZoneInfo.Local"/> is not accessed).</param>
 		/// <param name="dateSeparator">The separator placed between year/month/day</param>
 		/// <param name="timeSeparator">The separator placed between hour/minute/second</param>
-		/// <returns>The numbers of chars written.</returns>
+		/// <returns>The numbers of chars written, or an error message.</returns>
 		public Maybe<int, string> TryFormat(Span<char> destination, TimeSpan? timezone = null, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz, char dateSeparator = '-', char timeSeparator = ':')
 		{
 			string? err = DateUtil.ValidateAsFormat(format);

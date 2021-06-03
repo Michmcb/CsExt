@@ -19,15 +19,15 @@
 		/// <summary>
 		/// 1970-01-01 00:00:00
 		/// </summary>
-		public static readonly UtcDateTime UnixEpoch = new UtcDateTime(DateUtil.UnixEpochMillis);
+		public static readonly UtcDateTime UnixEpoch = new(DateUtil.UnixEpochMillis);
 		/// <summary>
 		/// 0001-01-01 00:00:00
 		/// </summary>
-		public static readonly UtcDateTime MinValue = new UtcDateTime(0);
+		public static readonly UtcDateTime MinValue = new(0);
 		/// <summary>
 		/// 9999-12-31 23:59:59.999
 		/// </summary>
-		public static readonly UtcDateTime MaxValue = new UtcDateTime(DateUtil.MaxMillis);
+		public static readonly UtcDateTime MaxValue = new(DateUtil.MaxMillis);
 		/// <summary>
 		/// Creates a new instance, as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
@@ -71,7 +71,7 @@
 		/// <summary>
 		/// Returns an instance representing the current UTC time
 		/// </summary>
-		public static UtcDateTime Now => new UtcDateTime(DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond);
+		public static UtcDateTime Now => new(DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// Returns the Years part of this instance
 		/// </summary>
@@ -159,7 +159,7 @@
 		/// <summary>
 		/// Returns the Time of Day as a TimeSpan
 		/// </summary>
-		public TimeSpan TimeOfDay => new TimeSpan(TotalMilliseconds * TimeSpan.TicksPerMillisecond);
+		public TimeSpan TimeOfDay => new(TotalMilliseconds * TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// The number of milliseconds elapsed since 0001-01-01 00:00:00 represented by this instance
 		/// </summary>
@@ -269,11 +269,10 @@
 		/// <summary>
 		/// Adds <paramref name="millis"/> to this instance
 		/// </summary>
-		public UtcDateTime AddMilliseconds(int millis)
+		public UtcDateTime AddMilliseconds(long millis)
 		{
 			return new UtcDateTime(TotalMilliseconds + millis);
 		}
-		//}
 		/// <summary>
 		/// Returns a truncated instance so that it is only accurate to the part specified by <paramref name="truncateTo"/>.
 		/// For example, if <paramref name="truncateTo"/> is Minute, then Seconds and Milliseconds are set to zero.
@@ -285,10 +284,12 @@
 			return truncateTo switch
 			{
 				DateTimePart.Year => new UtcDateTime(Year, 1, 1),
-				DateTimePart.Month => new UtcDateTime(TotalMilliseconds - (Day * DateUtil.MillisPerDay) + DateUtil.MillisPerDay - (Hour * DateUtil.MillisPerHour) - (Minute * DateUtil.MillisPerMinute) - (Second * DateUtil.MillisPerSecond) - Millisecond),
-				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (Hour * DateUtil.MillisPerHour) - (Minute * DateUtil.MillisPerMinute) - (Second * DateUtil.MillisPerSecond) - Millisecond),
-				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (Minute * DateUtil.MillisPerMinute) - (Second * DateUtil.MillisPerSecond) - Millisecond),
-				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - Second * DateUtil.MillisPerSecond - Millisecond),
+				// It's slow to calculate year/month/day and then additionally recalculate the milliseconds from that, so we truncate to days first,
+				// then remove the days (the Day property calculates year/month/day)
+				DateTimePart.Month => new(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerDay) - (Day * DateUtil.MillisPerDay) + DateUtil.MillisPerDay),
+				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerDay)),
+				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerHour)),
+				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerMinute)),
 				DateTimePart.Second => new UtcDateTime(TotalMilliseconds - Millisecond),
 				DateTimePart.Millisecond => this,
 				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
@@ -388,11 +389,11 @@
 		/// <summary>
 		/// Returns true if <paramref name="left"/> and <paramref name="right"/> refer to the same point in time, false otherwise.
 		/// </summary>
-		public static bool operator ==(in UtcDateTime left, in UtcDateTime right) => left.TotalMilliseconds == right.TotalMilliseconds;
+		public static bool operator ==(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds == right.TotalMilliseconds;
 		/// <summary>
 		/// Returns true if <paramref name="left"/> and <paramref name="right"/> refer to different point in time, false otherwise.
 		/// </summary>
-		public static bool operator !=(in UtcDateTime left, in UtcDateTime right) => left.TotalMilliseconds != right.TotalMilliseconds;
+		public static bool operator !=(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds != right.TotalMilliseconds;
 		/// <summary>
 		/// Returns true if <paramref name="left"/> is earlier than <paramref name="right"/>, false otherwise.
 		/// </summary>
@@ -412,26 +413,26 @@
 		/// <summary>
 		/// Adds <paramref name="right"/> to <paramref name="left"/>. Any sub-millisecond precision of <paramref name="right"/> is truncated.
 		/// </summary>
-		public static UtcDateTime operator +(UtcDateTime left, TimeSpan right) => new UtcDateTime(left.TotalMilliseconds + right.Ticks / TimeSpan.TicksPerMillisecond);
+		public static UtcDateTime operator +(UtcDateTime left, TimeSpan right) => new(left.TotalMilliseconds + right.Ticks / TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// Returns the difference between <paramref name="left"/> and <paramref name="right"/>.
 		/// </summary>
-		public static TimeSpan operator -(UtcDateTime left, UtcDateTime right) => new TimeSpan((left.TotalMilliseconds - right.TotalMilliseconds) * TimeSpan.TicksPerMillisecond);
+		public static TimeSpan operator -(UtcDateTime left, UtcDateTime right) => new((left.TotalMilliseconds - right.TotalMilliseconds) * TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// Converts this UtcDateTime instance to a DateTime instance, with a DateTimeKind of Utc
 		/// </summary>
-		public static implicit operator DateTime(UtcDateTime utcDateTime) => new DateTime(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
+		public static implicit operator DateTime(UtcDateTime utcDateTime) => new(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
 		/// <summary>
 		/// Converts this UtcDateTime instance to a DateTimeOffset instance, with an Offset of TimeSpan.Zero
 		/// </summary>
-		public static implicit operator DateTimeOffset(UtcDateTime utcDateTime) => new DateTimeOffset(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, TimeSpan.Zero);
+		public static implicit operator DateTimeOffset(UtcDateTime utcDateTime) => new(utcDateTime.TotalMilliseconds * TimeSpan.TicksPerMillisecond, TimeSpan.Zero);
 		/// <summary>
 		/// Creates a new instance from the provided <paramref name="dateTime"/>. If <paramref name="dateTime"/>.DateTimeKind is Unspecified, an <see cref="ArgumentException"/> is thrown.
 		/// </summary>
 		public static explicit operator UtcDateTime(DateTime dateTime)
 		{
 			return dateTime.Kind == DateTimeKind.Unspecified
-				? throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() to fix this if you know what the kind should be.", nameof(dateTime))
+				? throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() or DateTime.ToUniversalTime() to fix this if you know what the kind should be.", nameof(dateTime))
 				: dateTime.Kind == DateTimeKind.Utc
 					? new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond)
 					: new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond);
@@ -440,6 +441,6 @@
 		/// Creates a new instance from the provided <paramref name="dateTimeOffset"/>, interpreting <paramref name="dateTimeOffset"/> as if its Offset were Zero.
 		/// To be specific, <paramref name="dateTimeOffset"/>.Offset is subtracted from <paramref name="dateTimeOffset"/> to make the offset Zero, and then that is converted to a UtcDateTime.
 		/// </summary>
-		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset) => new UtcDateTime((dateTimeOffset.Ticks - dateTimeOffset.Offset.Ticks) / TimeSpan.TicksPerMillisecond);
+		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset) => new((dateTimeOffset.Ticks - dateTimeOffset.Offset.Ticks) / TimeSpan.TicksPerMillisecond);
 	}
 }

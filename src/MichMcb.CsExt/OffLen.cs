@@ -5,7 +5,7 @@
 
 	/// <summary>
 	/// An alternative to <see cref="Range"/>. This represents an offset, and a length.
-	/// Also, in .netstandard2.0 and earlier, Range does not exist, so this can be used in place of that.
+	/// In .netstandard2.0 and earlier, Range does not exist, so this is used in place of that.
 	/// </summary>
 	public readonly struct OffLen : IEquatable<OffLen>
 	{

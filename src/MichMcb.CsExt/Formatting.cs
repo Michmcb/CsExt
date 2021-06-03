@@ -13,7 +13,7 @@
 		/// This is a private method in corefx, taken from here: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write2Digits(uint val, Span<char> dest, int offset)
+		public static void Write2Digits(uint val, Span<char> dest, int offset = 0)
 		{
 			Debug.Assert(val <= 99);
 
@@ -24,9 +24,10 @@
 		}
 		/// <summary>
 		/// Writes a four-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 999.
+		/// Based on this: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static void Write3Digits(uint val, Span<char> dest, int offset)
+		public static void Write3Digits(uint val, Span<char> dest, int offset = 0)
 		{
 			Debug.Assert(val <= 999);
 			uint temp = '0' + val;

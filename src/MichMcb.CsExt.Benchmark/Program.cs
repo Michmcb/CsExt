@@ -6,7 +6,8 @@
 	{
 		public static void Main(string[] args)
 		{
-			BenchmarkRunner.Run<FormatUtcDateTime>();
+			//BenchmarkRunner.Run<Rng>();
+			//BenchmarkRunner.Run<FormatUtcDateTime>();
 			//BenchmarkRunner.Run<HashSetVsArray>();
 			//BenchmarkRunner.Run<ArrListAdd>();
 			//BenchmarkRunner.Run<ArrListIterate>();

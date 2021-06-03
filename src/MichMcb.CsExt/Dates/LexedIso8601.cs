@@ -10,9 +10,6 @@
 	/// </summary>
 	public readonly struct LexedIso8601
 	{
-		/// <summary>
-		/// The portion of the
-		/// </summary>
 		public readonly OffLen Year;
 		public readonly OffLen Month;
 		public readonly OffLen Day;

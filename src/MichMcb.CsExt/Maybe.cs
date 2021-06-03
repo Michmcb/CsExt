@@ -16,7 +16,7 @@
 		private readonly TVal value;
 		private readonly TErr error;
 		/// <summary>
-		/// Creates a new instance with <paramref name="value"/>, and the value of <paramref name="ok"/>.
+		/// Creates a new instance with <paramref name="value"/>.
 		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
 		/// </summary>
 		/// <param name="value">The success value.</param>
@@ -28,7 +28,7 @@
 			Ok = ok;
 		}
 		/// <summary>
-		/// Creates a new instance with <paramref name="value"/>, and the value of <paramref name="error"/>.
+		/// Creates a new instance with <paramref name="error"/>.
 		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
 		/// </summary>
 		/// <param name="error">The error value.</param>
@@ -54,7 +54,6 @@
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
 		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone : error;
-#pragma warning disable CS8762 // Parameter must have a non-null value when exiting in some condition.
 		/// <summary>
 		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
 		/// Otherwise, val is set to the default value for <typeparamref name="TVal"/> and returns false.
@@ -95,21 +94,6 @@
 			error = this.error;
 			return !Ok;
 		}
-#pragma warning restore CS8762 // Parameter must have a non-null value when exiting in some condition.
-		/// <summary>
-		/// Equivalent to new Maybe(<paramref name="value"/>, default, true);
-		/// </summary>
-		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TVal value)
-		{
-			return new Maybe<TVal, TErr>(value, true);
-		}
-		/// <summary>
-		/// Equivalent to new Maybe(default, <paramref name="error"/>, true);
-		/// </summary>
-		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error)
-		{
-			return new Maybe<TVal, TErr>(error, false);
-		}
 		/// <summary>
 		/// Calls ToString() on the value if <see cref="Ok"/> is true, otherwise calls ToString() on the error.
 		/// </summary>
@@ -117,13 +101,39 @@
 		{
 			return Ok ? value?.ToString() ?? string.Empty : error?.ToString() ?? string.Empty;
 		}
-		public override bool Equals(object obj)
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/>.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"/>
+		public override bool Equals(object? obj)
 		{
 			throw new InvalidOperationException("You cannot compare Maybe instances");
 		}
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/>.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"/>
 		public override int GetHashCode()
 		{
 			throw new InvalidOperationException("You cannot get HashCodes of Maybe instances");
 		}
+		/// <summary>
+		/// Equivalent to new Maybe(<paramref name="value"/>, default, true);
+		/// </summary>
+		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TVal value) => new(value, true);
+		/// <summary>
+		/// Equivalent to new Maybe(default, <paramref name="error"/>, true);
+		/// </summary>
+		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error) => new(error, false);
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/>.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"/>
+		public static bool operator ==(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => left.Equals(right);
+		/// <summary>
+		/// Throws <see cref="InvalidOperationException"/>.
+		/// </summary>
+		/// <exception cref="InvalidOperationException"/>
+		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => !(left == right);
 	}
 }

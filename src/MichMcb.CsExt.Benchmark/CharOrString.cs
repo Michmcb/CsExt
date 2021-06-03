@@ -2,8 +2,9 @@
 {
 	using BenchmarkDotNet.Attributes;
 	using BenchmarkDotNet.Jobs;
+	using MichMcb.CsExt.Dates;
 
-	[SimpleJob(RuntimeMoniker.NetCoreApp31)]
+	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
 	[RPlotExporter]
 	public class CharOrString
 	{

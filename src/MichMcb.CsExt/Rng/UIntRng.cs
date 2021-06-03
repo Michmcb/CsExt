@@ -1,17 +1,25 @@
 ﻿namespace MichMcb.CsExt.Rng
 {
 	using System;
+	using System.Buffers.Binary;
 	using System.Runtime.CompilerServices;
 
 	/// <summary>
-	/// A random number generator that produces <see cref="uint"/>.
-	/// Much faster than <see cref="Random"/>.
+	/// A random number generator, implemented as a linear congruential generator, that produces <see cref="uint"/>.
+	/// Faster than <see cref="Random"/>.
 	/// </summary>
 	public sealed class UIntRng
 	{
 		// Add 2 after we convert to a double, otherwise we'll overflow
 		private const double DoubleIntMaxValue = (uint.MaxValue * 2d) + 2d;
 		private uint seed;
+		/// <summary>
+		/// Creates a new instance. Uses <see cref="Guid.ToByteArray()"/> on a new <see cref="Guid"/> to get the initial seed value.
+		/// </summary>
+		public UIntRng()
+		{
+			seed = BinaryPrimitives.ReadUInt32LittleEndian(Guid.NewGuid().ToByteArray());
+		}
 		/// <summary>
 		/// Creates a new instance.
 		/// </summary>
@@ -49,6 +57,30 @@
 		public double NextDouble()
 		{
 			return (Next() / DoubleIntMaxValue) + 0.5d;
+		}
+		/// <summary>
+		/// Fills <paramref name="span"/> with random numbers. Not thread-safe.
+		/// </summary>
+		/// <param name="span">The span to fill with random numbers</param>
+		public void NextBytes(in Span<byte> span)
+		{
+			int i;
+			// We'll fill the span in 4-byte increments 
+			for (i = 0; i < span.Length - 3; i += 4)
+			{
+				BinaryPrimitives.WriteUInt32LittleEndian(span.Slice(i, 4), Next());
+			}
+			// If there's any left over, then fill the remainder
+			if (i != span.Length)
+			{
+				Span<byte> extra = stackalloc byte[4];
+				BinaryPrimitives.WriteUInt32LittleEndian(extra, Next());
+				int j = 0;
+				for (; i < span.Length; i++)
+				{
+					span[i] = extra[j++];
+				}
+			}
 		}
 	}
 }
