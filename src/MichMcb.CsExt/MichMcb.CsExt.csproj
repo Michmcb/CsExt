@@ -5,16 +5,15 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.7</Version>
+    <Version>0.8.0</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will keep it up to date with the latest .NET releases.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Removed StringEscaper
-- UtcDateTime.Truncate() is faster
-- Added extension method DateTime.Truncate()
-- Made offset parameter for Write2Digits and Write3Digits of Formatting class optional, defaulting to 0
-- IntRng and UIntRng can be constructed without a seed. Like Random, it uses a Guid to initialize its seed</PackageReleaseNotes>
+    <PackageReleaseNotes>- Opt is gone
+- Fixed UIntRng.NextDouble()'s return value being off. Now it properly returns a number &gt;= 0 and &lt; 1
+- Maybe has a method ValueOrException(), which throws a NoValueException if Ok is false, or returns the value if Ok is true
+- Added EnumUtil&lt;T&gt;. A class which compiles functions to speed up parsing and stringifying values of an enum type. Also allows for EnumStringAttribute to be applied to enum values to give them different string representations, or can alternatively accept a dictionary of enum value to string</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -22,8 +21,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.7.0.0</AssemblyVersion>
-    <FileVersion>0.7.0.0</FileVersion>
+    <AssemblyVersion>0.8.0.0</AssemblyVersion>
+    <FileVersion>0.8.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
