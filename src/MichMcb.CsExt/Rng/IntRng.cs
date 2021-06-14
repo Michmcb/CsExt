@@ -11,7 +11,7 @@
 	public sealed class IntRng
 	{
 		// Add 2 after we convert to a double, otherwise we'll overflow
-		private const double DoubleIntMaxValue = (int.MaxValue * 2d) + 2d;
+		private const double DoubleIntMaxValue = (int.MaxValue * 2d) + 1d;
 		private int seed;
 		/// <summary>
 		/// Creates a new instance. Uses <see cref="Guid.ToByteArray()"/> on a new <see cref="Guid"/> to get the initial seed value.

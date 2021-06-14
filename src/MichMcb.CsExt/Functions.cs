@@ -1,7 +1,6 @@
 ﻿namespace MichMcb.CsExt
 {
 	using System;
-	using System.Diagnostics.CodeAnalysis;
 	/// <summary>
 	/// A class which has many static helper functions to create the Opt and Ex types.
 	/// Intended that you have a "using static MichMcb.CsExt.Functions;" to be able to use these easily.
@@ -22,28 +21,6 @@
 		/// </summary>
 		public static void NoAction<T>(params T[] o) { }
 #pragma warning restore IDE0060 // Remove unused parameter
-		/// <summary>
-		/// Returns a new <see cref="Opt{TVal}"/> instance, with the default value for <typeparamref name="V"/>.
-		/// The created <see cref="Opt{TVal}"/> will evaluate to false.
-		/// </summary>
-		/// <typeparam name="V">The type of the val.</typeparam>
-		/// <param name="val">The val to assign to the object.</param>
-		/// <returns>A new <see cref="Opt{TVal}"/> that evaluates to false, and has the value <paramref name="val"/>.</returns>
-		public static Opt<V> None<V>([AllowNull] V val = default)
-		{
-			return new Opt<V>(val!, false);
-		}
-		/// <summary>
-		/// Returns a new <see cref="Opt{TVal}"/> instance, with the default value for <typeparamref name="V"/>.
-		/// The created <see cref="Opt{TVal}"/> will evaluate to true.
-		/// </summary>
-		/// <typeparam name="V">The type of the val.</typeparam>
-		/// <param name="val">The val to assign to the object.</param>
-		/// <returns>A new <see cref="Opt{TVal}"/> that evaluates to true, and has the value <paramref name="val"/>.</returns>
-		public static Opt<V> Some<V>(V val)
-		{
-			return new Opt<V>(val!, true);
-		}
 		#region Switch
 		/// <summary>
 		/// Switches on strings, using <paramref name="comparison"/> to compare against them.

@@ -2,7 +2,6 @@
 {
 	using System;
 	using System.Diagnostics.CodeAnalysis;
-
 	/// <summary>
 	/// A way of returning either a Value or an Error. Provides methods to safely get either the Value or Error.
 	/// You can also use this type directly if an if statement; it evaluates to true/false based on the value of <see cref="Ok"/>.
@@ -49,6 +48,10 @@
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
 		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? value : ifNone;
+		/// <summary>
+		/// Gets the value, or throws a <see cref="NoValueException"/>, passing the string representation of the error.
+		/// </summary>
+		public TVal ValueOrException() => Ok ? value : throw new NoValueException(error?.ToString());
 		/// <summary>
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
@@ -129,11 +132,11 @@
 		/// Throws <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"/>
-		public static bool operator ==(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => left.Equals(right);
+		public static bool operator ==(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => throw new InvalidOperationException("You cannot compare Maybe instances");
 		/// <summary>
 		/// Throws <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"/>
-		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => !(left == right);
+		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => throw new InvalidOperationException("You cannot compare Maybe instances");
 	}
 }

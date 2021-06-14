@@ -11,7 +11,7 @@
 	public sealed class UIntRng
 	{
 		// Add 2 after we convert to a double, otherwise we'll overflow
-		private const double DoubleIntMaxValue = (uint.MaxValue * 2d) + 2d;
+		private const double UIntMaxDouble = uint.MaxValue;
 		private uint seed;
 		/// <summary>
 		/// Creates a new instance. Uses <see cref="Guid.ToByteArray()"/> on a new <see cref="Guid"/> to get the initial seed value.
@@ -56,7 +56,7 @@
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public double NextDouble()
 		{
-			return (Next() / DoubleIntMaxValue) + 0.5d;
+			return (Next() / UIntMaxDouble);
 		}
 		/// <summary>
 		/// Fills <paramref name="span"/> with random numbers. Not thread-safe.
