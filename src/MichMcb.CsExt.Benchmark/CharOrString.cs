@@ -4,7 +4,7 @@
 	using BenchmarkDotNet.Jobs;
 	using MichMcb.CsExt.Dates;
 
-	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
+	[SimpleJob(RuntimeMoniker.Net50)]
 	[RPlotExporter]
 	public class CharOrString
 	{

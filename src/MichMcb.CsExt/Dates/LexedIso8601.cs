@@ -10,18 +10,43 @@
 	/// </summary>
 	public readonly struct LexedIso8601
 	{
+		/// <summary>
+		/// The range of the string which represents the years.
+		/// </summary>
 		public readonly OffLen Year;
+		/// <summary>										
+		/// The range of the string which represents the months.
+		/// </summary>
 		public readonly OffLen Month;
+		/// <summary>										
+		/// The range of the string which represents the days.
+		/// </summary>
 		public readonly OffLen Day;
+		/// <summary>										
+		/// The range of the string which represents the hours.
+		/// </summary>
 		public readonly OffLen Hour;
+		/// <summary>										
+		/// The range of the string which represents the minutes.
+		/// </summary>
 		public readonly OffLen Minute;
+		/// <summary>										
+		/// The range of the string which represents the seconds.
+		/// </summary>
 		public readonly OffLen Second;
+		/// <summary>
+		/// The range of the string which represents the milliseconds.
+		/// </summary>
 		public readonly OffLen Millis;
 		/// <summary>
 		/// The timezone character. It can be Z, +, -, or \0 (if no timezone char was found)
 		/// </summary>
 		public readonly char TimezoneChar;
+		/// <summary>
+		/// The range of the string which represents the hours portion of the timezone.
+		/// </summary>
 		public readonly OffLen TimezoneHours;
+		/// The range of the string which represents the minutes portion of the timezone.
 		public readonly OffLen TimezoneMinutes;
 		/// <summary>
 		/// The parts found in the lexed string. Note that if a portion is too small to have separators, it's detected as not having them.
@@ -201,9 +226,9 @@
 			{
 				goto success;
 			}
-#endregion
+			#endregion
 
-#region TimePart
+			#region TimePart
 			// TIME
 			// If we're not at the end of the string yet, we are parsing the time, so we need a T
 			if (s[end] != 'T')
@@ -328,9 +353,9 @@
 				parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
-#endregion
+			#endregion
 
-#region TimezonePart
+			#region TimezonePart
 			// Now, we should be on either a Z, +, or -
 			bool parseTimezone = false;
 			switch (s[end])
@@ -389,7 +414,7 @@
 					return string.Concat("Timezone minutes part was not 2 digits long, it was: ", end - s.Length);
 				}
 			}
-#endregion
+		#endregion
 
 		success:
 			return new LexedIso8601(lxYear, lxMonth, lxDay, lxHour, lxMinute, lxSecond, lxMillis, tzChar, lxTzHours, lxTzMinutes, parts);

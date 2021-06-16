@@ -9,10 +9,13 @@
 	[AttributeUsage(AttributeTargets.Field)]
 	public sealed class EnumStringAttribute : Attribute
 	{
-		public EnumStringAttribute(string name)
-		{
-			Name = name;
-		}
+		/// <summary>
+		/// Creates a new instance.
+		/// </summary>
+		public EnumStringAttribute(string name) { Name = name; }
+		/// <summary>
+		/// The string representation of a certain value of the enum.
+		/// </summary>
 		public string Name { get; }
 	}
 }

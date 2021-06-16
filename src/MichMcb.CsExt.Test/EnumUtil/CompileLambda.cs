@@ -9,10 +9,11 @@
 		[Fact]
 		public static void Compile()
 		{
-			EnumUtil<DateTimeKind> util = EnumUtil<DateTimeKind>.Compile(StringComparer.Ordinal).ValueOrException();
+			EnumUtil<DateTimeKind> util = EnumUtil<DateTimeKind>.Compile("Unknown", StringComparer.Ordinal).ValueOrException();
 			Assert.Equal(nameof(DateTimeKind.Unspecified), util.ToString(DateTimeKind.Unspecified));
 			Assert.Equal(nameof(DateTimeKind.Local), util.ToString(DateTimeKind.Local));
 			Assert.Equal(nameof(DateTimeKind.Utc), util.ToString(DateTimeKind.Utc));
+			Assert.Equal("Unknown", util.ToString((DateTimeKind)999));
 
 			Assert.True(util.IsDefined(DateTimeKind.Unspecified));
 			Assert.True(util.IsDefined(DateTimeKind.Local));
@@ -25,7 +26,7 @@
 		[Fact]
 		public static void CompileDict()
 		{
-			EnumUtil<DateTimeKind> util = EnumUtil<DateTimeKind>.Compile(StringComparer.Ordinal, new Dictionary<DateTimeKind, string>()
+			EnumUtil<DateTimeKind> util = EnumUtil<DateTimeKind>.Compile(string.Empty, StringComparer.Ordinal, new Dictionary<DateTimeKind, string>()
 			{
 				{ DateTimeKind.Unspecified, "Unknown" },
 				{ DateTimeKind.Local, "Local Time" },
@@ -41,6 +42,15 @@
 			Assert.Equal(DateTimeKind.Utc, util.TryParse("UTC Time").ValueOrException());
 
 			Assert.False(util.TryParse("gdsfg").Ok);
+		}
+		[Fact]
+		public static void CompileFlags()
+		{
+			EnumUtil<ConsoleModifiers> util = EnumUtil<ConsoleModifiers>.Compile().ValueOrException();
+			ConsoleModifiers ctrlAlt = ConsoleModifiers.Control | ConsoleModifiers.Alt;
+			Assert.False(util.HasFlagFunc(ctrlAlt, ConsoleModifiers.Shift));
+			Assert.True(util.HasFlagFunc(ctrlAlt, ConsoleModifiers.Control));
+			Assert.True(util.HasFlagFunc(ctrlAlt, ConsoleModifiers.Alt));
 		}
 	}
 }

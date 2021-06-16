@@ -9,12 +9,12 @@
 		/// An instance.
 		/// It's the same as new Nil();
 		/// </summary>
-		public readonly static Nil Inst = new Nil();
+		public static readonly Nil Inst = new();
 		/// <summary>
 		/// Always returns false
 		/// </summary>
 		/// <returns>false</returns>
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			return false;
 		}

@@ -11,7 +11,7 @@
 	{
 		public static void Main(string[] args)
 		{
-			var util = EnumUtil<DateTimePart>.Compile(StringComparer.OrdinalIgnoreCase).ValueOr(null);
+			var util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
 			bool b = util.IsDefined(DateTimePart.Day);
 			b = util.IsDefined((DateTimePart)1000);
 			BenchmarkRunner.Run<EnumUtilIsDefined>();
@@ -27,7 +27,7 @@
 	[RPlotExporter]
 	public class EnumUtilIsDefined
 	{
-		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(StringComparer.OrdinalIgnoreCase).ValueOr(null);
+		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
 		private static readonly HashSet<DateTimePart> hashset= new((DateTimePart[])Enum.GetValues(typeof(DateTimePart)));
 		[Benchmark]
 		public void Compiled()
@@ -67,7 +67,7 @@
 	[RPlotExporter]
 	public class EnumUtilTestParse
 	{
-		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(StringComparer.OrdinalIgnoreCase).ValueOr(null);
+		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
 		private static readonly Dictionary<string, DateTimePart> vals = new(StringComparer.OrdinalIgnoreCase);
 		private static readonly StringComparer sc = StringComparer.OrdinalIgnoreCase;
 		private static readonly string Val = "Millisecond";
@@ -89,8 +89,7 @@
 		[Benchmark]
 		public DateTimePart Compiled()
 		{
-			util.TryParse(Val, out DateTimePart p);
-			return p;
+			return util.TryParse(Val).ValueOr(DateTimePart.Year);
 		}
 		[Benchmark]
 		public DateTimePart EnumTryParse()
@@ -103,7 +102,7 @@
 	[RPlotExporter]
 	public class EnumUtilTestToString
 	{
-		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(StringComparer.OrdinalIgnoreCase).ValueOr(null);
+		private static readonly EnumUtil<DateTimePart> util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
 		[Benchmark]
 		public void EnumToString()
 		{

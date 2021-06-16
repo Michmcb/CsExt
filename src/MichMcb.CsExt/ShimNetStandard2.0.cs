@@ -1,5 +1,4 @@
 ﻿#if NETSTANDARD2_0
-#pragma warning disable IDE0060 // Remove unused parameter
 namespace System.Diagnostics.CodeAnalysis
 {
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Parameter | AttributeTargets.Property, Inherited = false)]
@@ -22,10 +21,13 @@ namespace MichMcb.CsExt
 {
 	using System;
 	public delegate void SpanAction<T, in TArg>(Span<T> span, TArg arg);
+	/// <summary>
+	/// Shims for .netstandard2.0
+	/// </summary>
 	public static class Shim
 	{
 		/// <summary>
-		/// Shim for string.Create
+		/// Shim for string.Create. Creates an array of chars, invokes <paramref name="action"/>, and then creates a new string from the array.
 		/// </summary>
 		public static string StringCreate<TState>(int length, TState state, SpanAction<char, TState> action)
 		{
@@ -45,5 +47,4 @@ namespace MichMcb.CsExt
 		}
 	}
 }
-#pragma warning restore IDE0060 // Remove unused parameter
 #endif

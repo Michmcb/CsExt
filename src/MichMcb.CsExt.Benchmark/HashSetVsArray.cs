@@ -7,7 +7,7 @@
 	using System.IO;
 	using System.Linq;
 
-	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
+	[SimpleJob(RuntimeMoniker.Net50)]
 	[RPlotExporter]
 	public class HashSetVsArray
 	{

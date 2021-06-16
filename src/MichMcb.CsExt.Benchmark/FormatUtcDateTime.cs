@@ -6,7 +6,7 @@
 	using MichMcb.CsExt.Rng;
 	using System;
 
-	[SimpleJob(RuntimeMoniker.NetCoreApp50)]
+	[SimpleJob(RuntimeMoniker.Net50)]
 	[RPlotExporter]
 	public class FormatUtcDateTime
 	{
