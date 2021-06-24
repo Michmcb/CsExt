@@ -5,18 +5,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.8.1</Version>
+    <Version>0.8.2</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will keep it up to date with the latest .NET releases.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- EnumUtil&lt;T&gt; has the function HasFlag, and its Compile methods have more options and the parameters are better ordered
-- The EnumUtil static class has been added and it has generic methods, for less verbosity. e.g. EnumUtil&lt;T&gt;.Inst.IsDefined(T val) vs EnumUtil.IsDefined(T val)
-- XML Documentation for things missing it
-- Removed functions for switching on strings in a case-insensitive way, as it's very slow. Preferably, you'd use a Dictionary with a StringComparer.
-- Fixed OffLen.ToString()
-- OffLen's XML documentation for .netstandard2.1 advises you don't need to use it, because Range is better. It's just an alternative if you can't use Range.
-- Obsoleted WorkAcceptor interfaces because there's no concrete implementations.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Methods/properties on EnumUtil&lt;T&gt; for getting enum values, names, and both at the same time</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -24,8 +18,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.8.1.0</AssemblyVersion>
-    <FileVersion>0.8.1.0</FileVersion>
+    <AssemblyVersion>0.8.2.0</AssemblyVersion>
+    <FileVersion>0.8.2.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

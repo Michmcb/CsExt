@@ -4,7 +4,7 @@
 	using System.Collections.Generic;
 	using System.Linq.Expressions;
 	using System.Reflection;
-
+	using System.Runtime.CompilerServices;
 	/// <summary>
 	/// A class which provides helpful utilities for an enum of type <typeparamref name="T"/>, such as parsing and quick ToString/HasFlag/IsDefined calls.
 	/// It can compile an expression tree for specific enum types.
@@ -19,19 +19,61 @@
 		/// </summary>
 		public static EnumUtil<T> Inst { get; set; } = null!;
 		/// <summary>
-		/// Creates a new instance.
+		/// Creates a new instance. The order in which names/values are returned is undefined.
 		/// </summary>
 		/// <param name="toString">The function to return a string representation of <typeparamref name="T"/>.</param>
 		/// <param name="isDefined">The function to tell if a value of <typeparamref name="T"/> is a defined enum type.</param>
 		/// <param name="hasFlag">The function used to tell if a value of <typeparamref name="T"/> has a certain flag defined.</param>
 		/// <param name="nameToValue">A dictionary of strings to values, used for parsing.</param>
-		public EnumUtil(Func<T, string> toString, Func<T, bool> isDefined, Func<T, T, bool> hasFlag, IReadOnlyDictionary<string, T> nameToValue)
+		public EnumUtil(Func<T, string> toString,
+			Func<T, bool> isDefined,
+			Func<T, T, bool> hasFlag,
+			IReadOnlyDictionary<string, T> nameToValue)
 		{
 			TypeName = typeof(T).Name;
 			ToStringFunc = toString;
 			IsDefinedFunc = isDefined;
 			HasFlagFunc = hasFlag;
 			NameToValue = nameToValue;
+			T[] vals = new T[nameToValue.Count];
+			string[] names = new string[nameToValue.Count];
+			int i = 0;
+			foreach (KeyValuePair<string, T> kvp in nameToValue)
+			{
+				vals[i] = kvp.Value;
+				names[i] = kvp.Key;
+				++i;
+			}
+			Values = vals;
+			Names = names;
+		}
+		/// <summary>
+		/// Creates a new instance. The order in which names/values are returned is defined by the order of <paramref name="values"/> and <paramref name="names"/>.
+		/// </summary>
+		/// <param name="toString">The function to return a string representation of <typeparamref name="T"/>.</param>
+		/// <param name="isDefined">The function to tell if a value of <typeparamref name="T"/> is a defined enum type.</param>
+		/// <param name="hasFlag">The function used to tell if a value of <typeparamref name="T"/> has a certain flag defined.</param>
+		/// <param name="nameToValue">A dictionary of strings to values, used for parsing.</param>
+		/// <param name="values">The enum values, in order that they should be returned.</param>
+		/// <param name="names">The enum string representations, in order that they should be returned.</param>
+		public EnumUtil(Func<T, string> toString,
+			Func<T, bool> isDefined,
+			Func<T, T, bool> hasFlag,
+			IReadOnlyDictionary<string, T> nameToValue,
+			IReadOnlyList<T> values,
+			IReadOnlyList<string> names)
+		{
+			if (values.Count != names.Count)
+			{
+				throw new ArgumentException("Values and names are not the same length", nameof(values));
+			}
+			TypeName = typeof(T).Name;
+			ToStringFunc = toString;
+			IsDefinedFunc = isDefined;
+			HasFlagFunc = hasFlag;
+			NameToValue = nameToValue;
+			Values = values;
+			Names = names;
 		}
 		/// <summary>
 		/// The underlying function to use to create string representations of <typeparamref name="T"/>.
@@ -50,11 +92,44 @@
 		/// </summary>
 		public IReadOnlyDictionary<string, T> NameToValue { get; }
 		/// <summary>
+		/// An ordered collection of all values of <typeparamref name="T"/>.
+		/// </summary>
+		public IReadOnlyList<T> Values { get; }
+		/// <summary>
+		/// An ordered collection of all string representations of <typeparamref name="T"/>.
+		/// </summary>
+		public IReadOnlyList<string> Names { get; }
+		/// <summary>
+		/// Enumerates through all of the string representations and values of <typeparamref name="T"/>.
+		/// </summary>
+		/// <returns>The values and string representations of <typeparamref name="T"/>.</returns>
+		public IEnumerable<NameValue<T>> NameValues()
+		{
+			for (int i = 0; i < Values.Count; i++)
+			{
+				yield return new(Values[i], Names[i]);
+			}
+		}
+		/// <summary>
+		/// Creates a new <see cref="IReadOnlyList{NameValue}"/> with all names/values.
+		/// </summary>
+		/// <returns>The values and string representations of <typeparamref name="T"/>.</returns>
+		public IReadOnlyList<NameValue<T>> GetNameValues()
+		{
+			NameValue<T>[] nvs = new NameValue<T>[Values.Count];
+			for (int i = 0; i < Values.Count; i++)
+			{
+				nvs[i] = new(Values[i], Names[i]);
+			}
+			return nvs;
+		}
+		/// <summary>
 		/// Calls <see cref="ToStringFunc"/>.
 		/// Turns <paramref name="value"/> into a string.
 		/// </summary>
 		/// <param name="value">The value to turn into a string.</param>
 		/// <returns>A string representation of <paramref name="value"/>.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public string ToString(T value)
 		{
 			return ToStringFunc(value);
@@ -65,6 +140,7 @@
 		/// </summary>
 		/// <param name="value">The value to check.</param>
 		/// <returns>true if defined, false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool IsDefined(T value)
 		{
 			return IsDefinedFunc(value);
@@ -76,6 +152,7 @@
 		/// <param name="value">The value to check.</param>
 		/// <param name="flag">The flag.</param>
 		/// <returns>true if <paramref name="flag"/> is set in <paramref name="value"/>, false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasFlag(T value, T flag)
 		{
 			return HasFlagFunc(value, flag);
@@ -85,6 +162,7 @@
 		/// </summary>
 		/// <param name="str">The raw string.</param>
 		/// <returns>The parsed value, or an error message.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Maybe<T, string> TryParse(string str)
 		{
 			return NameToValue.TryGetValue(str, out T val) ? val : string.Concat(str, " cannot be parsed as an enum of type ", TypeName);
@@ -124,6 +202,8 @@
 		{
 			Dictionary<string, T> dict = new(comparer);
 			FieldInfo[] infos = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			T[] vals = new T[infos.Length];
+			string[] names = new string[infos.Length];
 			for (int i = 0; i < infos.Length; i++)
 			{
 				FieldInfo fi = infos[i];
@@ -135,6 +215,8 @@
 					return string.Concat("The string representation for enum value ", val, " appears multiple times: ", name);
 				}
 				dict[name] = val;
+				vals[i] = val;
+				names[i] = name;
 			}
 			if (dict.Count != infos.Length)
 			{
@@ -144,7 +226,7 @@
 			Func<T, string> toString = CompileToString(dict, defaultStringValue);
 			Func<T, bool> isDefined = CompileIsDefined(dict.Values);
 			Func<T, T, bool> hasFlag = CompileHasFlag(Enum.GetUnderlyingType(typeof(T)));
-			return new EnumUtil<T>(toString, isDefined, hasFlag, dict);
+			return new EnumUtil<T>(toString, isDefined, hasFlag, dict, vals, names);
 		}
 		/// <summary>
 		/// Compiles an instance of <see cref="EnumUtil{T}"/>. Uses the provided <paramref name="stringRepresentations"/>
@@ -159,6 +241,8 @@
 		{
 			FieldInfo[] infos = typeof(T).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 			Dictionary<string, T> dict = new(comparer);
+			T[] vals = new T[infos.Length];
+			string[] names = new string[infos.Length];
 			for (int i = 0; i < infos.Length; i++)
 			{
 				FieldInfo fi = infos[i];
@@ -172,6 +256,8 @@
 					return string.Concat("The string representation for enum value ", val, " appears multiple times: ", name);
 				}
 				dict[name] = val;
+				vals[i] = val;
+				names[i] = name;
 			}
 			if (dict.Count != infos.Length)
 			{
@@ -181,7 +267,7 @@
 			Func<T, T, bool> hasFlag = CompileHasFlag(Enum.GetUnderlyingType(typeof(T)));
 			Func<T, string> toString = CompileToString(dict, defaultStringValue);
 			Func<T, bool> isDefined = CompileIsDefined(dict.Values);
-			return new EnumUtil<T>(toString, isDefined, hasFlag, dict);
+			return new EnumUtil<T>(toString, isDefined, hasFlag, dict, vals, names);
 		}
 		private static Func<T, T, bool> CompileHasFlag(Type underlyingType)
 		{
