@@ -12,7 +12,8 @@
 		/// </summary>
 		None = 0,
 		/// <summary>
-		/// A good default format: "yyyy-MM-ddTHH:mm:ss.sssZ"
+		/// yyyy-MM-ddTHH:mm:ss.sssZ
+		/// A good default format.
 		/// This is known in ISO-8601 as "Extended Format"
 		/// </summary>
 		Format_ExtendedFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc | Separator_All,
@@ -38,7 +39,8 @@
 		Format_ExtendedFormat_NoMillis_LocalTz = YearMonthDay | HourMinuteSecond | Separator_All,
 
 		/// <summary>
-		/// Everything, except without separators: "yyyyMMddTHHmmss.sssZ"
+		/// yyyyMMddTHHmmss.sssZ
+		/// Everything, except without separators
 		/// This is known in ISO-8601 as "Basic Format"
 		/// </summary>
 		Format_BasicFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc,

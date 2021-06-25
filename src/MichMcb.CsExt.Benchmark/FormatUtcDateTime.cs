@@ -12,7 +12,7 @@
 	{
 		public static readonly UtcDateTime utcNow = UtcDateTime.Now;
 		public static readonly DateTime now = DateTime.UtcNow;
-		public static readonly Memory<char> mem = new char[DateUtil.LengthRequired(Iso8601Parts.Format_ExtendedFormat_UtcTz)];
+		public static readonly Memory<char> mem = new char[DateUtil.TryGetLengthRequired(Iso8601Parts.Format_ExtendedFormat_UtcTz).ValueOrException()];
 		[Benchmark]
 		public void UtcDateTimeToString()
 		{
@@ -31,7 +31,7 @@
 		[Benchmark]
 		public void ExplicitFormat()
 		{
-			utcNow.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_UtcTz);
+			utcNow.FormatExtendedFormatUtc(mem.Span, millis: true);
 		}
 		[Benchmark]
 		public void TryFormat()

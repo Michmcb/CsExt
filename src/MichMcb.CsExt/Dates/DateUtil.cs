@@ -126,8 +126,8 @@
 		/// Or if <paramref name="format"/> is not a valid format (i.e. <see cref="ValidateAsFormat(Iso8601Parts)"/> returns non-null), returns that error message.
 		/// </summary>
 		/// <param name="format">The format.</param>
-		/// <returns>Length on success, or an error message on failure.</returns>
-		public static int LengthRequired(Iso8601Parts format)
+		/// <returns>Length on success, or -1 on failure.</returns>
+		public static Maybe<int, string> TryGetLengthRequired(Iso8601Parts format)
 		{
 			// Commonly used formats, known to be valid
 			switch (format)
@@ -154,7 +154,7 @@
 			string? errMsg = ValidateAsFormat(format);
 			if (errMsg != null)
 			{
-				return -1;
+				return errMsg;
 			}
 
 			Iso8601Parts part = format & Iso8601Parts.Mask_Date;
@@ -249,7 +249,7 @@
 		/// <param name="format">The format to validate.</param>
 		/// <returns>null if valid, error message otherwise.</returns>
 		[return: MaybeNull]
-		public static string? ValidateAsFormat(Iso8601Parts format)
+		private static string? ValidateAsFormat(Iso8601Parts format)
 		{
 			if (format == Iso8601Parts.None)
 			{

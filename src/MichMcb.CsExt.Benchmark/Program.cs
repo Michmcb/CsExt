@@ -11,11 +11,11 @@
 	{
 		public static void Main(string[] args)
 		{
-			var util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
-			bool b = util.IsDefined(DateTimePart.Day);
-			b = util.IsDefined((DateTimePart)1000);
-			BenchmarkRunner.Run<EnumUtilIsDefined>();
-			//BenchmarkRunner.Run<FormatUtcDateTime>();
+			//var util = EnumUtil<DateTimePart>.Compile(string.Empty, StringComparer.OrdinalIgnoreCase).ValueOr(null);
+			//bool b = util.IsDefined(DateTimePart.Day);
+			//b = util.IsDefined((DateTimePart)1000);
+			//BenchmarkRunner.Run<EnumUtilIsDefined>();
+			BenchmarkRunner.Run<FormatUtcDateTime>();
 			//BenchmarkRunner.Run<HashSetVsArray>();
 			//BenchmarkRunner.Run<ArrListAdd>();
 			//BenchmarkRunner.Run<ArrListIterate>();

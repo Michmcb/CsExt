@@ -39,7 +39,7 @@
 		/// </summary>
 		public readonly OffLen Millis;
 		/// <summary>
-		/// The timezone character. It can be Z, +, -, or \0 (if no timezone char was found)
+		/// The timezone character, always uppercase. It can be Z, +, -, or \0 (if no timezone char was found)
 		/// </summary>
 		public readonly char TimezoneChar;
 		/// <summary>
@@ -111,113 +111,99 @@
 			{
 				return "String only consists of a Year part";
 			}
-			bool sep1 = s[4] == '-';
-			bool sep2 = false;
+			bool sep = s[4] == '-';
 			// If we ended up on a separator, next is 5. Else it's 4.
-			int start = sep1 ? 5 : 4;
+			int start = sep ? 5 : 4;
 			int end = start + 2;
 			Iso8601Parts parts = Iso8601Parts.Year;
 
-			if (s.Length >= end)
+			if (s.Length < end)
 			{
-				// This may be ordinal days, if...
-				// The next char is also a number (3 numbers in a row), and then either that's the end of the string, or it's immediately followed by a T
-				if (s.Length >= end + 1 && s[end] >= '0' && s[end] <= '9' && (s.Length == end + 1 || s.Length >= end + 2 && s[end + 1] == 'T'))
-				{
-					// To capture all 3 digits, shift end forwards by 1
-					lxDay = OffLen.StartEnd(start, ++end);
-					if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
-					{
-#if !NETSTANDARD2_0
-						return string.Concat("Ordinal Day is not all latin digits: ", lxDay.Slice(s));
-#else
-						return StringConcat("Ordinal Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
-#endif
-					}
-					// Since there's only 1 separator in this case, be sneaky and set them to be the same so our check for consistent separators doesn't fail
-					sep2 = sep1;
-					parts = Iso8601Parts.YearDay | (sep1 ? Iso8601Parts.Separator_Date : 0);
-				}
-				else
-				{
-					lxMonth = OffLen.StartEnd(start, end);
-					if (!IsRangeAllLatinDigits(lxMonth.Slice(s)))
-					{
-						return lxMonth.Slice(s)[0] == 'W'
-#if !NETSTANDARD2_0
-							? string.Concat("ISO-8601 weeks are not supported: ", lxMonth.Slice(s))
-							: string.Concat("Month is not all latin digits: ", lxMonth.Slice(s));
-#else
-							? StringConcat("ISO-8601 weeks are not supported: ".AsSpan(), lxMonth.Slice(s))
-							: StringConcat("Month is not all latin digits: ".AsSpan(), lxMonth.Slice(s));
-#endif
-					}
-					parts = Iso8601Parts.YearMonth;
-				}
+				return string.Concat("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: ", s.Length - start);
 			}
+			// If the char is W, then it's weeks
+			if (s[start] == 'W' || s[start] == 'w')
+			{
+				// Www-D or WwwD
+				// TODO support weeks
+				return "ISO-8601 weeks are not supported";
+			}
+			// If one past end would be the end of the string, then it might be ordinal days (or it's a separator)
+			// Or if the length is longer and the char after the last char is T or t, then it should also be ordinal days
+			else if ((s.Length == end + 1)
+				|| (s.Length > end + 1 && (s[end + 1] == 'T' || s[end + 1] == 't')))
+			{
+				// To capture all 3 digits, shift end forwards by 1
+				lxDay = OffLen.StartEnd(start, ++end);
+				if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
+				{
+#if !NETSTANDARD2_0
+					return string.Concat("Ordinal Day is not all latin digits: ", lxDay.Slice(s));
+#else
+					return StringConcat("Ordinal Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+#endif
+				}
+				parts = Iso8601Parts.YearDay | (sep ? Iso8601Parts.Separator_Date : 0);
+			}
+			// Otherwise it's just the month as per normal
 			else
 			{
-				return string.Concat("Months part was not 2 digits long, it was: ", end - s.Length);
-			}
-			// There's a few different possibilities here. If we parsed Year/Month, it may the end of the string, or T, or days.
-			// Or if we parsed Year/Day, only the end of string or T is valid.
-			if ((parts & Iso8601Parts.YearMonth) == Iso8601Parts.YearMonth)
-			{
-				// When we're here, we've parsed a YearMonth. Check to see if we have more to go
-				if (s.Length != end)
+				lxMonth = OffLen.StartEnd(start, end);
+				if (!IsRangeAllLatinDigits(lxMonth.Slice(s)))
 				{
-					// If the next char is T, then there's no date, 
-					if (s[end] != 'T')
-					{
-						// If we ended up on a separator, advance by 1
-						if (sep2 = s[end] == '-')
-						{
-							++end;
-						}
-						// Parse the days
-						start = end;
-						end += 2;
-						if (s.Length >= end)
-						{
-							lxDay = OffLen.StartEnd(start, end);
-							if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
-							{
 #if !NETSTANDARD2_0
-								return string.Concat("Day is not all latin digits: ", lxDay.Slice(s));
+					return string.Concat("Month is not all latin digits: ", lxMonth.Slice(s));
 #else
-								return StringConcat("Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+					return StringConcat("Month is not all latin digits: ".AsSpan(), lxMonth.Slice(s));
 #endif
-							}
-							parts |= Iso8601Parts.Day;
-						}
-						else
-						{
-							return string.Concat("Days part was not 2 digits long, it was: ", end - s.Length);
-						}
+				}
+				parts = Iso8601Parts.YearMonth;
+				// When we're here, we've parsed a Year and a Month.
+				// So try to parse a day now
+				// Check to see if we're not at the end of the date part (indicated by end of string or T)
+				// We've finished the date part if this isn't true
+				if (s.Length != end && s[end] != 'T' && s[end] != 't')
+				{
+					// If we ended up on a separator, advance by 1
+					// Also make sure that the presence/absence of a separator is the same as year/month
+					if (s[end] == '-')
+					{
+						if (!sep) return "Separator between Year/Month was missing, but separator between Month/Day was present";
+						++end;
 					}
 					else
 					{
-						// Only 1 separator in this case (Year/Month)
-						sep2 = sep1;
+						if (sep) return "Separator between Year/Month was present, but separator between Month/Day was missing";
+					}
+					// Parse the days
+					start = end;
+					end += 2;
+					if (s.Length >= end)
+					{
+						lxDay = OffLen.StartEnd(start, end);
+						if (!IsRangeAllLatinDigits(lxDay.Slice(s)))
+						{
+#if !NETSTANDARD2_0
+							return string.Concat("Day is not all latin digits: ", lxDay.Slice(s));
+#else
+							return StringConcat("Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+#endif
+						}
+						parts |= Iso8601Parts.Day;
+					}
+					else
+					{
+						return string.Concat("Days part was not at least 2 digits long, it was: ", s.Length - start);
 					}
 				}
-				else
-				{
-					// Only 1 separator in this case (Year/Month)
-					sep2 = sep1;
-				}
 			}
-			if (sep1 != sep2)
+			// If we ONLY parsed the Year and Month, that's only valid if we got a separator. i.e. yyyy-MM is valid but yyyyMM is not.
+			if ((parts & Iso8601Parts.Mask_Date) == Iso8601Parts.YearMonth && !sep)
 			{
-				return "Inconsistent separators in the Date portion of the string";
-			}
-			// If we only parsed the Year and Month, that's only valid if we got a separator. i.e. yyyy-MM is valid but yyyyMM is not.
-			if ((parts & Iso8601Parts.Mask_Date) == Iso8601Parts.YearMonth && !sep1)
-			{
-				return "Parsed year/month without a separator";
+				return "Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM";
 			}
 			// If separators, then set the flag for having them
-			if (sep1)
+			if (sep)
 			{
 				parts |= Iso8601Parts.Separator_Date;
 			}
@@ -231,11 +217,12 @@
 			#region TimePart
 			// TIME
 			// If we're not at the end of the string yet, we are parsing the time, so we need a T
-			if (s[end] != 'T')
+			// And yes we're not allowed the timezone, unless we also have a time!
+			if (s[end] != 'T' && s[end] != 't')
 			{
-				return string.Concat("Date and Time separator T was expected at", end);
+				return string.Concat("Date and Time separator T was expected at index ", end);
 			}
-			sep1 = sep2 = false;
+			sep = false;
 			// Hours
 			start = ++end;
 			end += 2;
@@ -255,14 +242,14 @@
 			}
 			else
 			{
-				return string.Concat("Hours part was not 2 digits long, it was: ", end - s.Length);
+				return string.Concat("Hours part was not 2 digits long, it was: ", s.Length - start);
 			}
 			if (s.Length == end)
 			{
 				goto success;
 			}
 			// If we ended up on a separator, advance by 1
-			if (sep1 = s[end] == ':')
+			if (sep = s[end] == ':')
 			{
 				++end;
 			}
@@ -284,19 +271,24 @@
 			}
 			else
 			{
-				return string.Concat("Minutes part was not 2 digits long, it was: ", end - s.Length);
+				return string.Concat("Minutes part was not 2 digits long, it was: ", s.Length - start);
 
 			}
 			if (s.Length == end)
 			{
 				// Hour/Minute, and only 1 separator
-				parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
+				parts |= sep ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
 			// If we ended up on a separator, advance by 1
-			if (sep2 = s[end] == ':')
+			if (s[end] == ':')
 			{
+				if (!sep) return "Separator between Hour/Minute was missing, but separator between Minute/Second was present";
 				++end;
+			}
+			else
+			{
+				if (sep) return "Separator between Hour/Minute was present, but separator between Minute/Second was missing";
 			}
 			// Seconds
 			start = end;
@@ -316,22 +308,17 @@
 			}
 			else
 			{
-				return string.Concat("Seconds part was not 2 digits long, it was: ", end - s.Length);
+				return string.Concat("Seconds part was not 2 digits long, it was: ", s.Length - start);
 
 			}
-			// Possibly inconsistent separators at this point, so check that
-			if (sep1 != sep2)
-			{
-				return "Inconsistent separators in the Time portion of the string";
-			}
-			parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
+			parts |= sep ? Iso8601Parts.Separator_Time : 0;
 			if (s.Length == end)
 			{
 				goto success;
 			}
 			// If we end up on the milliseconds separator, advance by 1 and parse the milliseconds, could be any number of digits
 			// Unlike the hour:minute:second separators, this one's required if you use milliseconds
-			if (s[end] == '.')
+			if (s[end] == '.' || s[end] == ',')
 			{
 				start = ++end;
 				while (end < s.Length && s[end] >= '0' && s[end] <= '9')
@@ -350,16 +337,17 @@
 			// No timezone, exit
 			if (s.Length == end)
 			{
-				parts |= sep1 ? Iso8601Parts.Separator_Time : 0;
+				parts |= sep ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
 			#endregion
 
 			#region TimezonePart
-			// Now, we should be on either a Z, +, or -
+			// Now, we should be on either a Z/z, +, or -
 			bool parseTimezone = false;
 			switch (s[end])
 			{
+				case 'z':
 				case 'Z':
 					tzChar = 'Z';
 					parts |= Iso8601Parts.Tz_Utc;
@@ -389,7 +377,7 @@
 				}
 				else
 				{
-					return string.Concat("Timezone hours part was not 2 digits long, it was: ", end - s.Length);
+					return string.Concat("Timezone hours part was not 2 digits long, it was: ", s.Length - start);
 				}
 				// This is OK; just hours for a Timezone is acceptable
 				if (s.Length == end)
@@ -397,7 +385,7 @@
 					goto success;
 				}
 				// If we ended up on a separator, advance by 1
-				if (sep1 = s[end] == ':')
+				if (sep = s[end] == ':')
 				{
 					++end;
 				}
@@ -407,11 +395,11 @@
 				if (s.Length >= end)
 				{
 					lxTzMinutes = OffLen.StartEnd(start, end);
-					parts |= Iso8601Parts.Tz_HourMinute | (sep1 ? Iso8601Parts.Separator_Tz : 0);
+					parts |= Iso8601Parts.Tz_HourMinute | (sep ? Iso8601Parts.Separator_Tz : 0);
 				}
 				else
 				{
-					return string.Concat("Timezone minutes part was not 2 digits long, it was: ", end - s.Length);
+					return string.Concat("Timezone minutes part was not 2 digits long, it was: ", s.Length - start);
 				}
 			}
 		#endregion

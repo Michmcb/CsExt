@@ -17,10 +17,17 @@ namespace System.Diagnostics.CodeAnalysis
 		internal NotNullIfNotNullAttribute(string parameterName) { }
 	}
 }
+namespace System.Buffers
+{
+	/// <summary>
+	/// Shim for SpanAction which is not present in .netstandard 2.0
+	/// </summary>
+	public delegate void SpanAction<T, in TArg>(Span<T> span, TArg arg);
+}
 namespace MichMcb.CsExt
 {
 	using System;
-	public delegate void SpanAction<T, in TArg>(Span<T> span, TArg arg);
+	using System.Buffers;
 	/// <summary>
 	/// Shims for .netstandard2.0
 	/// </summary>
@@ -42,6 +49,7 @@ namespace MichMcb.CsExt
 		{
 			char[] str = new char[span1.Length + span2.Length];
 			span1.CopyTo(str);
+			// We cast str as a Span<char> because new string(Span<char>) does not exist in .netstandard2.0, so we need a char[]
 			span2.CopyTo(((Span<char>)str).Slice(span1.Length));
 			return new string(str);
 		}

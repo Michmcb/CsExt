@@ -5,12 +5,22 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.8.2</Version>
+    <Version>0.9</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will keep it up to date with the latest .NET releases.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Methods/properties on EnumUtil&lt;T&gt; for getting enum values, names, and both at the same time</PackageReleaseNotes>
+    <PackageReleaseNotes>UtcDateTime.TryParseIso8601String Improvements...
+- Fixed bug where it did not parse strings with leading/trailing whitespace correctly as the documentation says it does
+- Corrected the error messages when it could not parse a string
+- T and Z are case insensitive as per ISO-8601
+- Decimal for milliseconds is allowed to be . or , as per ISO-8601
+- Removed ability to specify custom separators bewteen date/time, as it isn't ISO-8601 complaint and can't be parsed anyways. Instead if the - or : are problematic, use basic format which does not have any separators.
+- String formatting methods have changed. There's one for UTC and one for TimeZone, with bools rather than taking a format. ToIso8601String takes a format, and TryToIso8601String has been added as well
+- DateUtil.GetLengthRequired and DateUtil.ValidateAsFormat replaced with TryGetLengthRequired, which does both at once
+
+Maybe&lt;TVal, TErr&gt;
+- Maybe now has static methods to construct an instance, where TVal and TErr are the same type</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -18,8 +28,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.8.2.0</AssemblyVersion>
-    <FileVersion>0.8.2.0</FileVersion>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+    <FileVersion>0.9.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

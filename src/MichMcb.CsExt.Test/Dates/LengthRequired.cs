@@ -70,7 +70,7 @@
 			};
 			foreach ((Iso8601Parts format, int lengthExpected) in formats)
 			{
-				Assert.Equal(lengthExpected, DateUtil.LengthRequired(format));
+				Assert.Equal(lengthExpected, DateUtil.TryGetLengthRequired(format).ValueOrException());
 			}
 		}
 		[Fact]

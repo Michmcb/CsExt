@@ -19,24 +19,22 @@
 		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
 		/// </summary>
 		/// <param name="value">The success value.</param>
-		/// <param name="ok">If true, success. If false, failure.</param>
-		public Maybe(TVal value, bool ok = true)
+		public Maybe(TVal value)
 		{
 			this.value = value;
 			error = default!;
-			Ok = ok;
+			Ok = true;
 		}
 		/// <summary>
 		/// Creates a new instance with <paramref name="error"/>.
 		/// You shouln't need to use this often; this struct can be implicitly cast from objects of either <typeparamref name="TErr"/> or <typeparamref name="TVal"/>.
 		/// </summary>
 		/// <param name="error">The error value.</param>
-		/// <param name="ok">If true, success. If false, failure.</param>
-		public Maybe(TErr error, bool ok = false)
+		public Maybe(TErr error)
 		{
 			value = default!;
 			this.error = error;
-			Ok = ok;
+			Ok = false;
 		}
 		/// <summary>
 		/// If true, has a <typeparamref name="TVal"/>, otherwise has a <typeparamref name="TErr"/>.
@@ -123,11 +121,11 @@
 		/// <summary>
 		/// Equivalent to new Maybe(<paramref name="value"/>, default, true);
 		/// </summary>
-		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TVal value) => new(value, true);
+		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TVal value) => new(value);
 		/// <summary>
 		/// Equivalent to new Maybe(default, <paramref name="error"/>, true);
 		/// </summary>
-		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error) => new(error, false);
+		public static implicit operator Maybe<TVal, TErr>([DisallowNull] TErr error) => new(error);
 		/// <summary>
 		/// Throws <see cref="InvalidOperationException"/>.
 		/// </summary>
@@ -138,5 +136,7 @@
 		/// </summary>
 		/// <exception cref="InvalidOperationException"/>
 		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => throw new InvalidOperationException("You cannot compare Maybe instances");
+		public static Maybe<TVal, TErr> Value(TVal value) => new(value);
+		public static Maybe<TVal, TErr> Error(TErr err) => new(err);
 	}
 }

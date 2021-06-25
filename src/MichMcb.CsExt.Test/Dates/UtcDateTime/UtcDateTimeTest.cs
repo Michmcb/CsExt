@@ -35,7 +35,7 @@
 			}
 
 			Assert.Equal(DateUtil.UnixEpochMillis, UtcDateTime.UnixEpoch.TotalMilliseconds);
-			UtcDateTime minValue = new UtcDateTime();
+			UtcDateTime minValue = new();
 			Assert.Equal(0, minValue.TotalMilliseconds);
 			Assert.Equal(0, UtcDateTime.MinValue.TotalMilliseconds);
 			Assert.Equal(DateUtil.MaxMillis, UtcDateTime.MaxValue.TotalMilliseconds);
@@ -59,157 +59,209 @@
 		[Fact]
 		public void ParseIso8601Strings()
 		{
-			// Don't hate me for all these inline assignments...I changed the method to return a Maybe<UtcDateTime, string>, and this was the lowest-effort way of fixing these tests
+			// Empty string of course not good
+			Assert.Equal("Years part was not 4 digits long, it was: 0", UtcDateTime.TryParseIso8601String("").ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2").ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 2", UtcDateTime.TryParseIso8601String("20").ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 3", UtcDateTime.TryParseIso8601String("202").ErrorOr(null));
 
-			Maybe<UtcDateTime, string> maybe = UtcDateTime.TryParseIso8601String("");
-			Assert.False(maybe.Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("202").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20201").Ok);
+			// Only year is not enough
+			Assert.Equal("String only consists of a Year part", UtcDateTime.TryParseIso8601String("2020").ErrorOr(null));
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-").ErrorOr(null));
+
+			// 5 digits, not good
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20201").ErrorOr(null));
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-1").ErrorOr(null));
+
 			// Not actually valid; yyyyMM can be confused with yyyy-MM, so it isn't allowed
-			Assert.False(UtcDateTime.TryParseIso8601String("202011").Ok);
-			// Interpreted as Ordinal
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020165", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 13), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T2").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T23", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T2310", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T23105").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.1", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.12", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.1234", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.12345", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123456", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123Z", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123")).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.123X").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.123+").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.123-").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.123+1").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123+10", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("20200615T231052.123+103").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("20200615T231052.123+1030", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), maybe.ValueOr(default));
-
-			Assert.False(UtcDateTime.TryParseIso8601String("").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("20").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("202").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-1").Ok);
+			Assert.Equal("Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM", UtcDateTime.TryParseIso8601String("202011").ErrorOr(null));
 			// This is valid; yyyy-MM is not ambiguous unlike yyyyMM
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-11", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 11, 1), maybe.ValueOr(default));
-			// Interpreted as Ordinal
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-165", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 13), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-1").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T2").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:1").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:5").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.1", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.1234", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12345", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123456", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123Z", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), maybe.ValueOr(default));
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123")).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123X").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123-").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+1").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), maybe.ValueOr(default));
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10:").Ok);
-			Assert.False(UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10:3").Ok);
-			Assert.True((maybe = UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10:30", TimeSpan.Zero)).Ok);
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), maybe.ValueOr(default));
+			Assert.Equal(new UtcDateTime(2020, 11, 1), UtcDateTime.TryParseIso8601String("2020-11", TimeSpan.Zero).ValueOrException());
+
+			// Interpreted as Ordinal (yyyy-ddd)
+			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("2020167", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("2020-167", TimeSpan.Zero).ValueOrException());
+
+			// Non-digits
+			Assert.Equal("Ordinal Day is not all latin digits: X67", UtcDateTime.TryParseIso8601String("2020-X67", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: 1X7", UtcDateTime.TryParseIso8601String("2020-1X7", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: 16X", UtcDateTime.TryParseIso8601String("2020-16X", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: X67", UtcDateTime.TryParseIso8601String("2020-X67T23", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: 1X7", UtcDateTime.TryParseIso8601String("2020-1X7T23:10", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: 16X", UtcDateTime.TryParseIso8601String("2020-16XT23:10:52", TimeSpan.Zero).ErrorOr(null));
+
+			// Weeks aren't supported
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020W10").ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-w10").ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020w101").ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-W10-1").ErrorOr(null));
+
+			// We don't do yyyy-MM-, because that gets interpreted as ordinal days, because it's only 3 chars until T or the end of the string
+			Assert.Equal("Ordinal Day is not all latin digits: 06-", UtcDateTime.TryParseIso8601String("2020-06-").ErrorOr(null));
+			Assert.Equal("Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-1").ErrorOr(null));
+
+			// Interpreted as yyyy-MM-dd 00:00:00
+			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("20200615", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("2020-06-15", TimeSpan.Zero).ValueOrException());
+
+			// Non-digits
+			Assert.Equal("Day is not all latin digits: X5", UtcDateTime.TryParseIso8601String("202006X5", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Day is not all latin digits: X5", UtcDateTime.TryParseIso8601String("2020-06-X5", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Day is not all latin digits: 1X", UtcDateTime.TryParseIso8601String("2020061X", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Day is not all latin digits: 1X", UtcDateTime.TryParseIso8601String("2020-06-1X", TimeSpan.Zero).ErrorOr(null));
+
+			// Inconsistent separators
+			Assert.Equal("Separator between Year/Month was present, but separator between Month/Day was missing", UtcDateTime.TryParseIso8601String("2020-0615").ErrorOr(null));
+			Assert.Equal("Separator between Year/Month was missing, but separator between Month/Day was present", UtcDateTime.TryParseIso8601String("202006-15").ErrorOr(null));
+
+			// Can't have the timezone yet
+			Assert.Equal("Date and Time separator T was expected at index 8", UtcDateTime.TryParseIso8601String("20200615Z").ErrorOr(null));
+			Assert.Equal("Date and Time separator T was expected at index 10", UtcDateTime.TryParseIso8601String("2020-06-15Z").ErrorOr(null));
+
+			// Can't end with T, and need at least 2 digits after that
+			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("20200615T").ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t2").ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15t").ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15T2").ErrorOr(null));
+
+			// Interpreted as yyyy-MM-dd HH:00:00
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("20200615T23", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("20200615t23", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15t23", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23", TimeSpan.Zero).ValueOrException());
+
+			// Need at least 2 digits for the minute
+			Assert.Equal("Minutes part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:").ErrorOr(null));
+			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t231").ErrorOr(null));
+			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15t23:1").ErrorOr(null));
+
+			// Interpreted as yyyy-MM-dd HH:mm:00
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), UtcDateTime.TryParseIso8601String("20200615T2310", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23:10", TimeSpan.Zero).ValueOrException());
+
+			// Need at least 2 digits for the second
+			Assert.Equal("Seconds part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:").ErrorOr(null));
+			Assert.Equal("Seconds part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615T23105").ErrorOr(null));
+			Assert.Equal("Seconds part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15t23:10:5").ErrorOr(null));
+
+			// Interpreted as yyyy-MM-dd HH:mm:ss
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("20200615T231052", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("     2020-06-15t23:10:52    ", TimeSpan.Zero).ValueOrException());
+
+			// Inconsistent separators
+			Assert.Equal("Separator between Hour/Minute was present, but separator between Minute/Second was missing", UtcDateTime.TryParseIso8601String("2020-06-15T23:1052").ErrorOr(null));
+			Assert.Equal("Separator between Hour/Minute was missing, but separator between Minute/Second was present", UtcDateTime.TryParseIso8601String("2020-06-15T2310:52").ErrorOr(null));
+
+			// Need at least 1 millisecond digit
+			Assert.Equal("Milliseconds separator was found but no milliseconds were found", UtcDateTime.TryParseIso8601String("20200615T231052.").ErrorOr(null));
+			Assert.Equal("Milliseconds separator was found but no milliseconds were found", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.").ErrorOr(null));
+
+			// Milliseconnndddssss
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), UtcDateTime.TryParseIso8601String("20200615T231052.1", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), UtcDateTime.TryParseIso8601String("20200615T231052.12", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052,1234", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052,12345", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123456", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.1", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52,123", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52,1234", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12345", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123456", TimeSpan.Zero).ValueOrException());
+
+			// Everything with the Z timezone
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123Z", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123z", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123Z", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123z", TimeSpan.Zero).ValueOrException());
+
+			// Everything with an implicit timezone of +10:00
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123", new TimeSpan(10, 0, 0)).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123", new TimeSpan(10, 0, 0)).ValueOrException());
+
+			// Timezone offset of +10:00 and +10:30
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615t231052.123+10", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123+1030", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52.123+10:30", TimeSpan.Zero).ValueOrException());
+
+			// Timezone char that's wrong
+			Assert.Equal("Timezone designator was not valid, it was: X", UtcDateTime.TryParseIso8601String("20200615T231052.123X").ErrorOr(null));
+			Assert.Equal("Timezone designator was not valid, it was: X", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123X").ErrorOr(null));
+
+			// Timezone hours wrong length
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("20200615T231052.123+").ErrorOr(null));
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("20200615T231052.123-").ErrorOr(null));
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615T231052.123+1").ErrorOr(null));
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+").ErrorOr(null));
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123-").ErrorOr(null));
+			Assert.Equal("Timezone hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+1").ErrorOr(null));
+
+			// Timezone minutes wrong
+			Assert.Equal("Timezone minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615T231052.123+103").ErrorOr(null));
+			Assert.Equal("Timezone minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10:3").ErrorOr(null));
 		}
 		[Fact]
 		public void UtcDateTimeToString()
 		{
-			UtcDateTime dt = new UtcDateTime(2020, 6, 5, 3, 0, 52, 012);
+			UtcDateTime dt = new(2020, 6, 5, 3, 0, 52, 012);
 			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToString());
-			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc());
-			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_FullTz));
-			Assert.Equal("20200605T030052.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_BasicFormat_UtcTz));
-			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_UtcTz));
-			Assert.Equal("2020-06-05", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOnly));
-			Assert.Equal("20200605", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOnlyWithoutSeparators));
-			Assert.Equal("2020-157", dt.ToIso8601StringUtc(Iso8601Parts.Format_DateOrdinal));
-			Assert.Equal("--06-05", dt.ToIso8601StringUtc(Iso8601Parts.Format_VcfUnknownYear));
 
-			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.Format_ExtendedFormat_NoMillis_UtcTz));
-			Assert.Equal("20200605T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Tz_Utc | Iso8601Parts.Separator_Time));
+			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringExtendedUtc(millis: true));
+			Assert.Equal("20200605T030052.012Z", dt.ToIso8601StringBasicUtc(millis: true));
+			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringExtendedUtc(millis: false));
+			Assert.Equal("20200605T030052Z", dt.ToIso8601StringBasicUtc(millis: false));
 
-			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc());
-			Assert.Equal("2020-06-05T03", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All));
-			Assert.Equal("2020-06-05T03Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
-			Assert.Equal("2020-06-05T03+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
-			Assert.Equal("2020-06-05T03+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+			Assert.Equal("2020-06-05T13:00:52.012+10:00", dt.ToIso8601StringWithTimeZone(extended: true, millis: true));
+			Assert.Equal("20200605T130052.012+1000", dt.ToIso8601StringWithTimeZone(extended: false, millis: true));
+			Assert.Equal("2020-06-05T13:00:52+10:00", dt.ToIso8601StringWithTimeZone(extended: true, millis: false));
+			Assert.Equal("20200605T130052+1000", dt.ToIso8601StringWithTimeZone(extended: false, millis: false));
 
-			Assert.Equal("2020-06-05T03:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All));
-			Assert.Equal("2020-06-05T03:00Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
-			Assert.Equal("2020-06-05T03:00+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
-			Assert.Equal("2020-06-05T03:00+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormat_FullTz));
+			Assert.Equal("20200605T030052.012Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_BasicFormat_UtcTz));
+			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormat_UtcTz));
+			Assert.Equal("2020-06-05", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_DateOnly));
+			Assert.Equal("20200605", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_DateOnlyWithoutSeparators));
+			Assert.Equal("2020-157", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_DateOrdinal));
+			Assert.Equal("--06-05", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_VcfUnknownYear));
 
-			Assert.Equal("2020-06-05T03:00:52", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All));
-			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
-			Assert.Equal("2020-06-05T03:00:52+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
-			Assert.Equal("2020-06-05T03:00:52+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormat_NoMillis_UtcTz));
+			Assert.Equal("20200605T03:00:52Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Tz_Utc | Iso8601Parts.Separator_Time));
 
-			Assert.Equal("2020-06-05T03:00:52.012", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All));
-			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
-			Assert.Equal("2020-06-05T03:00:52.012+00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
-			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601StringUtc(Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_ExtendedFormat_UtcTz));
+			Assert.Equal("2020-06-05T03", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
+			Assert.Equal("2020-06-05T03+00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
+			Assert.Equal("2020-06-05T03+00:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.Hour | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+
+			Assert.Equal("2020-06-05T03:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
+			Assert.Equal("2020-06-05T03:00+00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
+			Assert.Equal("2020-06-05T03:00+00:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinute | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+
+			Assert.Equal("2020-06-05T03:00:52", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00:52Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
+			Assert.Equal("2020-06-05T03:00:52+00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
+			Assert.Equal("2020-06-05T03:00:52+00:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecond | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+
+			Assert.Equal("2020-06-05T03:00:52.012", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All));
+			Assert.Equal("2020-06-05T03:00:52.012Z", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Utc));
+			Assert.Equal("2020-06-05T03:00:52.012+00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_Hour));
+			Assert.Equal("2020-06-05T03:00:52.012+00:00", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+
+			Assert.Equal("2020-06-05T06:00:52.012+03:00", dt.ToIso8601String(new TimeSpan(3, 0, 0), Iso8601Parts.YearMonthDay | Iso8601Parts.HourMinuteSecondMillis | Iso8601Parts.Separator_All | Iso8601Parts.Tz_HourMinute));
+
+
+			dt = new(2020, 6, 5, 12, 0, 0);
+			Assert.Equal("2020-06-05", dt.ToIso8601String(TimeSpan.Zero, Iso8601Parts.Format_DateOnly));
+			Assert.Equal("2020-06-04", dt.ToIso8601String(new TimeSpan(-13, 0, 0), Iso8601Parts.Format_DateOnly));
+			Assert.Equal("2020-06-06", dt.ToIso8601String(new TimeSpan(13, 0, 0), Iso8601Parts.Format_DateOnly));
 		}
 		[Fact]
 		public void CtorAndDateParts()
 		{
-			UtcDateTime dt = new UtcDateTime(2020, 7, 14, 16, 24, 59, 129);
+			UtcDateTime dt = new(2020, 7, 14, 16, 24, 59, 129);
 			dt.Deconstruct(out int year, out int month, out int day, out int hour, out int min, out int sec, out int ms);
 			Assert.Equal(2020, year);
 			Assert.Equal(7, month);
@@ -255,7 +307,7 @@
 						int second = rng.Next(0, 60);
 						int millis = rng.Next(0, 1000);
 
-						UtcDateTime dt = new UtcDateTime(year, month, day, hour, minute, second, millis);
+						UtcDateTime dt = new(year, month, day, hour, minute, second, millis);
 						dt.Deconstruct(out int y, out int mon, out int d, out int h, out int min, out int s, out int ms);
 						Assert.Equal(year, y);
 						Assert.Equal(month, mon);
@@ -271,7 +323,7 @@
 		[Fact]
 		public void AddDaysAndDayOfYear()
 		{
-			UtcDateTime dt = new UtcDateTime(1999, 1, 1);
+			UtcDateTime dt = new(1999, 1, 1);
 			Assert.Equal(1, dt.DayOfYear);
 			for (int i = 1; i < 365; i++)
 			{
@@ -289,7 +341,7 @@
 		[Fact]
 		public void AddYears()
 		{
-			UtcDateTime dt = new UtcDateTime(2004, 2, 29);
+			UtcDateTime dt = new(2004, 2, 29);
 			UtcDateTime result = dt.AddYears(1);
 			Assert.Equal(2005, result.Year);
 			Assert.Equal(2, result.Month);
@@ -312,7 +364,7 @@
 		[Fact]
 		public void AddPositiveMonths()
 		{
-			UtcDateTime dt = new UtcDateTime(2000, 1, 31);
+			UtcDateTime dt = new(2000, 1, 31);
 			UtcDateTime result = dt.AddMonths(0);
 			Assert.Equal(dt, result);
 
@@ -391,7 +443,7 @@
 		[Fact]
 		public void AddNegativeMonths()
 		{
-			UtcDateTime dt = new UtcDateTime(2000, 1, 31);
+			UtcDateTime dt = new(2000, 1, 31);
 			UtcDateTime result = dt.AddMonths(0);
 			Assert.Equal(dt, result);
 
