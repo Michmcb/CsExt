@@ -1,11 +1,13 @@
 ﻿namespace MichMcb.CsExt.Data
 {
+	using System;
 	using System.IO;
 
 	/// <summary>
 	/// Calculates the CRC32 hash of data that's written to or read from it.
 	/// Seeking this stream will reset its CRC32.
 	/// </summary>
+	[Obsolete("Use Crc32.NET instead, it's much faster/better")]
 	public sealed class Crc32Stream : Stream
 	{
 		private uint crc32w;

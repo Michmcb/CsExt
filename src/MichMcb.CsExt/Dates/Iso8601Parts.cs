@@ -124,7 +124,10 @@
 		/// Month
 		/// </summary>
 		Month = 0b0000_0000_0100_0000,
-		// When you uncomment this, set Mask_Date so it includes this: Week = 0b0000_0000_0010_0000,
+		///// <summary>
+		///// Week
+		///// </summary>
+		//Week = 0b0000_0000_0010_0000, TODO when you uncomment this, set Mask_Date correctly
 		/// <summary>
 		/// Day
 		/// </summary>

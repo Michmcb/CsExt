@@ -49,7 +49,7 @@
 		/// The range of the string which represents the minutes portion of the timezone.
 		public readonly OffLen TimezoneMinutes;
 		/// <summary>
-		/// The parts found in the lexed string. Note that if a portion is too small to have separators, it's detected as not having them.
+		/// The parts found in the lexed string.
 		/// </summary>
 		public readonly Iso8601Parts PartsFound;
 		internal LexedIso8601(OffLen year, OffLen month, OffLen day, OffLen hour, OffLen minute, OffLen second, OffLen millis, char timezoneChar, OffLen timezoneHours, OffLen timezoneMinutes, Iso8601Parts partsFound)
@@ -124,9 +124,54 @@
 			// If the char is W, then it's weeks
 			if (s[start] == 'W' || s[start] == 'w')
 			{
-				// Www-D or WwwD
+				// Www-D or WwwD or Www
 				// TODO support weeks
 				return "ISO-8601 weeks are not supported";
+				// Start is W, so we need to shift start and end forwards by 1 to capture the digits
+				/*if (s.Length >= end + 1)
+				{
+					lxMonth = OffLen.StartEnd(++start, ++end);
+					if (!IsRangeAllLatinDigits(lxMonth.Slice(s)))
+					{
+						// Week is not all latin digits
+					}
+					parts |= Iso8601Parts.Week;
+					// If we're not at the end of string, then check what the next char is.
+					if (s.Length != end && s[end] != 'T' && s[end] != 't')
+					{
+						if (s[end] == '-')
+						{
+							if (!sep) return "Separator between Week/Day was missing, but separator between Year/Week was present";
+							++end;
+						}
+						else
+						{
+							if (sep) return "Separator between Week/Day was present, but separator between Year/Week was missing";
+						}
+						if (s.Length >= end)
+						{
+							// The weekday isn't a latin digit
+							lxDay = OffLen.StartEnd(end, end + 1);
+							if (s[end] < '0' || s[end] > '9')
+							{
+#if !NETSTANDARD2_0
+								return string.Concat("Week Day is not all latin digits: ", lxDay.Slice(s));
+#else
+								return StringConcat("Week Day is not all latin digits: ".AsSpan(), lxDay.Slice(s));
+#endif
+							}
+							// Shift end forwards by 1. The next char should now be a T or a t (or end of string)
+							++end;
+							parts |= Iso8601Parts.Day;
+						}
+					}
+				}
+				else
+				{
+					// Not enough digits!
+					return string.Concat("Weeks part was not at least 2 digits long, it was: ", s.Length - start);
+				}*/
+				// We need to get 2 digits. Then, the next is either a separator, or a digit, or T.
 			}
 			// If one past end would be the end of the string, then it might be ordinal days (or it's a separator)
 			// Or if the length is longer and the char after the last char is T or t, then it should also be ordinal days
@@ -249,9 +294,23 @@
 				goto success;
 			}
 			// If we ended up on a separator, advance by 1
-			if (sep = s[end] == ':')
+			//if (sep = s[end] == ':')
+			//{
+			//	++end;
+			//}
+			//sep = s[end];
+			switch (s[end])
 			{
-				++end;
+				case ':':
+					sep = true;
+					++end;
+					break;
+				case 'Z':
+				case '+':
+				case '-':
+					goto tzParse;
+				default:
+					break;
 			}
 			// Minutes
 			start = end;
@@ -281,14 +340,19 @@
 				goto success;
 			}
 			// If we ended up on a separator, advance by 1
-			if (s[end] == ':')
+			switch (s[end])
 			{
-				if (!sep) return "Separator between Hour/Minute was missing, but separator between Minute/Second was present";
-				++end;
-			}
-			else
-			{
-				if (sep) return "Separator between Hour/Minute was present, but separator between Minute/Second was missing";
+				case ':':
+					if (!sep) return "Separator between Hour/Minute was missing, but separator between Minute/Second was present";
+					++end;
+					break;
+				case 'Z':
+				case '+':
+				case '-':
+					goto tzParse;
+				default:
+					if (sep) return "Separator between Hour/Minute was present, but separator between Minute/Second was missing";
+					break;
 			}
 			// Seconds
 			start = end;
@@ -340,9 +404,10 @@
 				parts |= sep ? Iso8601Parts.Separator_Time : 0;
 				goto success;
 			}
-			#endregion
+		#endregion
 
-			#region TimezonePart
+		#region TimezonePart
+		tzParse:
 			// Now, we should be on either a Z/z, +, or -
 			bool parseTimezone = false;
 			switch (s[end])

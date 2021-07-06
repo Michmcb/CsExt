@@ -59,22 +59,33 @@
 		[Fact]
 		public void ParseIso8601Strings()
 		{
+			//UtcDateTime.TryParseIso8601String("2020-W12", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020W12", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020-W12-5", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020W125", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020-W12T10", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020W12T10", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020-W12-5T10", TimeSpan.Zero);
+			//UtcDateTime.TryParseIso8601String("2020W125T10", TimeSpan.Zero);
+
+
+			// TODO it would be nice if we included the string that we tried to parse in the error message.
 			// Empty string of course not good
-			Assert.Equal("Years part was not 4 digits long, it was: 0", UtcDateTime.TryParseIso8601String("").ErrorOr(null));
-			Assert.Equal("Years part was not 4 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2").ErrorOr(null));
-			Assert.Equal("Years part was not 4 digits long, it was: 2", UtcDateTime.TryParseIso8601String("20").ErrorOr(null));
-			Assert.Equal("Years part was not 4 digits long, it was: 3", UtcDateTime.TryParseIso8601String("202").ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 0", UtcDateTime.TryParseIso8601String("", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 2", UtcDateTime.TryParseIso8601String("20", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Years part was not 4 digits long, it was: 3", UtcDateTime.TryParseIso8601String("202", TimeSpan.Zero).ErrorOr(null));
 
 			// Only year is not enough
-			Assert.Equal("String only consists of a Year part", UtcDateTime.TryParseIso8601String("2020").ErrorOr(null));
-			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-").ErrorOr(null));
+			Assert.Equal("String only consists of a Year part", UtcDateTime.TryParseIso8601String("2020", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-", TimeSpan.Zero).ErrorOr(null));
 
 			// 5 digits, not good
-			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20201").ErrorOr(null));
-			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-1").ErrorOr(null));
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20201", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-1", TimeSpan.Zero).ErrorOr(null));
 
 			// Not actually valid; yyyyMM can be confused with yyyy-MM, so it isn't allowed
-			Assert.Equal("Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM", UtcDateTime.TryParseIso8601String("202011").ErrorOr(null));
+			Assert.Equal("Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM", UtcDateTime.TryParseIso8601String("202011", TimeSpan.Zero).ErrorOr(null));
 			// This is valid; yyyy-MM is not ambiguous unlike yyyyMM
 			Assert.Equal(new UtcDateTime(2020, 11, 1), UtcDateTime.TryParseIso8601String("2020-11", TimeSpan.Zero).ValueOrException());
 
@@ -91,18 +102,21 @@
 			Assert.Equal("Ordinal Day is not all latin digits: 16X", UtcDateTime.TryParseIso8601String("2020-16XT23:10:52", TimeSpan.Zero).ErrorOr(null));
 
 			// Weeks aren't supported
-			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020W10").ErrorOr(null));
-			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-w10").ErrorOr(null));
-			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020w101").ErrorOr(null));
-			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-W10-1").ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020W10", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-w10", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020w101", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("ISO-8601 weeks are not supported", UtcDateTime.TryParseIso8601String("2020-W10-1", TimeSpan.Zero).ErrorOr(null));
 
 			// We don't do yyyy-MM-, because that gets interpreted as ordinal days, because it's only 3 chars until T or the end of the string
-			Assert.Equal("Ordinal Day is not all latin digits: 06-", UtcDateTime.TryParseIso8601String("2020-06-").ErrorOr(null));
-			Assert.Equal("Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-1").ErrorOr(null));
+			Assert.Equal("Ordinal Day is not all latin digits: 06-", UtcDateTime.TryParseIso8601String("2020-06-", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-1", TimeSpan.Zero).ErrorOr(null));
 
 			// Interpreted as yyyy-MM-dd 00:00:00
 			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("20200615", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("2020-06-15", TimeSpan.Zero).ValueOrException());
+
+			// Not allowed when we require a timezone
+			Assert.Equal("This ISO-8601 time was missing a timezone designator: 2020-06-15", UtcDateTime.TryParseIso8601String("2020-06-15").ErrorOr(null));
 
 			// Non-digits
 			Assert.Equal("Day is not all latin digits: X5", UtcDateTime.TryParseIso8601String("202006X5", TimeSpan.Zero).ErrorOr(null));
@@ -111,33 +125,36 @@
 			Assert.Equal("Day is not all latin digits: 1X", UtcDateTime.TryParseIso8601String("2020-06-1X", TimeSpan.Zero).ErrorOr(null));
 
 			// Inconsistent separators
-			Assert.Equal("Separator between Year/Month was present, but separator between Month/Day was missing", UtcDateTime.TryParseIso8601String("2020-0615").ErrorOr(null));
-			Assert.Equal("Separator between Year/Month was missing, but separator between Month/Day was present", UtcDateTime.TryParseIso8601String("202006-15").ErrorOr(null));
+			Assert.Equal("Separator between Year/Month was present, but separator between Month/Day was missing", UtcDateTime.TryParseIso8601String("2020-0615", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Separator between Year/Month was missing, but separator between Month/Day was present", UtcDateTime.TryParseIso8601String("202006-15", TimeSpan.Zero).ErrorOr(null));
 
 			// Can't have the timezone yet
 			Assert.Equal("Date and Time separator T was expected at index 8", UtcDateTime.TryParseIso8601String("20200615Z").ErrorOr(null));
 			Assert.Equal("Date and Time separator T was expected at index 10", UtcDateTime.TryParseIso8601String("2020-06-15Z").ErrorOr(null));
 
 			// Can't end with T, and need at least 2 digits after that
-			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("20200615T").ErrorOr(null));
-			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t2").ErrorOr(null));
-			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15t").ErrorOr(null));
-			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15T2").ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("20200615T", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t2", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15t", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Hours part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15T2", TimeSpan.Zero).ErrorOr(null));
 
 			// Interpreted as yyyy-MM-dd HH:00:00
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("20200615T23", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("20200615t23", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15t23", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23Z", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 0, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23+10:00", TimeSpan.Zero).ValueOrException());
 
 			// Need at least 2 digits for the minute
-			Assert.Equal("Minutes part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:").ErrorOr(null));
-			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t231").ErrorOr(null));
-			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15t23:1").ErrorOr(null));
+			Assert.Equal("Minutes part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("20200615t231", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Minutes part was not 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-06-15t23:1", TimeSpan.Zero).ErrorOr(null));
 
 			// Interpreted as yyyy-MM-dd HH:mm:00
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), UtcDateTime.TryParseIso8601String("20200615T2310", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23:10", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 0), UtcDateTime.TryParseIso8601String("2020-06-15T23:10Z", TimeSpan.Zero).ValueOrException());
 
 			// Need at least 2 digits for the second
 			Assert.Equal("Seconds part was not 2 digits long, it was: 0", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:").ErrorOr(null));
@@ -146,7 +163,10 @@
 
 			// Interpreted as yyyy-MM-dd HH:mm:ss
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("20200615T231052", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("20200615T231052Z", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("     2020-06-15t23:10:52    ", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52Z", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52+10:00", TimeSpan.Zero).ValueOrException());
 
 			// Inconsistent separators
 			Assert.Equal("Separator between Hour/Minute was present, but separator between Minute/Second was missing", UtcDateTime.TryParseIso8601String("2020-06-15T23:1052").ErrorOr(null));
@@ -185,6 +205,10 @@
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123+1030", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 13, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.123+10", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 12, 40, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52.123+10:30", TimeSpan.Zero).ValueOrException());
+
+			// Max and min offsets
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 9, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52.123+14:00", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 16, 11, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15t23:10:52.123-12:00", TimeSpan.Zero).ValueOrException());
 
 			// Timezone char that's wrong
 			Assert.Equal("Timezone designator was not valid, it was: X", UtcDateTime.TryParseIso8601String("20200615T231052.123X").ErrorOr(null));

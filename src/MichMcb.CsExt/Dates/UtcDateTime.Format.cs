@@ -17,19 +17,40 @@
 		}
 		/// <summary>
 		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// A timezone designator is required.
 		/// All parsed ISO-8601 strings are adjusted to UTC.
 		/// Any leading or trailing whitespace is ignored.
-		/// Valid ISO-8601 strings are, for example...
-		/// <code>Date Only: 2010-07-15 or 20100715</code>
-		/// <code>Year and Month: 2010-07 but NOT 201007 (dates may be ambiguous with yyMMdd)</code>
-		/// <code>With Timezone: 2010-07-15T07:21:39.123+10:00 or 20100715T072139.123+10:00</code>
-		/// <code>UTC: 2010-07-15T07:11:39Z or 20100715T071139.123Z</code>
-		/// <code>Ordinal Date: 2010-197 or 2010197</code>
 		/// </summary>
 		/// <param name="str">The string to parse</param>
-		/// <param name="assumeMissingTimeZoneAs">If the string is missing a timezone designator, then it assumes this was the offset used. If null, uses offset of <see cref="TimeZoneInfo.Local"/>.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
-		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan? assumeMissingTimeZoneAs = null)
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str)
+		{
+			return TryParseIso8601String(str, TimeSpan.Zero, false);
+		}
+		/// <summary>
+		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// A timezone designator is not required.
+		/// All parsed ISO-8601 strings are adjusted to UTC.
+		/// Any leading or trailing whitespace is ignored.
+		/// </summary>
+		/// <param name="str">The string to parse</param>
+		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. Use <see cref="TimeZoneInfo.Local"/> if you want to interpret this as the local timezone.</param>
+		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing)
+		{
+			return TryParseIso8601String(str, timezoneWhenMissing, true);
+		}
+		/// <summary>
+		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// A timezone designator is only required if <paramref name="allowMissingTimezone"/> is false.
+		/// All parsed ISO-8601 strings are adjusted to UTC.
+		/// Any leading or trailing whitespace is ignored.
+		/// </summary>
+		/// <param name="str">The string to parse</param>
+		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. Use <see cref="TimeZoneInfo.Local"/> if you want to interpret this as the local timezone.</param>
+		/// <param name="allowMissingTimezone">If true, a timezone designator is allowed to be missing, and will be assumed to be <paramref name="timezoneWhenMissing"/>. Otherwise, a timezone designator is required.</param>
+		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing, bool allowMissingTimezone)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
 			if (!LexedIso8601.LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
@@ -81,19 +102,30 @@
 						{
 							tzMinutes = IntParse(luthor.TimezoneMinutes.Slice(ts), NumberStyles.None);
 						}
-						// The offsets mean that this time has already had the offset added. Therefore if it's +10:00, we need to subtract 10 so the result is in UTC, or add 10 if it's -10:00
-						if (luthor.TimezoneChar == '+')
+						if (luthor.TimezoneChar == '-')
 						{
+							// negative offset
 							tzHours = -tzHours;
 							tzMinutes = -tzMinutes;
 						}
 					}
 					break;
 				case '\0':
-					// No timezone means as should assume local time, or whatever they tell us
-					TimeSpan tzSpan = assumeMissingTimeZoneAs ?? TimeZoneInfo.Local.BaseUtcOffset;
-					tzHours = -tzSpan.Hours;
-					tzMinutes = -tzSpan.Minutes;
+					if (allowMissingTimezone)
+					{
+						// No timezone means as should assume local time, or whatever they tell us
+						TimeSpan tzSpan = timezoneWhenMissing;
+						tzHours = tzSpan.Hours;
+						tzMinutes = tzSpan.Minutes;
+					}
+					else
+					{
+#if !NETSTANDARD2_0
+						return string.Concat("This ISO-8601 time was missing a timezone designator: ", str);
+#else
+						return Shim.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
+#endif
+					}
 					break;
 			}
 			ArgumentOutOfRangeException? ex;

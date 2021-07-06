@@ -386,13 +386,32 @@
 			}
 
 			totalMs = ((DaysFromYear(year) + (days - 1)) * MillisPerDay) +
-				((hour + tzHours) * MillisPerHour) + ((minute + tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
+				((hour + -tzHours) * MillisPerHour) + ((minute + -tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
 			return totalMs < 0 || totalMs > MaxMillis
 				? new ArgumentOutOfRangeException(string.Concat("The provided date parts (Year ", year.ToString(), " Ordinal Day ", days.ToString(), " Hour ",
 					hour.ToString(), " Minute ", minute.ToString(), " Second ", second.ToString(), " Millis ", millis.ToString(), " Timezone Hours ", tzHours.ToString(), " Timezone Minutes ", tzMinutes.ToString(),
 					") resulted in a UtcDateTime that is outside the range of representable values."))
 				: null;
 		}
+		//internal static ArgumentOutOfRangeException? MillisFromParts_Weeks(int year, int week, int weekDay, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		//{
+		//	totalMs = 0;
+		//	if (year < 1 || year > 9999)
+		//	{
+		//		return new ArgumentOutOfRangeException(nameof(year), "Year must be at least 1 and at most 9999");
+		//	}
+		//	if (weekDay < 1 || weekDay > 7)
+		//	{
+		//		return new ArgumentOutOfRangeException(nameof(year), string.Concat("Week Day must be at least 1 and at most 6"));
+		//	}
+		//	var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+		//	if (ex != null)
+		//	{
+		//		return ex;
+		//	}
+		//
+		//	// TODO implement calculating a date from a week
+		//}
 		internal static ArgumentOutOfRangeException? MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
@@ -420,7 +439,7 @@
 				// Add number of days from the months already passed
 				totalDaysFromStartYearToMonth[month - 1] + (day - 1)) * MillisPerDay) +
 				// Time portion is easy, just hours, minutes, seconds, milliseconds
-				((hour + tzHours) * MillisPerHour) + ((minute + tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
+				((hour + -tzHours) * MillisPerHour) + ((minute + -tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
 			return totalMs < 0 || totalMs > MaxMillis
 				? new ArgumentOutOfRangeException(string.Concat("The provided date parts (Year ", year.ToString(), " Month ", month.ToString(), " Day ", day.ToString(), " Hour ",
 					hour.ToString(), " Minute ", minute.ToString(), " Second ", second.ToString(), " Millis ", millis.ToString(), " Timezone Hours ", tzHours.ToString(), " Timezone Minutes ", tzMinutes.ToString(),
