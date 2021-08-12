@@ -2,11 +2,13 @@
 {
 	using System;
 	using System.Diagnostics.CodeAnalysis;
+	using System.Runtime.CompilerServices;
+
 	/*
-	TODO notes for a ZonedDateTime are written here
-	MaxMillis is this in hex: 0001 1EFA E44C B3FF
-	3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
-	60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
+TODO notes for a ZonedDateTime are written here
+MaxMillis is this in hex: 0001 1EFA E44C B3FF
+3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
+60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
 	/// <summary>
 	/// Represents a UTC Date Time, as milliseconds since 0001-01-01 00:00:00.000.
 	/// Unlike <see cref="DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.
@@ -45,7 +47,7 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day)
 		{
-			var ex = DateUtil.MillisFromParts(year, month, day, 0, 0, 0, 0, 0, 0, out long ms);
+			ArgumentOutOfRangeException? ex = DateUtil.MillisFromParts(year, month, day, 0, 0, 0, 0, 0, 0, out long ms);
 			if (ex != null)
 			{
 				throw ex;
@@ -57,11 +59,11 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second) : this(year, month, day, hour, minute, second, 0) { }
 		/// <summary>
-		/// Creates a new instance with the lot.
+		/// Creates a new instance with every part specified.
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			var ex = DateUtil.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
+			ArgumentOutOfRangeException? ex = DateUtil.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
 			if (ex != null)
 			{
 				throw ex;
@@ -212,7 +214,8 @@
 		}
 		/// <summary>
 		/// Adds the specified number of months to this instance.
-		/// If is instance represents a day of month that is too large for the resultant month, then the day of the resultant instance will be the last day of the resultant month.
+		/// If is instance represents a day of month that is too large for the resultant month, then the day will be the last day of the resultant month.
+		/// For example: 31st of January plus 1 Month is 28th of Februray (or 29th, if a leap year).
 		/// </summary>
 		public UtcDateTime AddMonths(int months)
 		{
@@ -322,19 +325,23 @@
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// Negative values are allowed.
+		/// The value of (<paramref name="seconds"/> * <see cref="DateUtil.MillisPerSecond"/>) must be within the range of <see cref="DateUtil.MinMillisUnixEpoch"/> and <see cref="DateUtil.MaxMillisUnixEpoch"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UtcDateTime FromUnixEpochSeconds(long seconds)
 		{
-			return new UtcDateTime(seconds * DateUtil.MillisPerSecond + DateUtil.UnixEpochMillis);
+			return FromUnixEpochMilliseconds(seconds * DateUtil.MillisPerSecond);
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as milliseconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// Negative values are allowed.
+		/// <paramref name="milliseconds"/> must be within the range of <see cref="DateUtil.MinMillisUnixEpoch"/> and <see cref="DateUtil.MaxMillisUnixEpoch"/>.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UtcDateTime FromUnixEpochMilliseconds(long milliseconds)
 		{
-			return new UtcDateTime(milliseconds + DateUtil.UnixEpochMillis);
+			return milliseconds < DateUtil.MinMillisUnixEpoch || milliseconds > DateUtil.MaxMillisUnixEpoch
+				? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + DateUtil.MinMillisUnixEpoch + " and at most " + DateUtil.MaxMillisUnixEpoch)
+				: new UtcDateTime(milliseconds + DateUtil.UnixEpochMillis);
 		}
 		/// <summary>
 		/// Returns true of <paramref name="obj"/> is a <see cref="UtcDateTime"/> and they refer to the same point in time.
@@ -438,9 +445,8 @@
 					: new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
-		/// Creates a new instance from the provided <paramref name="dateTimeOffset"/>, interpreting <paramref name="dateTimeOffset"/> as if its Offset were Zero.
-		/// To be specific, <paramref name="dateTimeOffset"/>.Offset is subtracted from <paramref name="dateTimeOffset"/> to make the offset Zero, and then that is converted to a UtcDateTime.
+		/// Creates a new instance from the provided <paramref name="dateTimeOffset"/>, using <see cref="DateTimeOffset.UtcTicks"/>.
 		/// </summary>
-		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset) => new((dateTimeOffset.Ticks - dateTimeOffset.Offset.Ticks) / TimeSpan.TicksPerMillisecond);
+		public static explicit operator UtcDateTime(DateTimeOffset dateTimeOffset) => new(dateTimeOffset.UtcTicks / TimeSpan.TicksPerMillisecond);
 	}
 }

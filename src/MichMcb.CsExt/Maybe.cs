@@ -4,9 +4,6 @@
 	using System.Diagnostics.CodeAnalysis;
 	/// <summary>
 	/// A way of returning either a Value or an Error. Provides methods to safely get either the Value or Error.
-	/// You can also use this type directly if an if statement; it evaluates to true/false based on the value of <see cref="Ok"/>.
-	/// If <see cref="Ok"/> is true, then only <typeparamref name="TVal"/> is valid.
-	/// If <see cref="Ok"/> is false, then only <typeparamref name="TErr"/> is valid.
 	/// </summary>
 	/// <typeparam name="TVal">The Type on success.</typeparam>
 	/// <typeparam name="TErr">The Type on failure.</typeparam>
@@ -38,7 +35,6 @@
 		}
 		/// <summary>
 		/// If true, has a <typeparamref name="TVal"/>, otherwise has a <typeparamref name="TErr"/>.
-		/// When this instance is used in an If statement, it produces this value.
 		/// </summary>
 		public bool Ok { get; }
 		/// <summary>
@@ -56,24 +52,6 @@
 		[return: NotNullIfNotNull("ifNone")]
 		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone : error;
 		/// <summary>
-		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
-		/// Otherwise, val is set to the default value for <typeparamref name="TVal"/> and returns false.
-		/// </summary>
-		public bool HasValue([NotNullWhen(true)] out TVal val)
-		{
-			val = value;
-			return Ok;
-		}
-		/// <summary>
-		/// If <see cref="Ok"/> is false, sets <paramref name="error"/> to the Value for this instance and returns true.
-		/// Otherwise, val is set to the default value for <typeparamref name="TErr"/> and returns false.
-		/// </summary>
-		public bool HasError([NotNullWhen(true)] out TErr error)
-		{
-			error = this.error;
-			return !Ok;
-		}
-		/// <summary>
 		/// Returns the value of <see cref="Ok"/>. If true, then <paramref name="val"/> is set. Otherwise, <paramref name="error"/> is set.
 		/// </summary>
 		/// <param name="val">If <see cref="Ok"/> is true, the value. Otherwise, the default value for <typeparamref name="TVal"/>.</param>
@@ -85,6 +63,15 @@
 			return Ok;
 		}
 		/// <summary>
+		/// If <see cref="Ok"/> is true, sets <paramref name="val"/> to the Value for this instance and returns true.
+		/// Otherwise, val is set to the default value for <typeparamref name="TVal"/> and returns false.
+		/// </summary>
+		public bool Success([NotNullWhen(true)] out TVal val)
+		{
+			val = value;
+			return Ok;
+		}
+		/// <summary>
 		/// Does the opposite of <see cref="Success(out TVal, out TErr)"/>.
 		/// </summary>
 		/// <param name="val">If <see cref="Ok"/> is true, the value. Otherwise, the default value for <typeparamref name="TVal"/>.</param>
@@ -92,6 +79,15 @@
 		public bool Failure([NotNullWhen(false)] out TVal val, [NotNullWhen(true)] out TErr error)
 		{
 			val = value;
+			error = this.error;
+			return !Ok;
+		}
+		/// <summary>
+		/// If <see cref="Ok"/> is false, sets <paramref name="error"/> to the Value for this instance and returns true.
+		/// Otherwise, val is set to the default value for <typeparamref name="TErr"/> and returns false.
+		/// </summary>
+		public bool Failure([NotNullWhen(true)] out TErr error)
+		{
 			error = this.error;
 			return !Ok;
 		}
@@ -136,7 +132,15 @@
 		/// </summary>
 		/// <exception cref="InvalidOperationException"/>
 		public static bool operator !=(Maybe<TVal, TErr> left, Maybe<TVal, TErr> right) => throw new InvalidOperationException("You cannot compare Maybe instances");
+		/// <summary>
+		/// Equivalent to calling the constructor and passing <paramref name="value"/>.
+		/// </summary>
+		/// <param name="value">The value.</param>
 		public static Maybe<TVal, TErr> Value(TVal value) => new(value);
+		/// <summary>
+		/// Equivalent to calling the constructor and passing <paramref name="err"/>.
+		/// </summary>
+		/// <param name="err">The error.</param>
 		public static Maybe<TVal, TErr> Error(TErr err) => new(err);
 	}
 }

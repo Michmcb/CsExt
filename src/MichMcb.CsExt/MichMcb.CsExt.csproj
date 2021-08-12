@@ -5,17 +5,18 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>0.9.1</Version>
-    <Description>A library full of helpful stuff. It's just a collection of functions I've created. Note that for this particular library, as it's mainly stuff that I make for myself that I feel like sharing, I won't hesitate to make breaking changes, and will keep it up to date with the latest .NET releases.</Description>
+    <Version>1.0.0</Version>
+    <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Obsolete Crc32 stuff - Crc32.NET is a much better library and CRC32 isn't general purpose enough for this
-- Fixed a bug not allowing only Hour or Hour/Minute after the date portion of ISO-8601 string
-- Fixed a bug not allowing timezones larger than +12 hours
-- TryParseIso8601String(ReadOnlySpan&lt;char&gt;) requires a timezone, or it rejects the string.
-- TryParseIso8601String(ReadOnlySpan&lt;char&gt;, TimeSpan) allows a missing timezone, using the provided TimeSpan as the default. Use TimeZoneInfo.Local for the local timezone.
-- TryParseIso8601String(ReadOnlySpan&lt;char&gt;, TimeSpan, bool) only allows a missing timezone depending upon the bool.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Constants for max/min milliseconds, offset by the Unix Epoch
+- Updated some documentation
+- Methods to convert from Unix Epoch give a better error message if it would result in an out of range UtcDateTime
+- Deconstruct extension method for DateTime
+- Unit Tests for Maybe (at last)
+- Removed obsolete types
+- Parsing a UtcDateTime no longer allocates strings when using netstandard2.0, and it's faster in .net5.0 and above (custom int parsing, specifically for latin numbers)</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -23,8 +24,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>0.9.1.0</AssemblyVersion>
-    <FileVersion>0.9.1.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

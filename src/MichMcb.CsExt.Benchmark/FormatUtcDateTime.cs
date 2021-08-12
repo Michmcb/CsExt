@@ -3,7 +3,6 @@
 	using BenchmarkDotNet.Attributes;
 	using BenchmarkDotNet.Jobs;
 	using MichMcb.CsExt.Dates;
-	using MichMcb.CsExt.Rng;
 	using System;
 
 	[SimpleJob(RuntimeMoniker.Net50)]

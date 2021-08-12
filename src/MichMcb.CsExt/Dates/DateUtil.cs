@@ -4,7 +4,7 @@
 	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
-	/// A utility class for Dates.
+	/// A utility class for Dates. Also contains extension methods for <see cref="DateTime"/>.
 	/// </summary>
 	public static class DateUtil
 	{
@@ -80,6 +80,14 @@
 		/// </summary>
 		public const long UnixEpochMillis = 62135596800000;
 		/// <summary>
+		/// 0001-01-01 00:00:00, represented as milliseconds elapsed since 1970-01-01 00:00:00
+		/// </summary>
+		public const long MinMillisUnixEpoch = -UnixEpochMillis;
+		/// <summary>
+		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 1970-01-01 00:00:00
+		/// </summary>
+		public const long MaxMillisUnixEpoch = MaxMillis - UnixEpochMillis;
+		/// <summary>
 		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		public const long MaxMillis = 315537897599999;
@@ -124,9 +132,10 @@
 		/// <summary>
 		/// Returns the length of the string that will be created if a <see cref="UtcDateTime"/> is formatted using <paramref name="format"/>.
 		/// Or if <paramref name="format"/> is not a valid format (i.e. <see cref="ValidateAsFormat(Iso8601Parts)"/> returns non-null), returns that error message.
+		/// Note there are also constant lengths exposed on this class for predefined formats, saving a call to this function.
 		/// </summary>
 		/// <param name="format">The format.</param>
-		/// <returns>Length on success, or -1 on failure.</returns>
+		/// <returns>Length on success, or an error message on failure.</returns>
 		public static Maybe<int, string> TryGetLengthRequired(Iso8601Parts format)
 		{
 			// Commonly used formats, known to be valid
@@ -484,16 +493,6 @@
 			return new DateTime(seconds * TimeSpan.TicksPerSecond + UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
-		/// Converts a DateTime to seconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
-		/// </summary>
-		/// <returns>The number of seconds</returns>
-		public static long ToUnixTimeSeconds(this DateTime dt)
-		{
-			return dt.Kind == DateTimeKind.Utc
-				? ((dt.Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond)
-				: ((dt.ToUniversalTime().Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond);
-		}
-		/// <summary>
 		/// Converts a Unix time expressed as the number of <paramref name="milliseconds"/> that have elapsed since 1970-01-01 00:00:00 UTC.
 		/// </summary>
 		/// <param name="milliseconds">The milliseconds</param>
@@ -503,7 +502,33 @@
 			return new DateTime(milliseconds * TimeSpan.TicksPerMillisecond + UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
-		/// Converts a DateTime to milliseconds that have elapsed since 1970-01-01 00:00:00. The provided DateTime is converted to Utc if its Kind is Local or Unspecified.
+		/// Calculates an hour/minute/second/millisecond given <paramref name="dt"/>.
+		/// </summary>
+		public static void CalcTimeParts(this DateTime dt, out int hour, out int minute, out int second, out int millis)
+		{
+			CalcTimeParts(dt.Ticks / TimeSpan.TicksPerMillisecond, out hour, out minute, out second, out millis);
+		}
+		/// <summary>
+		/// Calculates a year/month/day/hour/minute/second/millisecond given <paramref name="dt"/>.
+		/// </summary>
+		public static void Deconstruct(this DateTime dt, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis)
+		{
+			CalcDateTimeParts(dt.Ticks / TimeSpan.TicksPerMillisecond, out year, out month, out day, out hour, out minute, out second, out millis);
+		}
+		/// <summary>
+		/// Converts a <see cref="DateTime"/> to seconds that have elapsed since 1970-01-01 00:00:00.
+		/// The provided <see cref="DateTime"/> is converted to Utc (using <see cref="DateTime.ToUniversalTime()"/>) if its Kind is Local or Unspecified.
+		/// </summary>
+		/// <returns>The number of seconds</returns>
+		public static long ToUnixTimeSeconds(this DateTime dt)
+		{
+			return dt.Kind == DateTimeKind.Utc
+				? ((dt.Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond)
+				: ((dt.ToUniversalTime().Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond);
+		}
+		/// <summary>
+		/// Converts a <see cref="DateTime"/> to milliseconds that have elapsed since 1970-01-01 00:00:00.
+		/// The provided <see cref="DateTime"/> is converted to Utc (using <see cref="DateTime.ToUniversalTime()"/>) if its Kind is Local or Unspecified.
 		/// </summary>
 		/// <returns>The number of milliseconds</returns>
 		public static long ToUnixTimeMilliseconds(this DateTime dt)
