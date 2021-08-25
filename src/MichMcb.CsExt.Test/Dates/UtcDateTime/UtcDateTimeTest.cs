@@ -7,6 +7,35 @@
 	public sealed class UtcDateTimeTest
 	{
 		[Fact]
+		public void DayOfWeekAllOf2020()
+		{
+			DateTime dt = new(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			UtcDateTime udt = new(2020, 1, 1, 0, 0, 0);
+			for (int i = 0; i < 365; i++)
+			{
+				DayOfWeek expected = dt.DayOfWeek;
+				DayOfWeek actual = udt.DayOfWeek;
+				Assert.Equal(expected, actual);
+				dt = dt.AddDays(1);
+				udt = udt.AddDays(1);
+			}
+		}
+		[Fact]
+		public void TimeOfDayTest()
+		{
+			Assert.Equal(new TimeSpan(10, 12, 15), new UtcDateTime(2021, 1, 5, 10, 12, 15).TimeOfDay);
+		}
+		[Fact]
+		public void Is29thFebTest()
+		{
+			Assert.False(new UtcDateTime(2020, 2, 28).Is29thFeb);
+			Assert.True(new UtcDateTime(2020, 2, 29).Is29thFeb);
+			Assert.False(new UtcDateTime(2020, 3, 1).Is29thFeb);
+
+			Assert.False(new UtcDateTime(2021, 2, 28).Is29thFeb);
+			Assert.False(new UtcDateTime(2021, 3, 1).Is29thFeb);
+		}
+		[Fact]
 		public void PublicConstAndStaticFieldsCorrect()
 		{
 			int daysPer4Years = 0;

@@ -154,14 +154,15 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 				return (totalDays -= y1 * 365) + 1;
 			}
 		}
+		// 0001-01-01 is a Monday, thus 0001-01-00 would be a Sunday. TotalDays = 0 means 0001-01-01, so we need to add 1 and then mod 7 gets us the right answer.
 		/// <summary>
 		/// Gets the Day of Week represented by this instance
 		/// </summary>
-		public DayOfWeek DayOfWeek => (DayOfWeek)(TotalDays % 7); // 0001-01-01 is a Monday, this 0001-01-00 would be a Sunday. Therefore, all we need to do is return TotalDays % 7 (Sun = 0, Sat = 6)
+		public DayOfWeek DayOfWeek => (DayOfWeek)((TotalDays + 1) % 7);
 		/// <summary>
 		/// Returns the Time of Day as a TimeSpan
 		/// </summary>
-		public TimeSpan TimeOfDay => new(TotalMilliseconds * TimeSpan.TicksPerMillisecond);
+		public TimeSpan TimeOfDay => new(TotalMilliseconds % DateUtil.MillisPerDay * TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// The number of milliseconds elapsed since 0001-01-01 00:00:00 represented by this instance
 		/// </summary>
