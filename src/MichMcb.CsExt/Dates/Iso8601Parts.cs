@@ -154,7 +154,7 @@
 		/// <summary>
 		/// Millisecond
 		/// </summary>
-		Millis = 0b0000_0001_0000_0000,
+		Millis = 0b0000_0001_0000_0000, // TODO Change "Millis" enum to "Fractional".
 		/// <summary>
 		/// Second
 		/// </summary>

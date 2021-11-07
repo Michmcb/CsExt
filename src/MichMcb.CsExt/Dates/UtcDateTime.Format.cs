@@ -5,22 +5,6 @@
 	public readonly partial struct UtcDateTime : IEquatable<UtcDateTime>, IComparable<UtcDateTime>
 	{
 		/// <summary>
-		/// Optimized method for parsing short numbers that are always entirely digits 0-9.
-		/// This mostly exists because .NET Standard 2.0 can't parse a <see cref="ReadOnlySpan{T}"/>. So it's both an easy fix and an optimization.
-		/// This is about 4.5x faster than .NET's int.Parse (but of course way less flexible)
-		/// </summary>
-		private static int ParseLatinInt(in ReadOnlySpan<char> str)
-		{
-			int result = 0;
-			int mult = 1;
-			for (int i = str.Length - 1; i >= 0; i--)
-			{
-				result += (str[i] - '0') * mult;
-				mult *= 10;
-			}
-			return result;
-		}
-		/// <summary>
 		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
 		/// A timezone designator is required.
 		/// All parsed ISO-8601 strings are adjusted to UTC.
@@ -30,7 +14,7 @@
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str)
 		{
-			return TryParseIso8601String(str, TimeSpan.Zero, false);
+			return TryParseIso8601String(str, default, false);
 		}
 		/// <summary>
 		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
@@ -62,77 +46,25 @@
 			{
 				return errMsg;
 			}
-			int year = ParseLatinInt(luthor.Year.Slice(ts));
-			int month = 0, day = 1, hour = 0, minute = 0, second = 0, millis = 0;
-			if ((luthor.PartsFound & Iso8601Parts.Month) == Iso8601Parts.Month)
+			luthor.Parse(ts, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int tzHours, out int tzMinutes);
+			if (luthor.TimezoneChar == '\0')
 			{
-				month = ParseLatinInt(luthor.Month.Slice(ts));
-			}
-			if ((luthor.PartsFound & Iso8601Parts.Day) == Iso8601Parts.Day)
-			{
-				day = ParseLatinInt(luthor.Day.Slice(ts));
-			}
-			if ((luthor.PartsFound & Iso8601Parts.Hour) == Iso8601Parts.Hour)
-			{
-				hour = ParseLatinInt(luthor.Hour.Slice(ts));
-			}
-			if ((luthor.PartsFound & Iso8601Parts.Minute) == Iso8601Parts.Minute)
-			{
-				minute = ParseLatinInt(luthor.Minute.Slice(ts));
-			}
-			if ((luthor.PartsFound & Iso8601Parts.Second) == Iso8601Parts.Second)
-			{
-				second = ParseLatinInt(luthor.Second.Slice(ts));
-			}
-			if ((luthor.PartsFound & Iso8601Parts.Millis) == Iso8601Parts.Millis)
-			{
-				// Only parse the first 3 characters of milliseconds, since that's the highest degree of accuracy we allow for
-				(int offset, int length) = luthor.Millis;
-				millis = ParseLatinInt(ts.Slice(offset, length > 3 ? 3 : length));
-			}
-			int tzHours = 0;
-			int tzMinutes = 0;
-			switch (luthor.TimezoneChar)
-			{
-				case 'Z':
-					break;
-				case '-':
-				case '+':
-					{
-						if ((luthor.PartsFound & Iso8601Parts.Tz_Hour) == Iso8601Parts.Tz_Hour)
-						{
-							tzHours = ParseLatinInt(luthor.TimezoneHours.Slice(ts));
-						}
-						if ((luthor.PartsFound & Iso8601Parts.Tz_Minute) == Iso8601Parts.Tz_Minute)
-						{
-							tzMinutes = ParseLatinInt(luthor.TimezoneMinutes.Slice(ts));
-						}
-						if (luthor.TimezoneChar == '-')
-						{
-							// negative offset
-							tzHours = -tzHours;
-							tzMinutes = -tzMinutes;
-						}
-					}
-					break;
-				case '\0':
-					if (allowMissingTimezone)
-					{
-						// No timezone means as should assume local time, or whatever they tell us
-						TimeSpan tzSpan = timezoneWhenMissing;
-						tzHours = tzSpan.Hours;
-						tzMinutes = tzSpan.Minutes;
-					}
-					else
-					{
+				if (!allowMissingTimezone)
+				{
 #if !NETSTANDARD2_0
-						return string.Concat("This ISO-8601 time was missing a timezone designator: ", str);
+					return string.Concat("This ISO-8601 time was missing a timezone designator: ", str);
 #else
-						return Shim.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
+				return Shim.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
 #endif
-					}
-					break;
+				}
+				else
+				{
+					TimeSpan tzSpan = timezoneWhenMissing;
+					tzHours = tzSpan.Hours;
+					tzMinutes = tzSpan.Minutes;
+				}
 			}
+
 			ArgumentOutOfRangeException? ex;
 			if ((luthor.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
 			{
@@ -170,15 +102,15 @@
 		/// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
 		/// </summary>
 		/// <param name="timezone">If writing a non-UTC timezone designator or unqualified, writes the time with this offset. If using UTC timezone designator this is ignored.</param>
-		/// <param name="format">How to format the string. By default, this is ISO-8601 extended, with UTC timezone designator</param>
+		/// <param name="format">How to format the string.</param>
 		/// <returns>An ISO-8601 representing this UtcDateTime, or an error message.</returns>
 		public Maybe<string, string> TryToIso8601String(TimeSpan timezone, Iso8601Parts format)
 		{
 			return DateUtil.TryGetLengthRequired(format).Success(out int len, out string? errMsg)
 #if !NETSTANDARD2_0
-				? Maybe<string, string>.Value(string.Create(len, this, (dest, inst) => inst.TryFormatUnchecked(dest, timezone, format)))
+				? Maybe<string, string>.Value(string.Create(len, this, (dest, inst) => inst.FormatUnchecked(dest, timezone, format)))
 #else
-				? Maybe<string, string>.Value(Shim.StringCreate(len, this, (dest, inst) => inst.TryFormatUnchecked(dest, timezone, format)))
+				? Maybe<string, string>.Value(Shim.StringCreate(len, this, (dest, inst) => inst.FormatUnchecked(dest, timezone, format)))
 #endif
 				: Maybe<string, string>.Error(errMsg);
 		}
@@ -233,9 +165,9 @@
 		{
 			Iso8601Parts fmt = (extended ? Iso8601Parts.Format_ExtendedFormat_NoMillis_FullTz : Iso8601Parts.Format_BasicFormat_NoMillis_FullTz) | (millis ? Iso8601Parts.Millis : 0);
 #if !NETSTANDARD2_0
-			return string.Create(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.TryFormatUnchecked(dest, timezone, fmt));
+			return string.Create(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.FormatUnchecked(dest, timezone, fmt));
 #else
-			return Shim.StringCreate(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.TryFormatUnchecked(dest, timezone, fmt));
+			return Shim.StringCreate(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.FormatUnchecked(dest, timezone, fmt));
 #endif
 		}
 		/// <summary>
@@ -257,9 +189,9 @@
 			{
 				return string.Concat("Destination span is too small. Required length is ", len, " but the destination span length is only ", destination.Length);
 			}
-			return TryFormatUnchecked(destination, timezone, format);
+			return FormatUnchecked(destination, timezone, format);
 		}
-		private Maybe<int, string> TryFormatUnchecked(Span<char> destination, TimeSpan? timezone = null, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
+		private int FormatUnchecked(Span<char> destination, TimeSpan? timezone = null, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
 		{
 			switch (format)
 			{

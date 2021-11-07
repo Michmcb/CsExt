@@ -70,6 +70,87 @@
 			TimezoneMinutes = timezoneMinutes;
 			PartsFound = partsFound;
 		}
+		public void Parse(in ReadOnlySpan<char> s, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int tzHours, out int tzMinutes)
+		{
+			year = 0;
+			month = 1;
+			day = 1;
+			hour = 0;
+			minute = 0;
+			second = 0;
+			millis = 0;
+			if ((PartsFound & Iso8601Parts.Year) == Iso8601Parts.Year)
+			{
+				year = ParseLatinInt(Year.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Month) == Iso8601Parts.Month)
+			{
+				month = ParseLatinInt(Month.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Day) == Iso8601Parts.Day)
+			{
+				day = ParseLatinInt(Day.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Hour) == Iso8601Parts.Hour)
+			{
+				hour = ParseLatinInt(Hour.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Minute) == Iso8601Parts.Minute)
+			{
+				minute = ParseLatinInt(Minute.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Second) == Iso8601Parts.Second)
+			{
+				second = ParseLatinInt(Second.Slice(s));
+			}
+			if ((PartsFound & Iso8601Parts.Millis) == Iso8601Parts.Millis)
+			{
+				// Only the first 3 characters after the decimal place are milliseconds.
+				// Subsequent ones would be micro, nano, etc.
+				// But we're only parsing specifically milliseconds here
+				(int offset, int length) = Millis;
+				millis = ParseLatinInt(s.Slice(offset, length > 3 ? 3 : length));
+				// If there's not 3 digits, then we need to multiply the result
+				switch (length)
+				{
+					case 1:
+						millis *= 100;
+						break;
+					case 2:
+						millis *= 10;
+						break;
+					default:
+						break;
+				}
+			}
+			tzHours = 0;
+			tzMinutes = 0;
+			switch (TimezoneChar)
+			{
+				case '\0':
+				case 'Z':
+					break;
+				case '-':
+				case '+':
+					{
+						if ((PartsFound & Iso8601Parts.Tz_Hour) == Iso8601Parts.Tz_Hour)
+						{
+							tzHours = ParseLatinInt(TimezoneHours.Slice(s));
+						}
+						if ((PartsFound & Iso8601Parts.Tz_Minute) == Iso8601Parts.Tz_Minute)
+						{
+							tzMinutes = ParseLatinInt(TimezoneMinutes.Slice(s));
+						}
+						if (TimezoneChar == '-')
+						{
+							// negative offset
+							tzHours = -tzHours;
+							tzMinutes = -tzMinutes;
+						}
+					}
+					break;
+			}
+		}
 		/// <summary>
 		/// Returns an instance which denotes what ranges of <paramref name="s"/> correspond to what parts in ISO-8601 valid strings.
 		/// Makes sure that it's well formed.
@@ -245,7 +326,7 @@
 			// If we ONLY parsed the Year and Month, that's only valid if we got a separator. i.e. yyyy-MM is valid but yyyyMM is not.
 			if ((parts & Iso8601Parts.Mask_Date) == Iso8601Parts.YearMonth && !sep)
 			{
-				return "Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM";
+				return "Parsed only a year and month without a separator, which ISO-8601 disallows because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM";
 			}
 			// If separators, then set the flag for having them
 			if (sep)
@@ -293,12 +374,7 @@
 			{
 				goto success;
 			}
-			// If we ended up on a separator, advance by 1
-			//if (sep = s[end] == ':')
-			//{
-			//	++end;
-			//}
-			//sep = s[end];
+
 			switch (s[end])
 			{
 				case ':':
@@ -485,6 +561,22 @@
 				}
 			}
 			return true;
+		}
+		/// <summary>
+		/// Optimized method for parsing short numbers that are always entirely digits 0-9.
+		/// This mostly exists because .NET Standard 2.0 can't parse a <see cref="ReadOnlySpan{T}"/>. So it's both an easy fix and an optimization.
+		/// This is about 4.5x faster than .NET's int.Parse (but of course way less flexible)
+		/// </summary>
+		public static int ParseLatinInt(in ReadOnlySpan<char> s)
+		{
+			int result = 0;
+			int mult = 1;
+			for (int i = s.Length - 1; i >= 0; i--)
+			{
+				result += (s[i] - '0') * mult;
+				mult *= 10;
+			}
+			return result;
 		}
 	}
 }
