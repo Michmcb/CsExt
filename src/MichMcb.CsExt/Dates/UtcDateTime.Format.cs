@@ -68,7 +68,7 @@
 			ArgumentOutOfRangeException? ex;
 			if ((luthor.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
 			{
-				ex = DateUtil.MillisFromParts_OrdinalDays(year, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
+				ex = DateUtil.TryCalculateMillisFromPartsOrdinalDays(year, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
 				if (ex == null)
 				{
 					return new UtcDateTime(ms);

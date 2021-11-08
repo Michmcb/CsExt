@@ -420,7 +420,7 @@
 			--year;
 			return (year * 365) + year / 4 - year / 100 + year / 400;
 		}
-		internal static ArgumentOutOfRangeException? MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		internal static ArgumentOutOfRangeException? TryCalculateMillisFromPartsOrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -431,7 +431,7 @@
 			{
 				return new ArgumentOutOfRangeException(nameof(year), string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString()));
 			}
-			var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+			ArgumentOutOfRangeException? ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
 			if (ex != null)
 			{
 				return ex;
@@ -515,7 +515,7 @@
 			// The Date portion entails adding the total number of days from year 1 to this year, then all the days from month 1 to this month, and finally the days.
 			totalMs = ((TotalDaysFromYear(year) + totalDaysInAllMonthsFromStartOfYear + (day - 1)) * MillisPerDay) +
 				// Time portion is easy, just hours, minutes, seconds, milliseconds
-				((hour + -tzHours) * MillisPerHour) + ((minute + -tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
+				((hour - tzHours) * MillisPerHour) + ((minute - tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
 			return totalMs < 0 || totalMs > MaxMillis
 				? new ArgumentOutOfRangeException(string.Empty, string.Concat("The provided date parts (Year ", year.ToString(), " Month ", month.ToString(), " Day ", day.ToString(), " Hour ",
 					hour.ToString(), " Minute ", minute.ToString(), " Second ", second.ToString(), " Millis ", millis.ToString(), " Timezone Hours ", tzHours.ToString(), " Timezone Minutes ", tzMinutes.ToString(),
