@@ -80,6 +80,10 @@
 		/// </summary>
 		public const long UnixEpochMillis = 62135596800000;
 		/// <summary>
+		/// 1970-01-01, represented as days elapsed since 0001-01-01
+		/// </summary>
+		public const int UnixEpochDays = 719162;
+		/// <summary>
 		/// 0001-01-01 00:00:00, represented as milliseconds elapsed since 1970-01-01 00:00:00
 		/// </summary>
 		public const long MinMillisUnixEpoch = -UnixEpochMillis;
@@ -91,6 +95,10 @@
 		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		public const long MaxMillis = 315537897599999;
+		/// <summary>
+		/// 9999-12-31, represented as days elapsed since 0001-01-01
+		/// </summary>
+		public const int MaxDays = 3652058;
 		/// <summary>
 		/// Milliseconds in a second
 		/// </summary>
@@ -316,6 +324,47 @@
 			return null;
 		}
 		/// <summary>
+		/// Calculates a day/month/year given <paramref name="days"/>, which is interpreted as the number of days elapsed since 0001-01-01.
+		/// </summary>
+		public static void CalcDateParts(int days, out int year, out int month, out int day)
+		{
+			// Most of this code is written by myself. However, the two Adjustments and the optimization of (days >> 5) + 1 comes from the .NET Source for DateTime
+
+			// The way we'll do this is first, get the number of groups of 400 years, then deduct that from our totalDays.
+			int y400 = days / DaysPer400Years;
+			days -= DaysPer400Years * y400;
+			int y100 = days / DaysPer100Years;
+			if (y100 == 4)
+			{
+				y100 = 3; // Adjustment
+			}
+			days -= DaysPer100Years * y100;
+			int y4 = days / DaysPer4Years;
+			days -= DaysPer4Years * y4;
+			int y1 = days / 365;
+			if (y1 == 4)
+			{
+				y1 = 3; // Adjustment 
+			}
+
+			days -= y1 * 365;
+
+			year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
+
+			// Here, our years are relative to year 1, not year 0, so we need to use a special leap year calculation
+			bool leapYear = y1 == 3 && (y4 != 24 || y100 == 3);
+			int[] totalDaysFromStartYearToMonth = leapYear ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth;
+
+			// Bitshifting right 5 bytes, because all months have less than 32 days.
+			// It saves us a bit of checking in the loop
+			month = (days >> 5) + 1;
+			while (days >= totalDaysFromStartYearToMonth[month])
+			{
+				month++;
+			}
+			day = days - totalDaysFromStartYearToMonth[month - 1] + 1;
+		}
+		/// <summary>
 		/// Calculates an hour/minute/second/millisecond given <paramref name="ms"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
 		/// </summary>
 		public static void CalcTimeParts(long ms, out int hour, out int minute, out int second, out int millis)
@@ -331,13 +380,17 @@
 		public static void CalcDateTimeParts(long ms, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis)
 		{
 			CalcTimeParts(ms, out hour, out minute, out second, out millis);
-			// Credit where it's due; most of this code is written by myself.
-			// However, the two Adjustments and the optimization of (totalDays >> 5) + 1 comes from the .NET Source for DateTime
 
 			// We know the total number of days easily.
-			// totalDays is the number of days since 0001-01-01
-			int totalDays = (int)(ms / MillisPerDay);
-			// The way we'll do this is first, get the number of groups of 400 years, then deduct that from our totalDays.
+			CalcDateParts((int)(ms / MillisPerDay), out year, out month, out day);
+		}
+		/// <summary>
+		/// Returns the Day of the year, from 1 to 366.
+		/// </summary>
+		/// <param name="totalDays">The number of days elapsed since 0001-01-01.</param>
+		/// <returns>The day of the year.</returns>
+		public static int DayOfYear(int totalDays)
+		{
 			int y400 = totalDays / DaysPer400Years;
 			totalDays -= DaysPer400Years * y400;
 			int y100 = totalDays / DaysPer100Years;
@@ -351,33 +404,23 @@
 			int y1 = totalDays / 365;
 			if (y1 == 4)
 			{
-				y1 = 3; // Adjustment 
+				y1 = 3; // Adjustment
 			}
 
-			totalDays -= y1 * 365;
-
-			year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
-
-			// Here, our years are relative to year 1, not year 0, so we need to use a special leap year calculation
-			bool leapYear = y1 == 3 && (y4 != 24 || y100 == 3);
-			int[] totalDaysFromStartYearToMonth = leapYear ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth;
-
-			// Bitshifting right 5 bytes, because all months have less than 32 days.
-			// It saves us a bit of checking in the loop
-			month = (totalDays >> 5) + 1;
-			while (totalDays >= totalDaysFromStartYearToMonth[month])
-			{
-				month++;
-			}
-			day = totalDays - totalDaysFromStartYearToMonth[month - 1] + 1;
+			return (totalDays -= y1 * 365) + 1;
 		}
-		internal static int DaysFromYear(int year)
+		/// <summary>
+		/// Returns the total number of days elapsed since 0001-01-01, as of <paramref name="year"/>.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <returns>Total days elapsed since 0001-01-01.</returns>
+		public static int TotalDaysFromYear(int year)
 		{
 			// Add extra leap year days; a leap year is divisible by 4, but not by 100, unless also divisible by 400.
 			--year;
 			return (year * 365) + year / 4 - year / 100 + year / 400;
 		}
-		internal static ArgumentOutOfRangeException? MillisFromParts_OrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
+		internal static ArgumentOutOfRangeException? TryCalculateMillisFromPartsOrdinalDays(int year, int days, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
 			if (year < 1 || year > 9999)
@@ -388,13 +431,13 @@
 			{
 				return new ArgumentOutOfRangeException(nameof(year), string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString()));
 			}
-			var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+			ArgumentOutOfRangeException? ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
 			if (ex != null)
 			{
 				return ex;
 			}
 
-			totalMs = ((DaysFromYear(year) + (days - 1)) * MillisPerDay) +
+			totalMs = ((TotalDaysFromYear(year) + (days - 1)) * MillisPerDay) +
 				((hour + -tzHours) * MillisPerHour) + ((minute + -tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
 			return totalMs < 0 || totalMs > MaxMillis
 				? new ArgumentOutOfRangeException(string.Concat("The provided date parts (Year ", year.ToString(), " Ordinal Day ", days.ToString(), " Hour ",
@@ -421,9 +464,66 @@
 		//
 		//	// TODO implement calculating a date from a week
 		//}
+		internal static ArgumentOutOfRangeException? TotalDaysFromParts_OrdinalDays(int year, int days, out int totalDays)
+		{
+			totalDays = 0;
+			if (year < 1 || year > 9999)
+			{
+				return new ArgumentOutOfRangeException(nameof(year), "Year must be at least 1 and at most 9999");
+			}
+			if (days < 1 || days > (DateTime.IsLeapYear(year) ? 366 : 365))
+			{
+				return new ArgumentOutOfRangeException(nameof(year), string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString()));
+			}
+			totalDays = TotalDaysFromYear(year) + days - 1;
+			return totalDays < 0 || totalDays > MaxDays
+				? new ArgumentOutOfRangeException(string.Empty, string.Concat("The provided date parts (Year ", year.ToString(), " Ordinal Day ", days.ToString(), ") resulted in a Date that is outside the range of representable values."))
+				: null;
+		}
+		internal static ArgumentOutOfRangeException? TotalDaysFromParts(int year, int month, int day, out int totalDays)
+		{
+			totalDays = 0;
+			ArgumentOutOfRangeException? ex = CheckDateParts(year, month, day);
+			if (ex != null)
+			{
+				return ex;
+			}
+
+			int totalDaysInAllMonthsFromStartOfYear = (DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth)[month - 1];
+
+			totalDays = TotalDaysFromYear(year) + totalDaysInAllMonthsFromStartOfYear + (day - 1);
+			return totalDays < 0 || totalDays > MaxDays
+				? new ArgumentOutOfRangeException(string.Empty, "")
+				: null;
+		}
 		internal static ArgumentOutOfRangeException? MillisFromParts(int year, int month, int day, int hour, int minute, int second, int millis, int tzHours, int tzMinutes, out long totalMs)
 		{
 			totalMs = 0;
+			ArgumentOutOfRangeException? ex = CheckDateParts(year, month, day);
+			if (ex != null)
+			{
+				return ex;
+			}
+			ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
+			if (ex != null)
+			{
+				return ex;
+			}
+
+			int totalDaysInAllMonthsFromStartOfYear = (DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth)[month - 1];
+
+			// The Date portion entails adding the total number of days from year 1 to this year, then all the days from month 1 to this month, and finally the days.
+			totalMs = ((TotalDaysFromYear(year) + totalDaysInAllMonthsFromStartOfYear + (day - 1)) * MillisPerDay) +
+				// Time portion is easy, just hours, minutes, seconds, milliseconds
+				((hour - tzHours) * MillisPerHour) + ((minute - tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
+			return totalMs < 0 || totalMs > MaxMillis
+				? new ArgumentOutOfRangeException(string.Empty, string.Concat("The provided date parts (Year ", year.ToString(), " Month ", month.ToString(), " Day ", day.ToString(), " Hour ",
+					hour.ToString(), " Minute ", minute.ToString(), " Second ", second.ToString(), " Millis ", millis.ToString(), " Timezone Hours ", tzHours.ToString(), " Timezone Minutes ", tzMinutes.ToString(),
+					") resulted in a UtcDateTime that is outside the range of representable values."))
+				: null;
+		}
+		internal static ArgumentOutOfRangeException? CheckDateParts(int year, int month, int day)
+		{
 			if (year < 1 || year > 9999)
 			{
 				return new ArgumentOutOfRangeException(nameof(year), "Year must be at least 1 and at most 9999");
@@ -436,24 +536,7 @@
 			{
 				return new ArgumentOutOfRangeException(nameof(day), string.Concat("Day must be at least 1 and, for the provided month (", month.ToString(), "), at most ", DateTime.DaysInMonth(year, month).ToString()));
 			}
-			var ex = CheckTimeParts(hour, minute, second, millis, tzHours, tzMinutes);
-			if (ex != null)
-			{
-				return ex;
-			}
-
-			int[] totalDaysFromStartYearToMonth = DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth;
-
-			totalMs = ((DaysFromYear(year) +
-				// Add number of days from the months already passed
-				totalDaysFromStartYearToMonth[month - 1] + (day - 1)) * MillisPerDay) +
-				// Time portion is easy, just hours, minutes, seconds, milliseconds
-				((hour + -tzHours) * MillisPerHour) + ((minute + -tzMinutes) * MillisPerMinute) + (second * MillisPerSecond) + millis;
-			return totalMs < 0 || totalMs > MaxMillis
-				? new ArgumentOutOfRangeException(string.Concat("The provided date parts (Year ", year.ToString(), " Month ", month.ToString(), " Day ", day.ToString(), " Hour ",
-					hour.ToString(), " Minute ", minute.ToString(), " Second ", second.ToString(), " Millis ", millis.ToString(), " Timezone Hours ", tzHours.ToString(), " Timezone Minutes ", tzMinutes.ToString(),
-					") resulted in a UtcDateTime that is outside the range of representable values."))
-				: null;
+			return null;
 		}
 		internal static ArgumentOutOfRangeException? CheckTimeParts(int hour, int minute, int second, int millis, int tzHours, int tzMinutes)
 		{

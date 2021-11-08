@@ -45,15 +45,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// <summary>
 		/// Creates a new instance, with the hours, minutes, seconds, and milliseconds parts set to 0
 		/// </summary>
-		public UtcDateTime(int year, int month, int day)
-		{
-			ArgumentOutOfRangeException? ex = DateUtil.MillisFromParts(year, month, day, 0, 0, 0, 0, 0, 0, out long ms);
-			if (ex != null)
-			{
-				throw ex;
-			}
-			TotalMilliseconds = ms;
-		}
+		public UtcDateTime(int year, int month, int day) : this(year, month, day, 0, 0, 0, 0) { }
 		/// <summary>
 		/// Creates a new UtcDateTime instance, with the millisecond part set to 0
 		/// </summary>
@@ -81,7 +73,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				GetDateParts(out int year, out _, out _);
+				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out int year, out _, out _);
 				return year;
 			}
 		}
@@ -92,7 +84,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				GetDateParts(out _, out int month, out _);
+				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out _, out int month, out _);
 				return month;
 			}
 		}
@@ -103,7 +95,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				GetDateParts(out _, out _, out int day);
+				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out _, out _, out int day);
 				return day;
 			}
 		}
@@ -130,30 +122,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// <summary>
 		/// Returns the Day of the year, from 1 to 366
 		/// </summary>
-		public int DayOfYear
-		{
-			get
-			{
-				int totalDays = TotalDays;
-				int y400 = totalDays / DateUtil.DaysPer400Years;
-				totalDays -= DateUtil.DaysPer400Years * y400;
-				int y100 = totalDays / DateUtil.DaysPer100Years;
-				if (y100 == 4)
-				{
-					y100 = 3; // Adjustment
-				}
-				totalDays -= DateUtil.DaysPer100Years * y100;
-				int y4 = totalDays / DateUtil.DaysPer4Years;
-				totalDays -= DateUtil.DaysPer4Years * y4;
-				int y1 = totalDays / 365;
-				if (y1 == 4)
-				{
-					y1 = 3; // Adjustment
-				}
-
-				return (totalDays -= y1 * 365) + 1;
-			}
-		}
+		public int DayOfYear => DateUtil.DayOfYear(TotalDays);
 		// 0001-01-01 is a Monday, thus 0001-01-00 would be a Sunday. TotalDays = 0 means 0001-01-01, so we need to add 1 and then mod 7 gets us the right answer.
 		/// <summary>
 		/// Gets the Day of Week represented by this instance
@@ -247,7 +216,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// </summary>
 		public UtcDateTime AddDays(int days)
 		{
-			return new UtcDateTime(TotalMilliseconds + days * DateUtil.MillisPerDay);
+			return days == 0 ? this : new UtcDateTime(TotalMilliseconds + days * DateUtil.MillisPerDay);
 		}
 		/// <summary>
 		/// Adds <paramref name="hours"/> to this instance

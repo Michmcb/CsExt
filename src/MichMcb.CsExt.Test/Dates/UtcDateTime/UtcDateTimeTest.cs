@@ -75,7 +75,6 @@
 			UtcDateTime converted = (UtcDateTime)new DateTime(2001, 1, 1, 15, 10, 10, DateTimeKind.Utc);
 			Assert.Equal(new UtcDateTime(2001, 1, 1, 15, 10, 10), converted);
 
-			// I live in +10:00, no DST ever applied (thank goodness, screw DST)
 			converted = (UtcDateTime)new DateTime(2001, 1, 1, 15, 10, 10, DateTimeKind.Local);
 			Assert.Equal(new UtcDateTime(2001, 1, 1, 5, 10, 10), converted);
 
@@ -114,7 +113,7 @@
 			Assert.Equal("Months/Weeks/Ordinal Days part was not at least 2 digits long, it was: 1", UtcDateTime.TryParseIso8601String("2020-1", TimeSpan.Zero).ErrorOr(null));
 
 			// Not actually valid; yyyyMM can be confused with yyyy-MM, so it isn't allowed
-			Assert.Equal("Parsed only a year and month without a separator, which is disallowed because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM", UtcDateTime.TryParseIso8601String("202011", TimeSpan.Zero).ErrorOr(null));
+			Assert.Equal("Parsed only a year and month without a separator, which ISO-8601 disallows because it can be confused with yyMMdd. Only yyyy-MM is valid, not yyyyMM", UtcDateTime.TryParseIso8601String("202011", TimeSpan.Zero).ErrorOr(null));
 			// This is valid; yyyy-MM is not ambiguous unlike yyyyMM
 			Assert.Equal(new UtcDateTime(2020, 11, 1), UtcDateTime.TryParseIso8601String("2020-11", TimeSpan.Zero).ValueOrException());
 
@@ -206,14 +205,14 @@
 			Assert.Equal("Milliseconds separator was found but no milliseconds were found", UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.").ErrorOr(null));
 
 			// Milliseconnndddssss
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), UtcDateTime.TryParseIso8601String("20200615T231052.1", TimeSpan.Zero).ValueOrException());
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), UtcDateTime.TryParseIso8601String("20200615T231052.12", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 100), UtcDateTime.TryParseIso8601String("20200615T231052.1", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 120), UtcDateTime.TryParseIso8601String("20200615T231052.12", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052,1234", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052,12345", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("20200615T231052.123456", TimeSpan.Zero).ValueOrException());
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 1), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.1", TimeSpan.Zero).ValueOrException());
-			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 12), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 100), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.1", TimeSpan.Zero).ValueOrException());
+			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 120), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52,123", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52,1234", TimeSpan.Zero).ValueOrException());
 			Assert.Equal(new UtcDateTime(2020, 6, 15, 23, 10, 52, 123), UtcDateTime.TryParseIso8601String("2020-06-15T23:10:52.12345", TimeSpan.Zero).ValueOrException());
