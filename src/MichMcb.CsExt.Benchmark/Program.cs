@@ -18,11 +18,12 @@
 			//BenchmarkRunner.Run<HashSetVsArray>();
 			//BenchmarkRunner.Run<ArrListAdd>();
 			//BenchmarkRunner.Run<ArrListIterate>();
+			BenchmarkRunner.Run<Randoms>();
 			Console.WriteLine("Enter to exit");
 			Console.ReadLine();
 		}
 	}
-	[SimpleJob(RuntimeMoniker.Net50)]
+	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
 	public class EnumUtilIsDefined
 	{
@@ -62,7 +63,7 @@
 			Enum.IsDefined(DateTimePart.Year);
 		}
 	}
-	[SimpleJob(RuntimeMoniker.Net50)]
+	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
 	public class EnumUtilTestParse
 	{
@@ -97,7 +98,7 @@
 			return p;
 		}
 	}
-	[SimpleJob(RuntimeMoniker.Net50)]
+	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
 	public class EnumUtilTestToString
 	{

@@ -5,7 +5,7 @@
 	using MichMcb.CsExt.Dates;
 	using System;
 
-	[SimpleJob(RuntimeMoniker.Net50)]
+	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
 	public class FormatUtcDateTime
 	{

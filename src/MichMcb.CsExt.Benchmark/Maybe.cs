@@ -3,7 +3,7 @@
 	using BenchmarkDotNet.Attributes;
 	using BenchmarkDotNet.Jobs;
 
-	[SimpleJob(RuntimeMoniker.Net50)]
+	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
 	public class Maybe
 	{

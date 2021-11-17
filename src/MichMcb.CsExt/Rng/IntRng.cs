@@ -6,7 +6,9 @@
 
 	/// <summary>
 	/// A random number generator, implemented as a linear congruential generator, that produces <see cref="int"/>.
-	/// Faster than <see cref="Random"/>.
+	/// Depending on the .NET version used, it can be faster than <see cref="Random"/>.
+	/// If using .net5.0 it can be 28 times faster.
+	/// If using .net6.0 it can be 9 times faster.
 	/// </summary>
 	public sealed class IntRng
 	{
