@@ -2,7 +2,7 @@
 {
 	using System;
 
-	public readonly partial struct UtcDateTime : IEquatable<UtcDateTime>, IComparable<UtcDateTime>
+	public readonly partial struct UtcDateTime
 	{
 		/// <summary>
 		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
@@ -42,132 +42,128 @@
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing, bool allowMissingTimezone)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
-			if (!LexedIso8601.LexIso8601(ts).Success(out LexedIso8601 luthor, out string errMsg))
+			if (!Iso8601.Parse(ts).Success(out Iso8601 iso, out string errMsg))
 			{
 				return errMsg;
 			}
-			luthor.Parse(ts, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int tzHours, out int tzMinutes);
-			if (luthor.TimezoneChar == '\0')
+
+			if ((iso.PartsFound & Iso8601Parts.Mask_Date) == 0)
+			{
+				return "When parsing a UtcDateTime, a date part is required. If you only want to parse a time, use the Iso8601 class directly.";
+			}
+
+			int tz;
+			if (iso.TimezoneMinutesOffset == null)
 			{
 				if (!allowMissingTimezone)
 				{
-#if !NETSTANDARD2_0
-					return string.Concat("This ISO-8601 time was missing a timezone designator: ", str);
-#else
-				return Shim.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
-#endif
+					return Compat.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
 				}
 				else
 				{
 					TimeSpan tzSpan = timezoneWhenMissing;
-					tzHours = tzSpan.Hours;
-					tzMinutes = tzSpan.Minutes;
-				}
-			}
-
-			ArgumentOutOfRangeException? ex;
-			if ((luthor.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
-			{
-				ex = DateUtil.TryCalculateMillisFromPartsOrdinalDays(year, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
-				if (ex == null)
-				{
-					return new UtcDateTime(ms);
+					tz = tzSpan.Hours * 60 + tzSpan.Minutes;
 				}
 			}
 			else
 			{
-				ex = DateUtil.MillisFromParts(year, month, day, hour, minute, second, millis, tzHours, tzMinutes, out long ms);
-				if (ex == null)
-				{
-					return new UtcDateTime(ms);
-				}
+				tz = iso.TimezoneMinutesOffset.Value;
 			}
-			return ex.Message;
+
+			string err;
+			if ((iso.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
+			{
+				return MillisFromDate_YearOrdinalDays(iso.Year, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+					? new UtcDateTime(timeMs + dateMs)
+					: err;
+			}
+			else if ((iso.PartsFound & Iso8601Parts.Week) == Iso8601Parts.Week)
+			{
+				return MillisFromDate_YearWeekDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+					? new UtcDateTime(timeMs + dateMs)
+					: err;
+			}
+			else
+			{
+				return MillisFromDate_YearMonthDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+					? new UtcDateTime(timeMs + dateMs)
+					: err;
+			}
 		}
 		/// <summary>
-		/// Formats this instance as an ISO-8601 string using Extended Format with UTC as the Timezone Designator (<see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>).
+		/// Formats this instance as an ISO-8601 string using Extended Format with UTC as the Timezone Designator (<see cref="Iso8601Format.ExtendedFormat_UtcTz"/>).
 		/// e.g. 2010-12-30T13:30:20.123Z
 		/// </summary>
 		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
 		public override string ToString()
 		{
 #if !NETSTANDARD2_0
-			return string.Create(DateUtil.Length_Format_ExtendedFormat_UtcTz, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis: true));
+			return string.Create(Iso8601Format.ExtendedFormat_UtcTz.Length, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis: true));
 #else
-			return Shim.StringCreate(DateUtil.Length_Format_ExtendedFormat_UtcTz, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis: true));
+			return Compat.StringCreate(Iso8601Format.ExtendedFormat_UtcTz.Length, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis: true));
+#endif
+		}
+		/// <summary>
+		/// Formats this instance as an ISO-8601 string. Always uses UTC as the timezone designator.
+		/// </summary>
+		/// <param name="extended">If true uses extended format, if false uses basic format.</param>
+		/// <param name="millis">Whether or not to include milliseconds.</param>
+		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
+		public string ToIso8601StringUtc(bool extended = true, bool millis = true)
+		{
+#if !NETSTANDARD2_0
+			return extended
+				? string.Create(millis ? Iso8601Format.ExtendedFormat_UtcTz.Length : Iso8601Format.ExtendedFormat_NoMillis_UtcTz.Length, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis))
+				: string.Create(millis ? Iso8601Format.BasicFormat_UtcTz.Length : Iso8601Format.BasicFormat_NoMillis_UtcTz.Length, this, (dest, inst) => inst.FormatBasicFormatUtc(dest, millis));
+#else
+			return extended
+				? Compat.StringCreate(millis ? Iso8601Format.ExtendedFormat_UtcTz.Length : Iso8601Format.ExtendedFormat_NoMillis_UtcTz.Length, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis))
+				: Compat.StringCreate(millis ? Iso8601Format.BasicFormat_UtcTz.Length : Iso8601Format.BasicFormat_NoMillis_UtcTz.Length, this, (dest, inst) => inst.FormatBasicFormatUtc(dest, millis));
+#endif
+		}
+		/// <summary>
+		/// Formats this instance as an ISO-8601 string. Always uses a full timezone designator.
+		/// </summary>
+		/// <param name="extended">If true uses extended format, if false uses basic format.</param>
+		/// <param name="millis">Whether or not to include milliseconds.</param>
+		/// <param name="timezone">The timezone to use.  Null will use <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>.</param>
+		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
+		public string ToIso8601StringTz(bool extended = true, bool millis = true, TimeSpan? timezone = null)
+		{
+			Iso8601Format fmt = extended
+				? millis ? Iso8601Format.ExtendedFormat_FullTz : Iso8601Format.ExtendedFormat_NoMillis_FullTz
+				: millis ? Iso8601Format.BasicFormat_FullTz : Iso8601Format.BasicFormat_NoMillis_FullTz;
+#if !NETSTANDARD2_0
+			return string.Create(fmt.Length, this, (dest, inst) => inst.Format(dest, timezone, fmt));
+#else
+			return Compat.StringCreate(fmt.Length, this, (dest, inst) => inst.Format(dest, timezone, fmt));
 #endif
 		}
 		/// <summary>
 		/// Formats this instance as an ISO-8601 string according to the rules specified by <paramref name="format"/>.
 		/// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
 		/// </summary>
-		/// <param name="timezone">If writing a non-UTC timezone designator or unqualified, writes the time with this offset. If using UTC timezone designator this is ignored.</param>
 		/// <param name="format">How to format the string.</param>
+		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
 		/// <returns>An ISO-8601 representing this UtcDateTime, or an error message.</returns>
-		public Maybe<string, string> TryToIso8601String(TimeSpan timezone, Iso8601Parts format)
+		public Maybe<string, string> TryToIso8601String(Iso8601Parts format, TimeSpan? timezone)
 		{
-			return DateUtil.TryGetLengthRequired(format).Success(out int len, out string? errMsg)
-#if !NETSTANDARD2_0
-				? Maybe<string, string>.Value(string.Create(len, this, (dest, inst) => inst.FormatUnchecked(dest, timezone, format)))
-#else
-				? Maybe<string, string>.Value(Shim.StringCreate(len, this, (dest, inst) => inst.FormatUnchecked(dest, timezone, format)))
-#endif
+			return Iso8601Format.TryCreate(format).Success(out Iso8601Format fmt, out string? errMsg)
+				? Maybe<string, string>.Value(ToIso8601String(fmt, timezone))
 				: Maybe<string, string>.Error(errMsg);
 		}
 		/// <summary>
-		/// Calls <see cref="TryToIso8601String(TimeSpan, Iso8601Parts)"/>.
+		/// Formats this instance as an ISO-8601 string according to the rules specified by <paramref name="format"/>.
+		/// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
 		/// </summary>
-		/// <param name="timezone">If writing a non-UTC timezone designator or unqualified, writes the time with this offset. If using UTC timezone designator this is ignored.</param>
-		/// <param name="format">How to format the string. By default, this is ISO-8601 extended, with UTC timezone designator</param>
-		/// <returns>An ISO-8601 representing this UtcDateTime.</returns>
-		/// <exception cref="ArgumentException">When <paramref name="format"/> is not valid.</exception>
-		public string ToIso8601String(TimeSpan timezone, Iso8601Parts format)
-		{
-			return TryToIso8601String(timezone, format).Success(out string iso, out string errMsg)
-				? iso
-				: throw new ArgumentException(errMsg, nameof(format));
-		}
-		/// <summary>
-		/// Formats this istnance as an ISO-8601 string using Extended Format with UTC as Timezone Designator (<see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>).
-		/// </summary>
-		/// <param name="millis">Whether or not to include milliseconds (to 3 decimal places).</param>
-		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601StringExtendedUtc(bool millis = true)
+		/// <param name="format">How to format the string.</param>
+		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
+		public string ToIso8601String(Iso8601Format format, TimeSpan? timezone)
 		{
 #if !NETSTANDARD2_0
-			return string.Create(millis ? DateUtil.Length_Format_ExtendedFormat_UtcTz : DateUtil.Length_Format_ExtendedFormat_NoMillis_UtcTz, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis));
+			return string.Create(format.Length, this, (dest, inst) => inst.Format(dest, timezone, format));
 #else
-			return Shim.StringCreate(millis ? DateUtil.Length_Format_ExtendedFormat_UtcTz : DateUtil.Length_Format_ExtendedFormat_NoMillis_UtcTz, this, (dest, inst) => inst.FormatExtendedFormatUtc(dest, millis));
-#endif
-		}
-		/// <summary>
-		/// Formats this istnance as an ISO-8601 string using Basic Format with UTC as Timezone Designator (<see cref="Iso8601Parts.Format_BasicFormat_UtcTz"/>).
-		/// </summary>
-		/// <param name="millis">Whether or not to include milliseconds (to 3 decimal places).</param>
-		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601StringBasicUtc(bool millis = true)
-		{
-#if !NETSTANDARD2_0
-			return string.Create(millis ? DateUtil.Length_Format_BasicFormat_UtcTz : DateUtil.Length_Format_BasicFormat_NoMillis_UtcTz, this, (dest, inst) => inst.FormatBasicFormatUtc(dest, millis));
-#else
-			return Shim.StringCreate(millis ? DateUtil.Length_Format_BasicFormat_UtcTz : DateUtil.Length_Format_BasicFormat_NoMillis_UtcTz, this, (dest, inst) => inst.FormatBasicFormatUtc(dest, millis));
-#endif
-		}
-		/// <summary>
-		/// Formats this istnance as an ISO-8601 string using Extended Format with <paramref name="timezone"/> as Timezone Designator (<see cref="Iso8601Parts.Format_ExtendedFormat_FullTz"/>).
-		/// Or if <paramref name="extended"/> is false, uses Basic Format (<see cref="Iso8601Parts.Format_BasicFormat_FullTz"/>).
-		/// </summary>
-		/// <param name="extended">How to format the string. By default, this is ISO-8601 extended, with UTC timezone designator</param>
-		/// <param name="millis">Whether or not to include milliseconds (to 3 decimal places).</param>
-		/// <param name="timezone">The timezone to use. If null, uses offset of <see cref="TimeZoneInfo.Local"/></param>
-		/// <returns>An ISO-8601 representing this UtcDateTime</returns>
-		public string ToIso8601StringWithTimeZone(bool extended = true, bool millis = true, TimeSpan? timezone = null)
-		{
-			Iso8601Parts fmt = (extended ? Iso8601Parts.Format_ExtendedFormat_NoMillis_FullTz : Iso8601Parts.Format_BasicFormat_NoMillis_FullTz) | (millis ? Iso8601Parts.Millis : 0);
-#if !NETSTANDARD2_0
-			return string.Create(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.FormatUnchecked(dest, timezone, fmt));
-#else
-			return Shim.StringCreate(DateUtil.TryGetLengthRequired(fmt).ValueOr(0), this, (dest, inst) => inst.FormatUnchecked(dest, timezone, fmt));
+			return Compat.StringCreate(format.Length, this, (dest, inst) => inst.Format(dest, timezone, format));
 #endif
 		}
 		/// <summary>
@@ -176,25 +172,39 @@
 		/// Note that if <paramref name="timezone"/> is provided and <paramref name="format"/> specifies a UTC Timezone designator or no Timezone designator (Local) this doesn't have any effect; use Tz_Hour or Tz_HourMinute.
 		/// </summary>
 		/// <param name="destination">The destination to write to. If this doesn't have the length required to hold the resultant string, returns an error.</param>
-		/// <param name="format">How to format the string. By default, this is ISO-8601 extended (Everything, with separators, and UTC timezone)</param>
-		/// <param name="timezone">If writing a non-UTC timezone designator or unqualified, writes the time with this offset. If null, uses UTC offset of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this no used (and <see cref="TimeZoneInfo.Local"/> is not accessed).</param>
+		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
+		/// <param name="format">How to format the string. By default, this is <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>.</param>
 		/// <returns>The numbers of chars written, or an error message.</returns>
-		public Maybe<int, string> TryFormat(Span<char> destination, TimeSpan? timezone = null, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
+		public Maybe<int, string> TryFormat(Span<char> destination, TimeSpan? timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
 		{
-			if (!DateUtil.TryGetLengthRequired(format).Success(out int len, out string? errMsg))
+			if (!Iso8601Format.TryCreate(format).Success(out Iso8601Format fmt, out string? errMsg))
 			{
 				return errMsg;
 			}
-			if (destination.Length < len)
-			{
-				return string.Concat("Destination span is too small. Required length is ", len, " but the destination span length is only ", destination.Length);
-			}
-			return FormatUnchecked(destination, timezone, format);
+			int w = Format(destination, timezone, fmt);
+			return w == 0
+				? string.Concat("Destination span is too small. Required length is ", fmt.Length, " but the destination span length is only ", destination.Length)
+				: w;
 		}
-		private int FormatUnchecked(Span<char> destination, TimeSpan? timezone = null, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
+		/// <summary>
+		/// Formats this UtcDateTime to <paramref name="destination"/> as an ISO-8601 string, according to the rules specified by <paramref name="format"/>.
+		/// The provided <paramref name="timezone"/> specifies the timezone designator to use and then writes the string according to the <paramref name="format"/>.
+		/// Note that if <paramref name="timezone"/> is provided and <paramref name="format"/> specifies a UTC Timezone designator or no Timezone designator (Local) this doesn't have any effect; use Tz_Hour or Tz_HourMinute.
+		/// </summary>
+		/// <param name="destination">The destination to write to. If this doesn't have the length required to hold the resultant string, returns an error.</param>
+		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
+		/// <param name="format">How to format the string. If default, this is <see cref="Iso8601Format.ExtendedFormat_UtcTz"/>.</param>
+		/// <returns>The numbers of chars written, or an error message.</returns>
+		public int Format(Span<char> destination, TimeSpan? timezone, Iso8601Format format = default)
 		{
-			switch (format)
+			if (destination.Length < format.Length)
 			{
+				return 0;
+			}
+			Iso8601Parts fmt = format.Format;
+			switch (fmt)
+			{
+				case Iso8601Parts.None:
 				case Iso8601Parts.Format_ExtendedFormat_UtcTz: return FormatExtendedFormatUtc(destination, true);
 				case Iso8601Parts.Format_ExtendedFormat_NoMillis_UtcTz: return FormatExtendedFormatUtc(destination, false);
 				case Iso8601Parts.Format_BasicFormat_UtcTz: return FormatBasicFormatUtc(destination, true);
@@ -203,12 +213,11 @@
 					break;
 			}
 
-			bool seps = (format & Iso8601Parts.Separator_Date) == Iso8601Parts.Separator_Date;
+			bool seps = (fmt & Iso8601Parts.Separator_Date) == Iso8601Parts.Separator_Date;
 
-			Iso8601Parts ftz = format & Iso8601Parts.Mask_Tz;
+			Iso8601Parts ftz = fmt & Iso8601Parts.Mask_Tz;
 			// When we aren't writing the time, and timezone designator is absent, we still offset to the local timezone,
 			// which can cause the date to change. The thing is, when we write just the Date that technically causes data loss.
-			// So when we write the date, I guess what we're saying is that we mean this date in our local timezone. In that case, we should not offset it at all
 
 			// If we're writing a UTC Timezone designator, timezone is meaningless and our offset is 0
 			// If we're writing unqualified or hour/min, we need to take timezone into account. So we'll either write the value of timezone later, or just assume that it was local
@@ -224,60 +233,82 @@
 				tz = timezone ?? TimeZoneInfo.Local.BaseUtcOffset;
 				tzOffsetMs = tz.Ticks / TimeSpan.TicksPerMillisecond;
 			}
-			DateUtil.CalcDateTimeParts(TotalMilliseconds + tzOffsetMs, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
+			// TODO Check to see if we exceeded MaxMillis by adding TotalMilliseconds to tzOffsetMs
+			DateTimePartsFromTotalMilliseconds(TotalMilliseconds + tzOffsetMs, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
 
 			int i = 0;
-			if ((format & Iso8601Parts.Year) == Iso8601Parts.Year)
+
+			// Weeks have to be handled differently, because 2019-12-30 for example is actually written 2020-W01-1.
+			if ((fmt & Iso8601Parts.YearWeek) == Iso8601Parts.YearWeek)
 			{
-				Formatting.Write4Digits((uint)year, destination, 0);
+				IsoYearWeek isoYearWeek = IsoYearWeek.Create(year, month, day);
+				Formatting.Write4Digits((uint)isoYearWeek.Year, destination, 0);
 				i += 4;
 				if (seps)
 				{
 					destination[i++] = '-';
 				}
-			}
-			else
-			{
-				// If no year, write --. Doesn't matter if we specified separators or not, that's what we write.
-				// This is primarily used for VCF format for birthdays, when the year is unknown (--MM-dd or --MMdd)
-				destination[i++] = '-';
-				destination[i++] = '-';
-			}
-			if ((format & Iso8601Parts.Month) == 0 && ((format & Iso8601Parts.Day) == Iso8601Parts.Day))
-			{
-				// Month and no Day is the ordinal format; we need to turn months into days and add that together with day to get the number to write
-				int[] totalDaysFromStartYearToMonth = DateTime.IsLeapYear(year) ? DateUtil.TotalDaysFromStartLeapYearToMonth : DateUtil.TotalDaysFromStartYearToMonth;
-				Formatting.Write3Digits((uint)(totalDaysFromStartYearToMonth[month - 1] + day), destination, i);
-				i += 3;
-			}
-			else
-			{
-				if ((format & Iso8601Parts.Month) == Iso8601Parts.Month)
-				{
-					Formatting.Write2Digits((uint)month, destination, i);
-					i += 2;
-				}
-				if ((format & Iso8601Parts.Day) == Iso8601Parts.Day)
+
+				destination[i++] = 'W';
+				Formatting.Write2Digits((uint)isoYearWeek.Week, destination, i);
+				i += 2;
+				if ((fmt & Iso8601Parts.Day) == Iso8601Parts.Day)
 				{
 					if (seps)
 					{
 						destination[i++] = '-';
 					}
-					Formatting.Write2Digits((uint)day, destination, i);
-					i += 2;
+					destination[i++] = (char)('0' + isoYearWeek.WeekDay);
+				}
+			}
+			else
+			{
+				if ((fmt & Iso8601Parts.Year) == Iso8601Parts.Year)
+				{
+					Formatting.Write4Digits((uint)year, destination, 0);
+					i += 4;
+					if (seps)
+					{
+						destination[i++] = '-';
+					}
+				}
+				if ((fmt & Iso8601Parts.Month) == 0 && ((fmt & Iso8601Parts.Day) == Iso8601Parts.Day))
+				{
+					// Month and no Day is the ordinal format; we need to turn months into days and add that together with day to get the number to write
+					int ordinalDay = (DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth)[month - 1] + day;
+					Formatting.Write3Digits((uint)ordinalDay, destination, i);
+					i += 3;
+				}
+				else
+				{
+					if ((fmt & Iso8601Parts.Month) == Iso8601Parts.Month)
+					{
+						Formatting.Write2Digits((uint)month, destination, i);
+						i += 2;
+					}
+					if ((fmt & Iso8601Parts.Day) == Iso8601Parts.Day)
+					{
+						if (seps)
+						{
+							destination[i++] = '-';
+						}
+						Formatting.Write2Digits((uint)day, destination, i);
+						i += 2;
+					}
 				}
 			}
 
-			if ((format & Iso8601Parts.Mask_Time) != 0)
+			if ((fmt & Iso8601Parts.Mask_Time) != 0)
 			{
-				seps = (format & Iso8601Parts.Separator_Time) == Iso8601Parts.Separator_Time;
+				seps = (fmt & Iso8601Parts.Separator_Time) == Iso8601Parts.Separator_Time;
+				// Always have to write T, even if no date was specified
 				destination[i++] = 'T';
-				if ((format & Iso8601Parts.Hour) == Iso8601Parts.Hour)
+				if ((fmt & Iso8601Parts.Hour) == Iso8601Parts.Hour)
 				{
 					Formatting.Write2Digits((uint)hour, destination, i);
 					i += 2;
 				}
-				if ((format & Iso8601Parts.Minute) == Iso8601Parts.Minute)
+				if ((fmt & Iso8601Parts.Minute) == Iso8601Parts.Minute)
 				{
 					if (seps)
 					{
@@ -286,7 +317,7 @@
 					Formatting.Write2Digits((uint)minute, destination, i);
 					i += 2;
 				}
-				if ((format & Iso8601Parts.Second) == Iso8601Parts.Second)
+				if ((fmt & Iso8601Parts.Second) == Iso8601Parts.Second)
 				{
 					if (seps)
 					{
@@ -295,7 +326,7 @@
 					Formatting.Write2Digits((uint)second, destination, i);
 					i += 2;
 				}
-				if ((format & Iso8601Parts.Millis) == Iso8601Parts.Millis)
+				if ((fmt & Iso8601Parts.Millis) == Iso8601Parts.Millis)
 				{
 					destination[i++] = '.';
 					Formatting.Write3Digits((uint)ms, destination, i);
@@ -319,7 +350,7 @@
 					tzi = Math.Abs(tz.Hours);
 					Formatting.Write2Digits((uint)tzi, destination, i);
 					i += 2;
-					if ((format & Iso8601Parts.Separator_Tz) == Iso8601Parts.Separator_Tz)
+					if ((fmt & Iso8601Parts.Separator_Tz) == Iso8601Parts.Separator_Tz)
 					{
 						destination[i++] = ':';
 					}
@@ -338,7 +369,7 @@
 		/// <returns>The number of chars written (20 if <paramref name="millis"/> is true or 16 if <paramref name="millis"/> is false), or 0 if <paramref name="destination"/> is too small.</returns>
 		public int FormatBasicFormatUtc(Span<char> destination, bool millis)
 		{
-			int len = millis ? DateUtil.Length_Format_BasicFormat_UtcTz : DateUtil.Length_Format_BasicFormat_NoMillis_UtcTz;
+			int len = millis ? Iso8601Format.BasicFormat_UtcTz.Length : Iso8601Format.BasicFormat_NoMillis_UtcTz.Length;
 			if (destination.Length < len)
 			{
 				return 0;
@@ -347,7 +378,7 @@
 			// yyyyMMddTHHmmss.sssZ
 			// 01234567890123456789
 
-			DateUtil.CalcDateTimeParts(TotalMilliseconds, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
+			Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
 			Formatting.Write4Digits((uint)year, destination, 0);
 			Formatting.Write2Digits((uint)month, destination, 4);
 			Formatting.Write2Digits((uint)day, destination, 6);
@@ -376,7 +407,7 @@
 		/// <returns>The number of chars written (24 if <paramref name="millis"/> is true or 20 if <paramref name="millis"/> is false), or 0 if <paramref name="destination"/> is too small.</returns>
 		public int FormatExtendedFormatUtc(Span<char> destination, bool millis)
 		{
-			int len = millis ? DateUtil.Length_Format_ExtendedFormat_UtcTz : DateUtil.Length_Format_ExtendedFormat_NoMillis_UtcTz;
+			int len = millis ? Iso8601Format.ExtendedFormat_UtcTz.Length : Iso8601Format.ExtendedFormat_NoMillis_UtcTz.Length;
 			if (destination.Length < len)
 			{
 				return 0;
@@ -385,7 +416,7 @@
 			// yyyy-MM-ddTHH:mm:ss.sssZ
 			// 012345678901234567890123
 
-			DateUtil.CalcDateTimeParts(TotalMilliseconds, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
+			Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
 			Formatting.Write4Digits((uint)year, destination, 0);
 			destination[4] = '-';
 			Formatting.Write2Digits((uint)month, destination, 5);

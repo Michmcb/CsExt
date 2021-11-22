@@ -11,17 +11,12 @@
 	{
 		public static readonly UtcDateTime utcNow = UtcDateTime.Now;
 		public static readonly DateTime now = DateTime.UtcNow;
-		public static readonly Memory<char> mem = new char[DateUtil.TryGetLengthRequired(Iso8601Parts.Format_ExtendedFormat_UtcTz).ValueOrException()];
+		public static readonly Memory<char> mem = new char[Iso8601Format.ExtendedFormat_UtcTz.Length];
 		[Benchmark]
 		public void UtcDateTimeToString()
 		{
 			utcNow.ToString();
 		}
-		//[Benchmark]
-		//public void DateTimeToStringExplicit()
-		//{
-		//	now.ToString("yyyy-MM-ddTHH:mm:ss.fffK");
-		//}
 		[Benchmark]
 		public void DateTimeToStringO()
 		{

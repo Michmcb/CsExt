@@ -77,10 +77,6 @@
 		/// yyyy-ddd
 		/// </summary>
 		Format_DateOrdinal = YearDay | Separator_Date,
-		/// <summary>
-		/// --MM-dd
-		/// </summary>
-		Format_VcfUnknownYear = MonthDay | Separator_Date,
 
 		/// <summary>
 		/// A mask to get only Separator-specific parts
@@ -89,7 +85,7 @@
 		/// <summary>
 		/// A mask to get only Date-specific parts
 		/// </summary>
-		Mask_Date =			0b0000_0000_1101_0000,
+		Mask_Date =			0b0000_0000_1111_0000,
 		/// <summary>
 		/// A mask to get only Time-specific parts
 		/// </summary>
@@ -124,10 +120,10 @@
 		/// Month
 		/// </summary>
 		Month = 0b0000_0000_0100_0000,
-		///// <summary>
-		///// Week
-		///// </summary>
-		//Week = 0b0000_0000_0010_0000, TODO when you uncomment this, set Mask_Date correctly
+		/// <summary>
+		/// Week
+		/// </summary>
+		Week = 0b0000_0000_0010_0000,
 		/// <summary>
 		/// Day
 		/// </summary>
@@ -145,11 +141,17 @@
 		/// </summary>
 		MonthDay = Month | Day,
 		/// <summary>
-		/// Year and Ordinal days (i.e. 1~366)
+		/// Year and ordinal days (i.e. 1 to 366)
 		/// </summary>
 		YearDay = Year | Day,
-		//YearWeek = Year | Week,
-		//YearWeekDay = Year | Week | Day,
+		/// <summary>
+		/// Year and week
+		/// </summary>
+		YearWeek = Year | Week,
+		/// <summary>
+		/// Year, week, and day of week
+		/// </summary>
+		YearWeekDay = Year | Week | Day,
 
 		/// <summary>
 		/// Millisecond

@@ -4,11 +4,6 @@
 	using System.Diagnostics.CodeAnalysis;
 	using System.Runtime.CompilerServices;
 
-	/*
-TODO notes for a ZonedDateTime are written here
-MaxMillis is this in hex: 0001 1EFA E44C B3FF
-3 hex digits (12 bits, 4096 possible states) is just enough to cram in TimeZone, but only if the highest resolution for it is minutes, and only if it's ± 24 hours at max. (or more realistically, 23:59)
-60 mins * 24 hrs gives us 0x0D80, so we can just barely fit that into the upper 3 hex digits of our TotalMilliseconds. Of course, doing this means we can't be any more precise than 1 millisecond. But that's fine I think.*/
 	/// <summary>
 	/// Represents a UTC Date Time, as milliseconds since 0001-01-01 00:00:00.000.
 	/// Unlike <see cref="DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.
@@ -21,7 +16,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// <summary>
 		/// 1970-01-01 00:00:00
 		/// </summary>
-		public static readonly UtcDateTime UnixEpoch = new(DateUtil.UnixEpochMillis);
+		public static readonly UtcDateTime UnixEpoch = new(UnixEpochMillis);
 		/// <summary>
 		/// 0001-01-01 00:00:00
 		/// </summary>
@@ -29,16 +24,16 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// <summary>
 		/// 9999-12-31 23:59:59.999
 		/// </summary>
-		public static readonly UtcDateTime MaxValue = new(DateUtil.MaxMillis);
+		public static readonly UtcDateTime MaxValue = new(MaxMillis);
 		/// <summary>
 		/// Creates a new instance, as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		/// <param name="millis">Milliseconds elapsed since 0001-01-01 00:00:00</param>
 		public UtcDateTime(long millis)
 		{
-			if (millis < 0 || millis > DateUtil.MaxMillis)
+			if (millis < 0 || millis > MaxMillis)
 			{
-				throw new ArgumentOutOfRangeException(nameof(millis), "Milliseconds must be at least 0 and at most " + DateUtil.MaxMillis.ToString());
+				throw new ArgumentOutOfRangeException(nameof(millis), "Milliseconds must be at least 0 and at most " + MaxMillis.ToString());
 			}
 			TotalMilliseconds = millis;
 		}
@@ -55,12 +50,15 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			ArgumentOutOfRangeException? ex = DateUtil.MillisFromParts(year, month, day, hour, minute, second, millis, 0, 0, out long ms);
-			if (ex != null)
+			if (!MillisFromTime(hour, minute, second, millis, 0).Success(out long tms, out string err))
 			{
-				throw ex;
+				throw new ArgumentOutOfRangeException(null, err);
 			}
-			TotalMilliseconds = ms;
+			if (!MillisFromDate_YearMonthDay(year, month, day).Success(out long dms, out err))
+			{
+				throw new ArgumentOutOfRangeException(null, err);
+			}
+			TotalMilliseconds = tms + dms;
 		}
 		/// <summary>
 		/// Returns an instance representing the current UTC time
@@ -73,7 +71,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out int year, out _, out _);
+				DatePartsFromTotalDays((int)(TotalMilliseconds / MillisPerDay), out int year, out _, out _);
 				return year;
 			}
 		}
@@ -84,7 +82,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out _, out int month, out _);
+				DatePartsFromTotalDays((int)(TotalMilliseconds / MillisPerDay), out _, out int month, out _);
 				return month;
 			}
 		}
@@ -95,34 +93,57 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		{
 			get
 			{
-				DateUtil.CalcDateParts((int)(TotalMilliseconds / DateUtil.MillisPerDay), out _, out _, out int day);
+				DatePartsFromTotalDays((int)(TotalMilliseconds / MillisPerDay), out _, out _, out int day);
 				return day;
 			}
 		}
 		/// <summary>
 		/// Returns the Hours part of this instance
 		/// </summary>
-		public int Hour => (int)(TotalMilliseconds / DateUtil.MillisPerHour % 24);
+		public int Hour => (int)(TotalMilliseconds / MillisPerHour % 24);
 		/// <summary>
 		/// Returns the minutes part of this instance
 		/// </summary>
-		public int Minute => (int)(TotalMilliseconds / DateUtil.MillisPerMinute % 60);
+		public int Minute => (int)(TotalMilliseconds / MillisPerMinute % 60);
 		/// <summary>
 		/// Returns the seconds part of this instance
 		/// </summary>
-		public int Second => (int)(TotalMilliseconds / DateUtil.MillisPerSecond % 60);
+		public int Second => (int)(TotalMilliseconds / MillisPerSecond % 60);
 		/// <summary>
 		/// Returns the milliseconds part of this instance
 		/// </summary>
-		public int Millisecond => (int)(TotalMilliseconds % DateUtil.MillisPerSecond);
+		public int Millisecond => (int)(TotalMilliseconds % MillisPerSecond);
 		/// <summary>
 		/// Returns the total number of days since 0001-01-01 represented by this instance
 		/// </summary>
-		public int TotalDays => (int)(TotalMilliseconds / DateUtil.MillisPerDay);
+		public int TotalDays => (int)(TotalMilliseconds / MillisPerDay);
 		/// <summary>
 		/// Returns the Day of the year, from 1 to 366
 		/// </summary>
-		public int DayOfYear => DateUtil.DayOfYear(TotalDays);
+		public int DayOfYear
+		{
+			get
+			{
+				int totalDays = TotalDays;
+				int y400 = totalDays / DaysPer400Years;
+				totalDays -= DaysPer400Years * y400;
+				int y100 = totalDays / DaysPer100Years;
+				if (y100 == 4)
+				{
+					y100 = 3; // Adjustment
+				}
+				totalDays -= DaysPer100Years * y100;
+				int y4 = totalDays / DaysPer4Years;
+				totalDays -= DaysPer4Years * y4;
+				int y1 = totalDays / 365;
+				if (y1 == 4)
+				{
+					y1 = 3; // Adjustment
+				}
+
+				return (totalDays -= y1 * 365) + 1;
+			}
+		}
 		// 0001-01-01 is a Monday, thus 0001-01-00 would be a Sunday. TotalDays = 0 means 0001-01-01, so we need to add 1 and then mod 7 gets us the right answer.
 		/// <summary>
 		/// Gets the Day of Week represented by this instance
@@ -131,7 +152,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// <summary>
 		/// Returns the Time of Day as a TimeSpan
 		/// </summary>
-		public TimeSpan TimeOfDay => new(TotalMilliseconds % DateUtil.MillisPerDay * TimeSpan.TicksPerMillisecond);
+		public TimeSpan TimeOfDay => new(TotalMilliseconds % MillisPerDay * TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// The number of milliseconds elapsed since 0001-01-01 00:00:00 represented by this instance
 		/// </summary>
@@ -159,7 +180,7 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// </summary>
 		public void Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis)
 		{
-			DateUtil.CalcDateTimeParts(TotalMilliseconds, out year, out month, out day, out hour, out minute, out second, out millis);
+			DateTimePartsFromTotalMilliseconds(TotalMilliseconds, out year, out month, out day, out hour, out minute, out second, out millis);
 		}
 		/// <summary>
 		/// Adds the specified number of years to this instance.
@@ -216,28 +237,28 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// </summary>
 		public UtcDateTime AddDays(int days)
 		{
-			return days == 0 ? this : new UtcDateTime(TotalMilliseconds + days * DateUtil.MillisPerDay);
+			return days == 0 ? this : new UtcDateTime(TotalMilliseconds + days * MillisPerDay);
 		}
 		/// <summary>
 		/// Adds <paramref name="hours"/> to this instance
 		/// </summary>
 		public UtcDateTime AddHours(int hours)
 		{
-			return new UtcDateTime(TotalMilliseconds + hours * DateUtil.MillisPerHour);
+			return new UtcDateTime(TotalMilliseconds + (hours * MillisPerHour));
 		}
 		/// <summary>
 		/// Adds <paramref name="minutes"/> to this instance
 		/// </summary>
 		public UtcDateTime AddMinutes(int minutes)
 		{
-			return new UtcDateTime(TotalMilliseconds + minutes * DateUtil.MillisPerMinute);
+			return new UtcDateTime(TotalMilliseconds + minutes * MillisPerMinute);
 		}
 		/// <summary>
 		/// Adds <paramref name="seconds"/> to this instance
 		/// </summary>
 		public UtcDateTime AddSeconds(int seconds)
 		{
-			return new UtcDateTime(TotalMilliseconds + seconds * DateUtil.MillisPerSecond);
+			return new UtcDateTime(TotalMilliseconds + seconds * MillisPerSecond);
 		}
 		/// <summary>
 		/// Adds <paramref name="millis"/> to this instance
@@ -259,10 +280,10 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 				DateTimePart.Year => new UtcDateTime(Year, 1, 1),
 				// It's slow to calculate year/month/day and then additionally recalculate the milliseconds from that, so we truncate to days first,
 				// then remove the days (the Day property calculates year/month/day)
-				DateTimePart.Month => new(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerDay) - (Day * DateUtil.MillisPerDay) + DateUtil.MillisPerDay),
-				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerDay)),
-				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerHour)),
-				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % DateUtil.MillisPerMinute)),
+				DateTimePart.Month => new(TotalMilliseconds - (TotalMilliseconds % MillisPerDay) - (Day * MillisPerDay) + MillisPerDay),
+				DateTimePart.Day => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % MillisPerDay)),
+				DateTimePart.Hour => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % MillisPerHour)),
+				DateTimePart.Minute => new UtcDateTime(TotalMilliseconds - (TotalMilliseconds % MillisPerMinute)),
 				DateTimePart.Second => new UtcDateTime(TotalMilliseconds - Millisecond),
 				DateTimePart.Millisecond => this,
 				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
@@ -273,52 +294,41 @@ MaxMillis is this in hex: 0001 1EFA E44C B3FF
 		/// </summary>
 		public long ToUnixEpochSeconds()
 		{
-			return (TotalMilliseconds - DateUtil.UnixEpochMillis) / DateUtil.MillisPerSecond;
+			return (TotalMilliseconds - UnixEpochMillis) / MillisPerSecond;
 		}
 		/// <summary>
 		/// Returns the number of milliseconds elapsed since 1970-01-01 00:00:00.
 		/// </summary>
 		public long ToUnixEpochMilliseconds()
 		{
-			return TotalMilliseconds - DateUtil.UnixEpochMillis;
-		}
-		/// <summary>
-		/// Creates a new instance, as the number of <paramref name="days"/> elapsed since 0001-01-01 00:00:00.
-		/// Optionally allows specifying the hour/minute/second/millisecond
-		/// </summary>
-		public static UtcDateTime FromDays(int days, int hour = 0, int minute = 0, int second = 0, int millis = 0)
-		{
-			ArgumentOutOfRangeException? ex = DateUtil.CheckTimeParts(hour, minute, second, millis, 0, 0);
-			return ex != null
-				? throw ex
-				: new UtcDateTime(days * DateUtil.MillisPerDay + hour * DateUtil.MillisPerHour + minute * DateUtil.MillisPerMinute + second * DateUtil.MillisPerSecond + millis);
+			return TotalMilliseconds - UnixEpochMillis;
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// The value of (<paramref name="seconds"/> * <see cref="DateUtil.MillisPerSecond"/>) must be within the range of <see cref="DateUtil.MinMillisUnixEpoch"/> and <see cref="DateUtil.MaxMillisUnixEpoch"/>.
+		/// The value of (<paramref name="seconds"/> * <see cref="MillisPerSecond"/>) must be within the range of <see cref="MinMillisUnixEpoch"/> and <see cref="MaxMillisUnixEpoch"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UtcDateTime FromUnixEpochSeconds(long seconds)
+		public static UtcDateTime FromUnixTimeSeconds(long seconds)
 		{
-			return FromUnixEpochMilliseconds(seconds * DateUtil.MillisPerSecond);
+			return FromUnixTimeMilliseconds(seconds * MillisPerSecond);
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as milliseconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// <paramref name="milliseconds"/> must be within the range of <see cref="DateUtil.MinMillisUnixEpoch"/> and <see cref="DateUtil.MaxMillisUnixEpoch"/>.
+		/// <paramref name="milliseconds"/> must be within the range of <see cref="MinMillisUnixEpoch"/> and <see cref="MaxMillisUnixEpoch"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static UtcDateTime FromUnixEpochMilliseconds(long milliseconds)
+		public static UtcDateTime FromUnixTimeMilliseconds(long milliseconds)
 		{
-			return milliseconds < DateUtil.MinMillisUnixEpoch || milliseconds > DateUtil.MaxMillisUnixEpoch
-				? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + DateUtil.MinMillisUnixEpoch + " and at most " + DateUtil.MaxMillisUnixEpoch)
-				: new UtcDateTime(milliseconds + DateUtil.UnixEpochMillis);
+			return milliseconds < MinMillisUnixEpoch || milliseconds > MaxMillisUnixEpoch
+				? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + MinMillisUnixEpoch + " and at most " + MaxMillisUnixEpoch)
+				: new UtcDateTime(milliseconds + UnixEpochMillis);
 		}
 		/// <summary>
 		/// Returns true of <paramref name="obj"/> is a <see cref="UtcDateTime"/> and they refer to the same point in time.
 		/// </summary>
 		/// <param name="obj">The object to compare to.</param>
 		/// <returns>True if equal, false if not.</returns>
-		public override bool Equals([AllowNull]object obj)
+		public override bool Equals([AllowNull] object obj)
 		{
 			return obj is UtcDateTime time && Equals(time);
 		}

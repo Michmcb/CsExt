@@ -14,7 +14,10 @@ namespace MichMcb.CsExt.Data
 		/// <param name="raw"></param>
 		public Md5(in ReadOnlySpan<byte> raw)
 		{
-			Param.Valid(raw.Length == 16, nameof(raw), "Provided bytes were not exactly 16 long");
+			if (raw.Length != 16)
+			{
+				throw new ArgumentException("Provided bytes were not exactly 16 long", nameof(raw));
+			}
 
 			Upper8 = BinaryPrimitives.ReadInt64LittleEndian(raw);
 			Lower8 = BinaryPrimitives.ReadInt64LittleEndian(raw[8..]);
