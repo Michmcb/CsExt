@@ -418,11 +418,12 @@
 		/// </summary>
 		public static explicit operator UtcDateTime(DateTime dateTime)
 		{
-			return dateTime.Kind == DateTimeKind.Unspecified
-				? throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() or DateTime.ToUniversalTime() to fix this if you know what the kind should be.", nameof(dateTime))
-				: dateTime.Kind == DateTimeKind.Utc
-					? new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond)
-					: new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond);
+			return dateTime.Kind switch
+			{
+				DateTimeKind.Utc => new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond),
+				DateTimeKind.Local => new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond),
+				_ => throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() or DateTime.ToUniversalTime() to fix this if you know what the kind should be.", nameof(dateTime)),
+			};
 		}
 		/// <summary>
 		/// Creates a new instance from the provided <paramref name="dateTimeOffset"/>, using <see cref="DateTimeOffset.UtcTicks"/>.

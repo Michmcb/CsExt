@@ -5,19 +5,17 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Removed Date type (net6.0 has DateOnly)
-- Removed Param helpers
-- Reorganized UtcDateTime
-- Iso8601Parts used as a format must be validated using Iso8601Format first
-- UtcDateTime can format and parse ISO-8601 Week dates, now
-- Iso8601 is now the lexer and parser. It can also parse only time now, as well, although UtcDateTime still requires a date and time.
-- Vcf date format (without a year) removed
-- Most things from DateUtil moved into UtcDateTime
+    <PackageReleaseNotes>- Fixed bug with splitting a string into Ranges, also it now works on a callback providing ReadOnlySpan slices rather than returning a collection of Range
+		 - IAsyncEvent, which allows you to have events that return a Task.
+		 - Extensions for DateOnly
+		 - UtcDateTime.ToString() methods will clamp the resultant string between 0001-01-01 00:00:00 and 9999-12-31 59:99:99.999, if the string is formatted as non-UTC and the requested timezone would offset it outside of that range
+		 - UtcDateTime.FromDateTime() as an alternative to casting. It also allows you to treat DateTimeKind.Unspecified the same as DateTimeKind.Utc
+		 - ErrMsg struct, to encapsulate an error code and error message.
 	 </PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
@@ -26,8 +24,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>2.0.0.0</AssemblyVersion>
-    <FileVersion>2.0.0.0</FileVersion>
+    <AssemblyVersion>2.1.0.0</AssemblyVersion>
+    <FileVersion>2.1.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

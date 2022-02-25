@@ -233,8 +233,10 @@
 				tz = timezone ?? TimeZoneInfo.Local.BaseUtcOffset;
 				tzOffsetMs = tz.Ticks / TimeSpan.TicksPerMillisecond;
 			}
-			// TODO Check to see if we exceeded MaxMillis by adding TotalMilliseconds to tzOffsetMs
-			DateTimePartsFromTotalMilliseconds(TotalMilliseconds + tzOffsetMs, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
+
+			// We clamp the milliseconds so they can't be larger than MaxMillis or lower than zero.
+			long msWithOffset = TotalMilliseconds + tzOffsetMs;
+			DateTimePartsFromTotalMilliseconds(msWithOffset > MaxMillis ? MaxMillis : msWithOffset < 0 ? 0 : msWithOffset, out int year, out int month, out int day, out int hour, out int minute, out int second, out int ms);
 
 			int i = 0;
 

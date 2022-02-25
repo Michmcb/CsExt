@@ -66,17 +66,15 @@
 			int dayOfYear = (DateTime.IsLeapYear(year) ? UtcDateTime.TotalDaysFromStartLeapYearToMonth : UtcDateTime.TotalDaysFromStartYearToMonth)[month - 1] + day;
 			int isoDayOfWeek = ((totalDays + dayOfYear - 1) % 7) + 1;
 			int w = (10 + dayOfYear - isoDayOfWeek) / 7;
-			if (w < 1)
-			{
+
+			return w < 1
 				// If the week number is 0, then that means it's the last week of the previous year
-				return new(year - 1, WeeksInYear(year - 1), isoDayOfWeek);
-			}
-			if (w > WeeksInYear(year))
-			{
-				// If the week number is larger than the number of weeks in this year, then that means it's the first week of the next year
-				return new(year + 1, 1, isoDayOfWeek);
-			}
-			return new(year, w, isoDayOfWeek);
+				? new(year - 1, WeeksInYear(year - 1), isoDayOfWeek)
+				: w > WeeksInYear(year)
+					// If the week number is larger than the number of weeks in this year, then that means it's the first week of the next year
+					? new(year + 1, 1, isoDayOfWeek)
+					// Otherwise our numbers are good
+					: new(year, w, isoDayOfWeek);
 		}
 		/// <summary>
 		/// Returns the number of weeks in the provided year.
