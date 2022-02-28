@@ -1,7 +1,6 @@
 ﻿namespace MichMcb.CsExt.Dates
 {
 	using System;
-
 	public readonly partial struct UtcDateTime
 	{
 		internal const int DaysToUnixEpoch = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
@@ -60,30 +59,30 @@
 		internal static readonly int[] TotalDaysFromStartYearToMonth = new int[] { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 		internal static readonly int[] TotalDaysFromStartLeapYearToMonth = new int[] { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 		/// <summary>
-		/// Calculates a day/month/year given <paramref name="days"/>, which is interpreted as the number of days elapsed since 0001-01-01.
+		/// Calculates a day/month/year given <paramref name="totalDays"/>, which is interpreted as the number of days elapsed since 0001-01-01.
 		/// </summary>
-		public static void DatePartsFromTotalDays(int days, out int year, out int month, out int day)
+		public static void DatePartsFromTotalDays(int totalDays, out int year, out int month, out int day)
 		{
 			// Most of this code is written by myself. However, the two Adjustments and the optimization of (days >> 5) + 1 comes from the .NET Source for DateTime
 
 			// The way we'll do this is first, get the number of groups of 400 years, then deduct that from our totalDays.
-			int y400 = days / DaysPer400Years;
-			days -= DaysPer400Years * y400;
-			int y100 = days / DaysPer100Years;
+			int y400 = totalDays / DaysPer400Years;
+			totalDays -= DaysPer400Years * y400;
+			int y100 = totalDays / DaysPer100Years;
 			if (y100 == 4)
 			{
 				y100 = 3; // Adjustment
 			}
-			days -= DaysPer100Years * y100;
-			int y4 = days / DaysPer4Years;
-			days -= DaysPer4Years * y4;
-			int y1 = days / 365;
+			totalDays -= DaysPer100Years * y100;
+			int y4 = totalDays / DaysPer4Years;
+			totalDays -= DaysPer4Years * y4;
+			int y1 = totalDays / 365;
 			if (y1 == 4)
 			{
 				y1 = 3; // Adjustment 
 			}
 
-			days -= y1 * 365;
+			totalDays -= y1 * 365;
 
 			year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
 
@@ -93,12 +92,12 @@
 
 			// Bitshifting right 5 bytes, because all months have less than 32 days.
 			// It saves us a bit of checking in the loop
-			month = (days >> 5) + 1;
-			while (days >= totalDaysFromStartYearToMonth[month])
+			month = (totalDays >> 5) + 1;
+			while (totalDays >= totalDaysFromStartYearToMonth[month])
 			{
 				month++;
 			}
-			day = days - totalDaysFromStartYearToMonth[month - 1] + 1;
+			day = totalDays - totalDaysFromStartYearToMonth[month - 1] + 1;
 		}
 		/// <summary>
 		/// Calculates an hour/minute/second/millisecond given <paramref name="totalMilliseconds"/>, which is interpreted as the number of milliseconds elapsed since 0001-01-01.
@@ -125,73 +124,62 @@
 		/// </summary>
 		/// <param name="year">The year.</param>
 		/// <returns>Total days elapsed since 0001-01-01.</returns>
-		public static int TotalDaysFromYear(int year)
+		public static Maybe<int, string> TotalDaysFromYear(int year)
 		{
-			// Add extra leap year days; a leap year is divisible by 4, but not by 100, unless also divisible by 400.
 			--year;
-			return (year * 365) + year / 4 - year / 100 + year / 400;
+			return year >= 0 && year <= 9998
+				// Add extra leap year days; a leap year is divisible by 4, but not by 100, unless also divisible by 400.
+				? (year * 365) + year / 4 - year / 100 + year / 400
+				: "Year must be at least 1 and at most 9999";
 		}
 		/// <summary>
-		/// Calculates milliseconds elapsed since 0001-01-01 for a year, month, and day.
+		/// Returns the total number of days elapsed since 0001-01-01, as of <paramref name="year"/> and <paramref name="month"/>, or an error message if the fall out of the expected range.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <param name="month">The month.</param>
+		/// <returns>Total days elapsed since 0001-01-01.</returns>
+		public static Maybe<int, string> TotalDaysFromYearMonth(int year, int month)
+		{
+			return month >= 1 && month <= 12
+				? TotalDaysFromYear(year).Success(out int yd, out string err)
+					? (yd + (DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth)[month - 1])
+					: err
+				: "Month must be at least 1 and at most 12";
+		}
+		/// <summary>
+		/// Returns the total number of days elapsed since 0001-01-01, as of <paramref name="year"/> and <paramref name="month"/>, or an error message if the fall out of the expected range.
 		/// </summary>
 		/// <param name="year">The year.</param>
 		/// <param name="month">The month.</param>
 		/// <param name="day">The day.</param>
-		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
-		public static Maybe<long, string> MillisFromDate_YearMonthDay(int year, int month, int day)
+		/// <returns>Total days elapsed since 0001-01-01.</returns>
+		public static Maybe<int, string> TotalDaysFromYearMonthDay(int year, int month, int day)
 		{
-			if (year < 1 || year > 9999)
-			{
-				return "Year must be at least 1 and at most 9999";
-			}
-			if (month < 1 || month > 12)
-			{
-				return "Month must be at least 1 and at most 12";
-			}
-			if (day < 1 || day > DateTime.DaysInMonth(year, month))
-			{
-				return string.Concat("Day must be at least 1 and, for the provided month (", month.ToString(), "), at most ", DateTime.DaysInMonth(year, month).ToString());
-			}
-
-			return (TotalDaysFromYear(year) + (DateTime.IsLeapYear(year) ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth)[month - 1] + (day - 1)) * MillisPerDay;
+			return TotalDaysFromYearMonth(year, month).Success(out int totalDays, out string err)
+				? day >= 1 && day <= DateTime.DaysInMonth(year, month)
+					? (totalDays + (day - 1))
+					: string.Concat("Day must be at least 1 and, for the provided month (", month.ToString(), "), at most ", DateTime.DaysInMonth(year, month).ToString())
+				: err;
 		}
 		/// <summary>
-		/// Calculates milliseconds elapsed since 0001-01-01 for a year and a day of year.
-		/// </summary>
-		/// <param name="year">The year.</param>
-		/// <param name="dayOfYear">The day of the year.</param>
-		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
-		public static Maybe<long, string> MillisFromDate_YearOrdinalDays(int year, int dayOfYear)
-		{
-			if (year < 1 || year > 9999)
-			{
-				return "Year must be at least 1 and at most 9999";
-			}
-			if (dayOfYear < 1 || dayOfYear > (DateTime.IsLeapYear(year) ? 366 : 365))
-			{
-				return string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString());
-			}
-
-			return (TotalDaysFromYear(year) + (dayOfYear - 1)) * MillisPerDay;
-		}
-		/// <summary>
-		/// Calculates milliseconds elapsed since 0001-01-01 for a year, week of the year, and weekday, according to ISO-8601.
+		/// Calculates days elapsed since 0001-01-01 for a year, week of the year, and weekday, according to ISO-8601.
 		/// </summary>
 		/// <param name="year">The year.</param>
 		/// <param name="week">The ISO-8601 week of the year.</param>
-		/// <param name="weekDay">The day of the week. 1 is Monday, 7 is Sunday.</param>
+		/// <param name="isoWeekDay">The day of the week. You can use <see cref="DayOfWeekExtensions.IsoDayOfWeek(DayOfWeek)"/> to convert.</param>
 		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
-		public static Maybe<long, string> MillisFromDate_YearWeekDay(int year, int week, int weekDay)
+		public static Maybe<int, string> TotalDaysFromYearWeekDay(int year, int week, IsoDayOfWeek isoWeekDay)
 		{
-			if (year < 1 || year > 9999)
+			if (TotalDaysFromYear(year).Failure(out int totalDays, out string err))
 			{
-				return "Year must be at least 1 and at most 9999";
+				return err;
 			}
 			if (week < 1 || week > 53)
 			{
 				return "Week must be at least 1 and at most 53";
 			}
-			if (weekDay < 1 || weekDay > 7)
+			int iwd = (int)isoWeekDay;
+			if (iwd < 1 || iwd > 7)
 			{
 				return "Week Day must be at least 1 and at most 7";
 			}
@@ -199,7 +187,6 @@
 			// Thanks to https://en.wikipedia.org/wiki/ISO_week_date#Calculating_an_ordinal_or_month_date_from_a_week_date
 
 			// totalDays also happens to be January the 1st, so we can simply add 3 onto it to be able to get January the 4th.
-			int totalDays = TotalDaysFromYear(year);
 			int jan4TotalDays = totalDays + 3;
 			// Under ISO-8601, 1 is Monday, 7 is Sunday
 			int weekdayOf4thJan = (jan4TotalDays % 7) + 1;
@@ -208,10 +195,46 @@
 			// 2. Add weekday number
 			// 3. From this sum, subtract the correction for the year (Get the weekday of 4th january. Add 3)
 			// 4. The result is the ordinal date which can be converted into a calendar date.
-			int ordinalDate = week * 7 + weekDay - (weekdayOf4thJan + 3);
+			int ordinalDate = week * 7 + iwd - (weekdayOf4thJan + 3);
 
 			// Now that we know the specific day that year/week refers to, it's a simple matter to just add on days.
-			return (totalDays + ordinalDate - 1) * MillisPerDay;
+			return totalDays + ordinalDate - 1;
+		}
+		/// <summary>
+		/// Calculates milliseconds elapsed since 0001-01-01 for a year, month, and day.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <param name="month">The month.</param>
+		/// <param name="day">The day.</param>
+		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
+		public static Maybe<long, string> MillisFromYearMonthDay(int year, int month, int day)
+		{
+			return TotalDaysFromYearMonthDay(year, month, day).Success(out int totalDays, out string errMsg) ? totalDays * MillisPerDay : errMsg;
+		}
+		/// <summary>
+		/// Calculates milliseconds elapsed since 0001-01-01 for a year and a day of year.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <param name="dayOfYear">The day of the year.</param>
+		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
+		public static Maybe<long, string> MillisFromYearOrdinalDays(int year, int dayOfYear)
+		{
+			return TotalDaysFromYear(year).Success(out int totalDays, out string err)
+				? dayOfYear >= 1 && dayOfYear <= (DateTime.IsLeapYear(year) ? 366 : 365)
+					? ((totalDays + (dayOfYear - 1)) * MillisPerDay)
+					: string.Concat("Day must be at least 1 and, for the provided year (", year.ToString(), "), at most ", (DateTime.IsLeapYear(year) ? 366 : 365).ToString())
+				: err;
+		}
+		/// <summary>
+		/// Calculates milliseconds elapsed since 0001-01-01 for a year, week of the year, and weekday, according to ISO-8601.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <param name="week">The ISO-8601 week of the year.</param>
+		/// <param name="isoWeekDay">The day of the week. You can use <see cref="DayOfWeekExtensions.IsoDayOfWeek(DayOfWeek)"/> to convert.</param>
+		/// <returns>The total milliseconds elapsed since 0001-01-01, or an error message.</returns>
+		public static Maybe<long, string> MillisFromYearWeekDay(int year, int week, IsoDayOfWeek isoWeekDay)
+		{
+			return TotalDaysFromYearWeekDay(year, week, isoWeekDay).Success(out int totalDays, out string err) ? totalDays * MillisPerDay : err;
 		}
 		/// <summary>
 		/// Calcualtes the total milliseconds in the provided hour, minute, second, milliseconds, and timezone offset.
@@ -222,7 +245,7 @@
 		/// <param name="millis">The milliseconds.</param>
 		/// <param name="tzTotalMins">The timezone offset, in minutes.</param>
 		/// <returns>The total milliseconds, or an error message.</returns>
-		public static Maybe<long, string> MillisFromTime(int hour, int minute, int second, int millis, int tzTotalMins)
+		public static Maybe<long, string> MillisFromHourMinuteSecondMillisTimezoneOffset(int hour, int minute, int second, int millis, int tzTotalMins)
 		{
 			if (hour < 0 || hour > 23)
 			{

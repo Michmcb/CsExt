@@ -10,7 +10,7 @@
 		/// <summary>
 		/// Creates a new instance
 		/// </summary>
-		public IsoYearWeek(int year, int week, int weekDay)
+		public IsoYearWeek(int year, int week, IsoDayOfWeek weekDay)
 		{
 			Year = year;
 			Week = week;
@@ -25,9 +25,9 @@
 		/// </summary>
 		public int Week { get; }
 		/// <summary>
-		/// The ISO day of week. 1 is Monday, and 7 is Sunday
+		/// The ISO day of week.
 		/// </summary>
-		public int WeekDay { get; }
+		public IsoDayOfWeek WeekDay { get; }
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="dateTime"/>.
 		/// </summary>
@@ -36,7 +36,7 @@
 		public static IsoYearWeek Create(DateTime dateTime)
 		{
 			dateTime.GetDateParts(out int year, out int month, out int day);
-			return Create(year, month, day);
+			return Create(year, month, day).ValueOrException();
 		}
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="dateTime"/>.
@@ -46,7 +46,7 @@
 		public static IsoYearWeek Create(UtcDateTime dateTime)
 		{
 			dateTime.GetDateParts(out int year, out int month, out int day);
-			return Create(year, month, day);
+			return Create(year, month, day).ValueOrException();
 		}
 		/// <summary>
 		/// Creates a new instance from the specified year, month, and day.
@@ -56,12 +56,14 @@
 		/// <param name="year">The year</param>
 		/// <param name="month">The month</param>
 		/// <param name="day">The day</param>
-		/// <returns>The ISO Year, Week, and Weekday.</returns>
-		public static IsoYearWeek Create(int year, int month, int day)
+		/// <returns>The ISO Year, Week, and Weekday, or an error message.</returns>
+		public static Maybe<IsoYearWeek, string> Create(int year, int month, int day)
 		{
 			// Thanks to https://en.wikipedia.org/wiki/ISO_week_date#Calculating_the_week_number_from_a_month_and_day_of_the_month_or_ordinal_date
-
-			int totalDays = UtcDateTime.TotalDaysFromYear(year);
+			if (UtcDateTime.TotalDaysFromYear(year).Failure(out int totalDays, out string err))
+			{
+				return err;
+			}
 
 			int dayOfYear = (DateTime.IsLeapYear(year) ? UtcDateTime.TotalDaysFromStartLeapYearToMonth : UtcDateTime.TotalDaysFromStartYearToMonth)[month - 1] + day;
 			int isoDayOfWeek = ((totalDays + dayOfYear - 1) % 7) + 1;
@@ -69,12 +71,12 @@
 
 			return w < 1
 				// If the week number is 0, then that means it's the last week of the previous year
-				? new(year - 1, WeeksInYear(year - 1), isoDayOfWeek)
+				? new IsoYearWeek(year - 1, WeeksInYear(year - 1), (IsoDayOfWeek)isoDayOfWeek)
 				: w > WeeksInYear(year)
 					// If the week number is larger than the number of weeks in this year, then that means it's the first week of the next year
-					? new(year + 1, 1, isoDayOfWeek)
+					? new IsoYearWeek(year + 1, 1, (IsoDayOfWeek)isoDayOfWeek)
 					// Otherwise our numbers are good
-					: new(year, w, isoDayOfWeek);
+					: new IsoYearWeek(year, w, (IsoDayOfWeek)isoDayOfWeek);
 		}
 		/// <summary>
 		/// Returns the number of weeks in the provided year.

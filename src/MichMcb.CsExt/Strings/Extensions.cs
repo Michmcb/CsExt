@@ -1,7 +1,6 @@
 ﻿namespace MichMcb.CsExt.Strings
 {
 	using System;
-	using System.Buffers;
 	using System.Collections.Generic;
 	using System.IO;
 
@@ -133,58 +132,6 @@
 		}
 #endif
 #if !NETSTANDARD2_0
-		/// <summary>
-		/// Splits the <paramref name="str"/> into ranges, and invokes <paramref name="callback"/> once for every range that is found, passing the slice of <paramref name="str"/>
-		/// as well as the range that was used to create that slice of the string.
-		/// </summary>
-		/// <param name="str">The string to split.</param>
-		/// <param name="separator">The character on which to split.</param>
-		/// <param name="state">The state to pass in.</param>
-		/// <param name="options">he options.</param>
-		/// <param name="callback">The callback invoked once for every slice of the string.</param>
-		public static void Split<T>(in this ReadOnlySpan<char> str, char separator, T state, StringSplitOptions options, ReadOnlySpanAction<char, T> callback)
-		{
-			bool removeEmpty = (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries;
-			bool trim = (options & StringSplitOptions.TrimEntries) == StringSplitOptions.TrimEntries;
-			int lastSep = -1;
-			int from;
-			int to;
-			for (int i = 0; i < str.Length; i++)
-			{
-				if (str[i] == separator)
-				{
-					// When we find a separator, we want to take a slice of the string: (lastSep, i]
-					// So shift lastSep forwards by 1. Since it's half-open, the difference must be larger than 0.
-					from = lastSep + 1;
-					to = i;
-					if (trim)
-					{
-						// We have to trim off the whitespace, meaning keep pushing from forwards and to backwards until it isn't whitespace
-						while (from < to && char.IsWhiteSpace(str[from])) { from++; }
-						while (from < to && char.IsWhiteSpace(str[to])) { to--; }
-					}
-					if (to - from > 0 || !removeEmpty)
-					{
-						// Non-empty
-						callback(str[from..to], state);
-					}
-					lastSep = i;
-				}
-			}
-
-			// We're at the end of the string, so if we need
-			from = lastSep + 1;
-			to = str.Length;
-			if (trim)
-			{
-				// Trim off whitespace once more
-				while (from < to && char.IsWhiteSpace(str[from])) { from++; }
-			}
-			if (to - from > 0 || !removeEmpty)
-			{
-				callback(str[from..to], state);
-			}
-		}
 		/// <summary>
 		/// Returns substrings of <paramref name="str"/>, where each substring is no longer than <paramref name="maxLineLength"/>.
 		/// This will try to avoid breaking in the middle of a word, preferring to break in whitespace instead.

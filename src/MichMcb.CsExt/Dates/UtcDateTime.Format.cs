@@ -73,19 +73,19 @@
 			string err;
 			if ((iso.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
 			{
-				return MillisFromDate_YearOrdinalDays(iso.Year, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+				return MillisFromYearOrdinalDays(iso.Year, iso.Day).Success(out long timeMs, out err) && MillisFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
 					? new UtcDateTime(timeMs + dateMs)
 					: err;
 			}
 			else if ((iso.PartsFound & Iso8601Parts.Week) == Iso8601Parts.Week)
 			{
-				return MillisFromDate_YearWeekDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+				return MillisFromYearWeekDay(iso.Year, iso.MonthOrWeek, (IsoDayOfWeek)iso.Day).Success(out long timeMs, out err) && MillisFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
 					? new UtcDateTime(timeMs + dateMs)
 					: err;
 			}
 			else
 			{
-				return MillisFromDate_YearMonthDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long timeMs, out err) && MillisFromTime(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
+				return MillisFromYearMonthDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long timeMs, out err) && MillisFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dateMs, out err)
 					? new UtcDateTime(timeMs + dateMs)
 					: err;
 			}
@@ -243,7 +243,8 @@
 			// Weeks have to be handled differently, because 2019-12-30 for example is actually written 2020-W01-1.
 			if ((fmt & Iso8601Parts.YearWeek) == Iso8601Parts.YearWeek)
 			{
-				IsoYearWeek isoYearWeek = IsoYearWeek.Create(year, month, day);
+				// We know this will never fail because we got this out of the method above
+				IsoYearWeek isoYearWeek = IsoYearWeek.Create(year, month, day).ValueOrException();
 				Formatting.Write4Digits((uint)isoYearWeek.Year, destination, 0);
 				i += 4;
 				if (seps)
@@ -260,7 +261,7 @@
 					{
 						destination[i++] = '-';
 					}
-					destination[i++] = (char)('0' + isoYearWeek.WeekDay);
+					destination[i++] = (char)('0' + (int)isoYearWeek.WeekDay);
 				}
 			}
 			else

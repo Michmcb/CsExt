@@ -1,4 +1,4 @@
-﻿namespace MichMcb.CsExt.Test.Dates.DateUtil
+﻿namespace MichMcb.CsExt.Test.Dates.DateTimeExtensions
 {
 	using MichMcb.CsExt.Dates;
 	using System;

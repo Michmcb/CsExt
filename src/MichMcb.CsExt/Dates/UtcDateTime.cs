@@ -50,11 +50,11 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			if (!MillisFromTime(hour, minute, second, millis, 0).Success(out long tms, out string err))
+			if (!MillisFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, 0).Success(out long tms, out string err))
 			{
 				throw new ArgumentOutOfRangeException(null, err);
 			}
-			if (!MillisFromDate_YearMonthDay(year, month, day).Success(out long dms, out err))
+			if (!MillisFromYearMonthDay(year, month, day).Success(out long dms, out err))
 			{
 				throw new ArgumentOutOfRangeException(null, err);
 			}
@@ -144,11 +144,14 @@
 				return (totalDays -= y1 * 365) + 1;
 			}
 		}
-		// 0001-01-01 is a Monday, thus 0001-01-00 would be a Sunday. TotalDays = 0 means 0001-01-01, so we need to add 1 and then mod 7 gets us the right answer.
 		/// <summary>
-		/// Gets the Day of Week represented by this instance
+		/// Gets the <see cref="System.DayOfWeek"/> represented by this instance
 		/// </summary>
-		public DayOfWeek DayOfWeek => (DayOfWeek)((TotalDays + 1) % 7);
+		public DayOfWeek DayOfWeek => (DayOfWeek)((TotalDays + 1) % 7); // 0001-01-00 is Sunday, but TotalDays = 0 is 0001-01-01. So by adding 1, we "align" ourselves with the DayOfWeek enum values.
+		/// <summary>
+		/// Gets the <see cref="Dates.IsoDayOfWeek"/> Day of Week represented by this instance
+		/// </summary>
+		public IsoDayOfWeek IsoDayOfWeek => (IsoDayOfWeek)(((TotalDays + 7) % 7) + 1); // Similar to the above, but ISO day of week goes 1-7, not 0-6, and starts on Monday instead of Sunday. So, we add 7 to align, and adjust up by 1 after the mod.
 		/// <summary>
 		/// Returns the Time of Day as a TimeSpan
 		/// </summary>

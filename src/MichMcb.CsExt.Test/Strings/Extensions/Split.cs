@@ -19,7 +19,12 @@
 				string[] expected = str.Split(sep, options);
 				string[] actual = new string[expected.Length];
 				int i = 0;
-				Extensions.Split(str, sep, Nil.Inst, options, (substr, _) => actual[i++] = new string(substr));
+
+				SpanSplit split = new(str, sep, options);
+				while (split.Next().HasVal(out Range slice))
+				{
+					actual[i++] = new string(str[slice]);
+				}
 
 				Assert.Equal(expected.Length, i);
 				for (i = 0; i < expected.Length; i++)
