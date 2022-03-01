@@ -73,6 +73,18 @@
 			return EnumUtil<T>.Inst.IsDefinedFunc(value);
 		}
 		/// <summary>
+		/// Calls <see cref="EnumUtil{T}.HasFlagFunc"/>.
+		/// Determines if <paramref name="value"/> has the provided <paramref name="flag"/> set.
+		/// </summary>
+		/// <param name="value">The value to check for a flag.</param>
+		/// <param name="flag">The flag value.</param>
+		/// <returns>true if the flag is set, false otherwise.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasFlag<T>(T value, T flag) where T : struct
+		{
+			return EnumUtil<T>.Inst.HasFlagFunc(value, flag);
+		}
+		/// <summary>
 		/// Calls <see cref="EnumUtil{T}.TryParse(string)"/>.
 		/// Uses <see cref="EnumUtil{T}.NameToValue"/> to look up <paramref name="str"/>.
 		/// </summary>

@@ -7,10 +7,6 @@ namespace MichMcb.CsExt.Strings
 	/// </summary>
 	public ref struct SpanSplit
 	{
-		private readonly ReadOnlySpan<char> str;
-		private readonly char separator;
-		private readonly bool removeEmpty;
-		private readonly bool trim;
 		private int lastSep = -1;
 		private int curSep;
 		/// <summary>
@@ -21,13 +17,24 @@ namespace MichMcb.CsExt.Strings
 		/// <param name="options">Whether to trim substrings and remove empty entries.</param>
 		public SpanSplit(in ReadOnlySpan<char> str, char separator, StringSplitOptions options)
 		{
-			this.str = str;
-			this.separator = separator;
-			removeEmpty = (options & StringSplitOptions.RemoveEmptyEntries) == StringSplitOptions.RemoveEmptyEntries;
-			trim = (options & StringSplitOptions.TrimEntries) == StringSplitOptions.TrimEntries;
+			Str = str;
+			Separator = separator;
+			Options = options;
 			lastSep = -1;
 			curSep = 0;
 		}
+		/// <summary>
+		/// The string being split.
+		/// </summary>
+		public ReadOnlySpan<char> Str { get; }
+		/// <summary>
+		/// The separator on which to split.
+		/// </summary>
+		public char Separator { get; }
+		/// <summary>
+		/// The options to use when splitting.
+		/// </summary>
+		public StringSplitOptions Options { get; }
 		/// <summary>
 		/// Gets the next range which can be used to slice the original string.
 		/// </summary>
@@ -36,22 +43,22 @@ namespace MichMcb.CsExt.Strings
 		{
 			int from;
 			int to;
-			for (; curSep < str.Length; curSep++)
+			for (; curSep < Str.Length; curSep++)
 			{
-				if (str[curSep] == separator)
+				if (Str[curSep] == Separator)
 				{
 					// When we find a separator, we want to take a slice of the string: (lastSep, i]
 					// So shift lastSep forwards by 1. Since it's half-open, the difference must be larger than 0.
 					from = lastSep + 1;
 					lastSep = curSep;
 					to = curSep;
-					if (trim)
+					if ((Options & StringSplitOptions.TrimEntries) == StringSplitOptions.TrimEntries)
 					{
 						// We have to trim off the whitespace, meaning keep pushing from forwards and to backwards until it isn't whitespace
-						while (from < to && char.IsWhiteSpace(str[from])) { from++; }
-						while (from < to && char.IsWhiteSpace(str[to])) { to--; }
+						while (from < to && char.IsWhiteSpace(Str[from])) { from++; }
+						while (from < to && char.IsWhiteSpace(Str[to])) { to--; }
 					}
-					if (to - from > 0 || !removeEmpty)
+					if (to - from > 0 || ((Options & StringSplitOptions.RemoveEmptyEntries) != StringSplitOptions.RemoveEmptyEntries))
 					{
 						// Non-empty
 						curSep++;
@@ -60,19 +67,19 @@ namespace MichMcb.CsExt.Strings
 				}
 			}
 
-			if (curSep == str.Length)
+			if (curSep == Str.Length)
 			{
 				// We're at the end of the string, get the last slice from the separator to the end of the string, if we need to.
 				curSep++;
 				// Bump the value one more time so we won't visit this block a second time
 				from = lastSep + 1;
-				to = str.Length;
-				if (trim)
+				to = Str.Length;
+				if ((Options & StringSplitOptions.TrimEntries) == StringSplitOptions.TrimEntries)
 				{
 					// Trim off whitespace once more
-					while (from < to && char.IsWhiteSpace(str[from])) { from++; }
+					while (from < to && char.IsWhiteSpace(Str[from])) { from++; }
 				}
-				if (to - from > 0 || !removeEmpty)
+				if (to - from > 0 || ((Options & StringSplitOptions.RemoveEmptyEntries) != StringSplitOptions.RemoveEmptyEntries))
 				{
 					return new Opt<Range>(from..to);
 				}
