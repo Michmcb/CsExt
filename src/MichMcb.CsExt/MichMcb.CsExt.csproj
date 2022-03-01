@@ -11,7 +11,7 @@
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
     <PackageReleaseNotes>- Made private readonly fields of SpanSplit public properties
-- Added missing HasFlag<T> method on EnumUtil</PackageReleaseNotes>
+- Added missing HasFlag&lt;T&gt; method on EnumUtil</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
