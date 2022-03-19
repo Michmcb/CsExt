@@ -16,7 +16,7 @@
 			{
 				{
 					DayOfWeek expected = dt.DayOfWeek;
-					DayOfWeek actual = udt.DayOfWeek;
+					DayOfWeek actual = udt.IsoDayOfWeek.DayOfWeek();
 					Assert.Equal(expected, actual);
 				}
 				{

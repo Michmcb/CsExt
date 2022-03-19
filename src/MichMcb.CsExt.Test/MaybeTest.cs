@@ -1,5 +1,6 @@
 ﻿namespace MichMcb.CsExt.Test
 {
+	using System;
 	using Xunit;
 
 	public static class MaybeTest
@@ -73,6 +74,24 @@
 		{
 			Assert.Equal("1", new Maybe<int, string>(1).ToString());
 			Assert.Equal("foo", new Maybe<int, string>("foo").ToString());
+		}
+		[Fact]
+		public static void ComparisonThrows()
+		{
+			Maybe<int, string> m1 = 1;
+			Maybe<int, string> m2 = "bad";
+			Assert.Throws<InvalidOperationException>(() => m1 == m2);
+			Assert.Throws<InvalidOperationException>(() => m1 != m2);
+			Assert.Throws<InvalidOperationException>(() => m1.Equals(m2));
+			Assert.Throws<InvalidOperationException>(() => m1.GetHashCode());
+		}
+		[Fact]
+		public static void ValueOrException()
+		{
+			Maybe<int, string> m1 = 1;
+			Maybe<int, string> m2 = "bad";
+			Assert.Equal(1, m1.ValueOrException());
+			Assert.Throws<NoValueException>(() => m2.ValueOrException());
 		}
 	}
 }

@@ -3,20 +3,38 @@
 	using System;
 	public readonly partial struct UtcDateTime
 	{
-		internal const int DaysToUnixEpoch = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
-		internal const long UnixEpochTicks = TimeSpan.TicksPerDay * DaysToUnixEpoch;
+		/// <summary>
+		/// 1970-01-01 00:00:00, represented as days elapsed since 0001-01-01 00:00:00
+		/// </summary>
+		public const int UnixEpochDays = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
+		/// <summary>
+		/// 1970-01-01 00:00:00, represented as ticks elapsed since 0001-01-01 00:00:00
+		/// </summary>
+		public const long UnixEpochTicks = TimeSpan.TicksPerDay * UnixEpochDays;
 		/// <summary>
 		/// 1970-01-01 00:00:00, represented as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		public const long UnixEpochMillis = 62135596800000;
 		/// <summary>
+		/// 1970-01-01 00:00:00, represented as milliseconds elapsed since 0001-01-01 00:00:00
+		/// </summary>
+		public const long UnixEpochSeconds = 62135596800;
+		/// <summary>
 		/// 0001-01-01 00:00:00, represented as milliseconds elapsed since 1970-01-01 00:00:00
 		/// </summary>
-		public const long MinMillisUnixEpoch = -UnixEpochMillis;
+		public const long MinMillisAsUnixTime = -UnixEpochMillis;
 		/// <summary>
 		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 1970-01-01 00:00:00
 		/// </summary>
-		public const long MaxMillisUnixEpoch = MaxMillis - UnixEpochMillis;
+		public const long MaxMillisAsUnixTime = MaxMillis - UnixEpochMillis;
+		/// <summary>
+		/// 0001-01-01 00:00:00, represented as seconds elapsed since 1970-01-01 00:00:00
+		/// </summary>
+		public const long MinSecondsAsUnixTime = -UnixEpochSeconds;
+		/// <summary>
+		/// 9999-12-31 23:59:59, represented as seconds elapsed since 1970-01-01 00:00:00
+		/// </summary>
+		public const long MaxSecondsAsUnixTime = 315537897599 - UnixEpochSeconds;
 		/// <summary>
 		/// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 0001-01-01 00:00:00
 		/// </summary>

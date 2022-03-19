@@ -23,6 +23,8 @@
 			{
 				Assert.Equal(i + 1, dt.AddDays(i).DayOfYear);
 			}
+
+			Assert.Equal(new UtcDateTime(2021, 1, 1, 1, 0, 0), new UtcDateTime(2021, 1, 1, 1, 0, 0).AddDays(0));
 		}
 		[Fact]
 		public static void AddHours()
@@ -102,6 +104,8 @@
 				Assert.Equal(1, m);
 				Assert.Equal(DateTime.DaysInMonth(i + 1, 1), d);
 			}
+
+			Assert.Equal(new UtcDateTime(2004, 2, 29), new UtcDateTime(2004, 2, 29).AddYears(0));
 		}
 		[Fact]
 		public static void AddPositiveMonths()

@@ -295,20 +295,20 @@
 		/// <summary>
 		/// Returns the number of seconds elapsed since 1970-01-01 00:00:00.
 		/// </summary>
-		public long ToUnixEpochSeconds()
+		public long ToUnixTimeSeconds()
 		{
 			return (TotalMilliseconds - UnixEpochMillis) / MillisPerSecond;
 		}
 		/// <summary>
 		/// Returns the number of milliseconds elapsed since 1970-01-01 00:00:00.
 		/// </summary>
-		public long ToUnixEpochMilliseconds()
+		public long ToUnixTimeMilliseconds()
 		{
 			return TotalMilliseconds - UnixEpochMillis;
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// The value of (<paramref name="seconds"/> * <see cref="MillisPerSecond"/>) must be within the range of <see cref="MinMillisUnixEpoch"/> and <see cref="MaxMillisUnixEpoch"/>.
+		/// The value of (<paramref name="seconds"/> * <see cref="MillisPerSecond"/>) must be within the range of <see cref="MinMillisAsUnixTime"/> and <see cref="MaxMillisAsUnixTime"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UtcDateTime FromUnixTimeSeconds(long seconds)
@@ -317,13 +317,13 @@
 		}
 		/// <summary>
 		/// Creates a new instance from the provided seconds, interpreted as milliseconds since the Unix Epoch (1970-01-01 00:00:00).
-		/// <paramref name="milliseconds"/> must be within the range of <see cref="MinMillisUnixEpoch"/> and <see cref="MaxMillisUnixEpoch"/>.
+		/// <paramref name="milliseconds"/> must be within the range of <see cref="MinMillisAsUnixTime"/> and <see cref="MaxMillisAsUnixTime"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static UtcDateTime FromUnixTimeMilliseconds(long milliseconds)
 		{
-			return milliseconds < MinMillisUnixEpoch || milliseconds > MaxMillisUnixEpoch
-				? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + MinMillisUnixEpoch + " and at most " + MaxMillisUnixEpoch)
+			return milliseconds < MinMillisAsUnixTime || milliseconds > MaxMillisAsUnixTime
+				? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + MinMillisAsUnixTime + " and at most " + MaxMillisAsUnixTime)
 				: new UtcDateTime(milliseconds + UnixEpochMillis);
 		}
 		/// <summary>
@@ -333,7 +333,7 @@
 		/// <returns>True if equal, false if not.</returns>
 		public override bool Equals([AllowNull] object obj)
 		{
-			return obj is UtcDateTime time && Equals(time);
+			return obj is UtcDateTime udt && Equals(udt);
 		}
 		/// <summary>
 		/// Calls <see cref="GetHashCode"/> on <see cref="TotalMilliseconds"/>.
@@ -354,18 +354,18 @@
 		/// Returns true if this instance and <paramref name="other"/> are close enough.
 		/// The parameter <paramref name="millisDifference"/> specifies the maximum amount of milliseconds they can differ by.
 		/// </summary>
-		public bool Equals(UtcDateTime other, long millisDifference)
+		public bool Equals(UtcDateTime other, ulong millisDifference)
 		{
-			return Math.Abs(TotalMilliseconds - other.TotalMilliseconds) < millisDifference;
+			return AbsDifferenceMillis(other) <= millisDifference;
 		}
 		/// <summary>
-		/// Returns true if this instance and <paramref name="other"/> are close enough.
-		/// The parameter <paramref name="delta"/> specifies the maximum amount of milliseconds they can differ.
-		/// Any nanoseconds that <paramref name="delta"/> has are ignored.
+		/// Returns the absolute difference, in milliseconds, between this instance and <paramref name="other"/>.
 		/// </summary>
-		public bool Equals(UtcDateTime other, TimeSpan delta)
+		public ulong AbsDifferenceMillis(UtcDateTime other)
 		{
-			return Equals(other, delta.Ticks / TimeSpan.TicksPerMillisecond);
+			return TotalMilliseconds > other.TotalMilliseconds
+				? (ulong)TotalMilliseconds - (ulong)other.TotalMilliseconds
+				: (ulong)other.TotalMilliseconds - (ulong)TotalMilliseconds;
 		}
 		/// <summary>
 		/// If this instance is later than <paramref name="other"/>, returns 1.
@@ -387,23 +387,27 @@
 		/// <summary>
 		/// Returns true if <paramref name="left"/> is earlier than <paramref name="right"/>, false otherwise.
 		/// </summary>
-		public static bool operator <(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) < 0;
+		public static bool operator <(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds < right.TotalMilliseconds;
 		/// <summary>
 		/// Returns true if <paramref name="left"/> is earlier than or the same point in time as <paramref name="right"/>, false otherwise.
 		/// </summary>
-		public static bool operator <=(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) <= 0;
+		public static bool operator <=(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds <= right.TotalMilliseconds;
 		/// <summary>
 		/// Returns true if <paramref name="left"/> is later than <paramref name="right"/>, false otherwise.
 		/// </summary>
-		public static bool operator >(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) > 0;
+		public static bool operator >(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds > right.TotalMilliseconds;
 		/// <summary>
 		/// Returns true if <paramref name="left"/> is later than or the same point in time as <paramref name="right"/>, false otherwise.
 		/// </summary>
-		public static bool operator >=(UtcDateTime left, UtcDateTime right) => left.CompareTo(right) >= 0;
+		public static bool operator >=(UtcDateTime left, UtcDateTime right) => left.TotalMilliseconds >= right.TotalMilliseconds;
 		/// <summary>
 		/// Adds <paramref name="right"/> to <paramref name="left"/>. Any sub-millisecond precision of <paramref name="right"/> is truncated.
 		/// </summary>
 		public static UtcDateTime operator +(UtcDateTime left, TimeSpan right) => new(left.TotalMilliseconds + right.Ticks / TimeSpan.TicksPerMillisecond);
+		/// <summary>
+		/// Adds <paramref name="right"/> to <paramref name="left"/>. Any sub-millisecond precision of <paramref name="right"/> is truncated.
+		/// </summary>
+		public static UtcDateTime operator -(UtcDateTime left, TimeSpan right) => new(left.TotalMilliseconds - right.Ticks / TimeSpan.TicksPerMillisecond);
 		/// <summary>
 		/// Returns the difference between <paramref name="left"/> and <paramref name="right"/>.
 		/// </summary>

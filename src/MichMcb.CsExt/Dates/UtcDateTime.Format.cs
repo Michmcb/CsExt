@@ -5,6 +5,21 @@
 	public readonly partial struct UtcDateTime
 	{
 		/// <summary>
+		/// Parses an RFC3339 string as a <see cref="UtcDateTime"/>. Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// </summary>
+		/// <param name="str">The string to parse.</param>
+		/// <param name="allowSpaceInsteadOfT">If true, an empty space is allowed instead of T or t to separate date/time. Otherwise, only T or t is allowed.</param>
+		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
+		public static Maybe<UtcDateTime, string> TryParseRfc3339String(in ReadOnlySpan<char> str, bool allowSpaceInsteadOfT = false)
+		{
+			return Rfc3339.Parse(str, allowSpaceInsteadOfT).Success(out Rfc3339? rfc, out string? err)
+				? MillisFromYearMonthDay(rfc.Year, rfc.Month, rfc.Day).Success(out long timeMs, out err)
+					&& MillisFromHourMinuteSecondMillisTimezoneOffset(rfc.Hour, rfc.Minute, rfc.Second, rfc.Millis, rfc.TimezoneMinutesOffset).Success(out long dateMs, out err)
+					? new UtcDateTime(timeMs + dateMs)
+					: err
+				: err;
+		}
+		/// <summary>
 		/// Parses an ISO-8601 string as a UtcDateTime. Only accurate to the millisecond (3 places); further accuracy is truncated.
 		/// A timezone designator is required.
 		/// All parsed ISO-8601 strings are adjusted to UTC.
@@ -42,7 +57,7 @@
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing, bool allowMissingTimezone)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
-			if (!Iso8601.Parse(ts).Success(out Iso8601 iso, out string errMsg))
+			if (!Iso8601.Parse(ts).Success(out Iso8601? iso, out string? errMsg))
 			{
 				return errMsg;
 			}
@@ -204,6 +219,7 @@
 			Iso8601Parts fmt = format.Format;
 			switch (fmt)
 			{
+				// This is intentional; when format is default, then Iso8601Parts will be None, and that corresponds to extended format, UTC.
 				case Iso8601Parts.None:
 				case Iso8601Parts.Format_ExtendedFormat_UtcTz: return FormatExtendedFormatUtc(destination, true);
 				case Iso8601Parts.Format_ExtendedFormat_NoMillis_UtcTz: return FormatExtendedFormatUtc(destination, false);

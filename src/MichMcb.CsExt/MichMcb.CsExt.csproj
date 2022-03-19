@@ -5,13 +5,20 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>2.2.1</Version>
+    <Version>2.3.0</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Made private readonly fields of SpanSplit public properties
-- Added missing HasFlag&lt;T&gt; method on EnumUtil</PackageReleaseNotes>
+    <PackageReleaseNotes>- More unit tests, ~74% coverage
+- Fixed an index out of range exception with ParseYearMonthDay when the string was not 10 or 8 characters long exactly. Length is now checked and returned as an error if it is not 10 or 8.
+- UtcDateTime.ToUnixEpochSeconds and UtcDateTime.ToUnixEpochMilliseconds are now called ToUnixTimeSeconds and ToUnixTimeMilliseconds to be consistent with everything else
+- Checking difference between UtcDateTime requires a ulong now, and there is a method to get the absolute difference in milliseconds
+- Operator - for subtracting a TimeSpan from a UtcDateTime, to mirror the + operator
+- Some internal constants on UtcDateTime are now public, and other constants on UtcDateTime are named to be more clear as to what they mean. They are also renamed from UnixEpoch to UnixTime.
+- Rfc3339 can be parsed, which is a strict profile of ISO-8601. Specifically, it is the extended format, with or without milliseconds, and either Z or a timezone offset. Missing a timezone offset is not allowed.
+- Rfc3339 can be formatted using Iso8601Format.ExtendedFormat_UtcTz or Iso8601Format.ExtendedFormat_FullTz, or UtcDateTime.FormatExtendedFormatUtc.
+	 </PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -19,8 +26,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>2.2.1.0</AssemblyVersion>
-    <FileVersion>2.2.1.0</FileVersion>
+    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <FileVersion>2.3.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

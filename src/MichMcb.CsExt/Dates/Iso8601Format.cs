@@ -8,12 +8,13 @@
 	{
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss.sssZ
-		/// A good default format.
-		/// This is known in ISO-8601 as "Extended Format"
+		/// A good default format. This conforms to RFC3339
+		/// This is known in ISO-8601 as "Extended Format".
 		/// </summary>
 		public static readonly Iso8601Format ExtendedFormat_UtcTz = new(Iso8601Parts.Format_ExtendedFormat_UtcTz, 24);
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss.sss+00:00
+		/// This conforms to RFC3339.
 		/// </summary>
 		public static readonly Iso8601Format ExtendedFormat_FullTz = new(Iso8601Parts.Format_ExtendedFormat_FullTz, 29);
 		/// <summary>

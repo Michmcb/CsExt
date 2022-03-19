@@ -35,10 +35,11 @@
 		public static Maybe<DateTime, string> ParseYearMonthDay(in ReadOnlySpan<char> str)
 #endif
 		{
-			return str.Length == 10
+			return str.Length switch
+			{
 				// yyyy-MM-dd
 				// 0123456789
-				? Parse.LatinInt(str.Slice(0, 4)).Success(out int y, out string err) && Parse.LatinInt(str.Slice(5, 2)).Success(out int m, out err) && Parse.LatinInt(str.Slice(8)).Success(out int d, out err)
+				10 => Parse.LatinInt(str.Slice(0, 4)).Success(out int y, out string err) && Parse.LatinInt(str.Slice(5, 2)).Success(out int m, out err) && Parse.LatinInt(str.Slice(8)).Success(out int d, out err)
 					? UtcDateTime.TotalDaysFromYearMonthDay(y, m, d).Success(out int totalDays, out err)
 #if NET6_0_OR_GREATER
 						? DateOnly.FromDayNumber(totalDays)
@@ -46,18 +47,20 @@
 						? new DateTime(TimeSpan.TicksPerDay * totalDays)
 #endif
 						: err
-					: err
+					: err,
 				// yyyyMMdd
 				// 01234567
-				: Parse.LatinInt(str.Slice(0, 4)).Success(out y, out err) && Parse.LatinInt(str.Slice(4, 2)).Success(out m, out err) && Parse.LatinInt(str.Slice(6)).Success(out d, out err)
-					? UtcDateTime.TotalDaysFromYearMonthDay(y, m, d).Success(out totalDays, out err)
+				8 => Parse.LatinInt(str.Slice(0, 4)).Success(out int y, out string err) && Parse.LatinInt(str.Slice(4, 2)).Success(out int m, out err) && Parse.LatinInt(str.Slice(6)).Success(out int d, out err)
+					? UtcDateTime.TotalDaysFromYearMonthDay(y, m, d).Success(out int totalDays, out err)
 #if NET6_0_OR_GREATER
 						? DateOnly.FromDayNumber(totalDays)
 #else
 						? new DateTime(TimeSpan.TicksPerDay * totalDays)
 #endif
 						: err
-					: err;
+					: err,
+				_ => Compat.StringConcat("String was not either 10 or 8 chars long: ".AsSpan(), str),
+			};
 		}
 	}
 }

@@ -41,7 +41,7 @@
 		/// Gets the value, or <paramref name="ifNone"/> if <see cref="Ok"/> is false.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? value : ifNone;
+		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? value : ifNone!;
 		/// <summary>
 		/// Gets the value, or throws a <see cref="NoValueException"/>, passing the string representation of the error.
 		/// </summary>
@@ -50,7 +50,7 @@
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone : error;
+		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone! : error;
 		/// <summary>
 		/// Returns the value of <see cref="Ok"/>. If true, then <paramref name="val"/> is set. Otherwise, <paramref name="error"/> is set.
 		/// </summary>

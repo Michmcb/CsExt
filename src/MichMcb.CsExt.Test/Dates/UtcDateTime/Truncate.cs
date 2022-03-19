@@ -1,6 +1,7 @@
 ﻿namespace MichMcb.CsExt.Test.Dates.UtcDateTime
 {
 	using MichMcb.CsExt.Dates;
+	using System;
 	using Xunit;
 
 	public static class Truncate
@@ -16,6 +17,7 @@
 			Assert.Equal(new UtcDateTime(2020, 7, 14, 0, 0, 0), dt.Truncate(DateTimePart.Day));
 			Assert.Equal(new UtcDateTime(2020, 7, 1, 0, 0, 0), dt.Truncate(DateTimePart.Month));
 			Assert.Equal(new UtcDateTime(2020, 1, 1, 0, 0, 0), dt.Truncate(DateTimePart.Year));
+			Assert.Throws<ArgumentOutOfRangeException>(() => dt.Truncate((DateTimePart)999));
 		}
 	}
 }

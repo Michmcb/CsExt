@@ -40,6 +40,23 @@
 			Assert.Equal(UtcDateTime.MaxMillis, UtcDateTime.MaxValue.TotalMilliseconds);
 		}
 		[Fact]
+		public void ParseRfc3339Strings()
+		{
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 10, 20, 30, 0), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30Z").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 10, 20, 30, 100), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.1Z").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 10, 20, 30, 120), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.12Z").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 10, 20, 30, 123), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.123Z").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 0, 20, 30, 0), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30+10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 0, 20, 30, 300), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.3+10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 0, 20, 30, 320), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.32+10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 0, 20, 30, 321), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.321+10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 20, 20, 30, 0), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30-10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 20, 20, 30, 400), UtcDateTime.TryParseRfc3339String("1234-05-15T10:20:30.4-10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 20, 20, 30, 450), UtcDateTime.TryParseRfc3339String("1234-05-15t10:20:30.45-10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 20, 20, 30, 456), UtcDateTime.TryParseRfc3339String("1234-05-15t10:20:30.456-10:00").ValueOrException());
+			Assert.Equal(new UtcDateTime(1234, 5, 15, 20, 20, 30, 456), UtcDateTime.TryParseRfc3339String("1234-05-15 10:20:30.456-10:00", allowSpaceInsteadOfT: true).ValueOrException());
+		}
+		[Fact]
 		public void ParseIso8601Strings()
 		{
 			Assert.Equal(new UtcDateTime(2019, 12, 30), UtcDateTime.TryParseIso8601String("2020-W01", TimeSpan.Zero).ValueOrException());

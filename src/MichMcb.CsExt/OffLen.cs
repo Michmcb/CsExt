@@ -55,6 +55,7 @@
 		public int End => Offset + Length;
 		/// <summary>
 		/// Creates a new instance, with offset being <paramref name="start"/>, and length being <paramref name="end"/> - <paramref name="start"/>.
+		/// That is, <paramref name="start"/> is inclusive, and <paramref name="end"/> is exclusive.
 		/// </summary>
 		/// <param name="start">The offset.</param>
 		/// <param name="end">The exclusive end index.</param>

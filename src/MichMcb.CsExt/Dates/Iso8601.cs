@@ -2,12 +2,11 @@
 {
 	using System;
 	/// <summary>
-	/// A lexer which picks out the ranges in an ISO-8601 string. This can then turned into a UTC Date Time.
-	/// The ranges are guaranteed to be able to be parsed as integers.
+	/// A lexer/parser which picks out the ranges in an ISO-8601 string and parses them as integers. This can then turned into a UTC Date Time.
 	/// </summary>
 	public sealed class Iso8601
 	{
-		internal Iso8601(int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, int? timezoneOffset, Iso8601Parts partsFound)
+		internal Iso8601(int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, int? timezoneMinutesOffset, Iso8601Parts partsFound)
 		{
 			Year = year;
 			MonthOrWeek = monthOrWeek;
@@ -16,7 +15,7 @@
 			Minute = minute;
 			Second = second;
 			Millis = millis;
-			TimezoneMinutesOffset = timezoneOffset;
+			TimezoneMinutesOffset = timezoneMinutesOffset;
 			PartsFound = partsFound;
 			// 214 748 364 7
 		}
@@ -67,7 +66,7 @@
 		/// Parses <paramref name="s"/> as an ISO-8601 string, returning the components of the string.
 		/// Makes sure that it's well formed.
 		/// </summary>
-		/// <param name="s">The string to parse</param>
+		/// <param name="s">The string to parse.</param>
 		/// <returns>A <see cref="Iso8601"/> on success, or an error message on failure.</returns>
 		public static Maybe<Iso8601, string> Parse(in ReadOnlySpan<char> s)
 		{
@@ -307,7 +306,6 @@
 			else
 			{
 				return Compat.StringConcat("Minutes part was not 2 digits long. String: ".AsSpan(), s);
-
 			}
 			if (s.Length == end)
 			{
@@ -477,7 +475,7 @@
 					minute: minute,
 					second: second,
 					millis: millis,
-					timezoneOffset: tz,
+					timezoneMinutesOffset: tz,
 					partsFound: parts
 				);
 #pragma warning restore IDE0057 // Use range operator

@@ -27,15 +27,29 @@
 		/// The string representation.
 		/// </summary>
 		public string Name { get; }
+		/// <summary>
+		/// Returns true if <paramref name="obj"/> is a <see cref="NameValue{T}"/>, and both <see cref="Value"/> and <see cref="Name"/> are equal.
+		/// </summary>
+		/// <param name="obj">The object to compare to.</param>
+		/// <returns>true if equal, false otherwise.</returns>
 		public override bool Equals(object? obj)
 		{
 			return obj is NameValue<T> value && Equals(value);
 		}
+		/// <summary>
+		/// Returns true if <see cref="Value"/> and <see cref="Name"/> are equal.
+		/// </summary>
+		/// <param name="other">The object to compare to.</param>
+		/// <returns>true if equal, false otherwise.</returns>
 		public bool Equals(NameValue<T> other)
 		{
 			return EqualityComparer<T>.Default.Equals(Value, other.Value) &&
 					 Name == other.Name;
 		}
+		/// <summary>
+		/// Calculates hashcode based on both <see cref="Value"/> and <see cref="Name"/>.
+		/// </summary>
+		/// <returns>A hash code that represents this.</returns>
 		public override int GetHashCode()
 		{
 #if NETSTANDARD2_0
@@ -47,7 +61,13 @@
 			return HashCode.Combine(Value, Name);
 #endif
 		}
+		/// <summary>
+		/// Returns true if <see cref="Value"/> and <see cref="Name"/> are equal.
+		/// </summary>
 		public static bool operator ==(NameValue<T> left, NameValue<T> right) => left.Equals(right);
+		/// <summary>
+		/// Returns true if <see cref="Value"/> and <see cref="Name"/> are equal.
+		/// </summary>
 		public static bool operator !=(NameValue<T> left, NameValue<T> right) => !(left == right);
 	}
 }
