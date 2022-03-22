@@ -2,7 +2,6 @@
 {
 	using System;
 	using Xunit;
-
 	public static class MaybeTest
 	{
 		[Fact]

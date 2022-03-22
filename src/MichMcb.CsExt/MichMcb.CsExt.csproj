@@ -10,15 +10,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- More unit tests, ~74% coverage
-- Fixed an index out of range exception with ParseYearMonthDay when the string was not 10 or 8 characters long exactly. Length is now checked and returned as an error if it is not 10 or 8.
-- UtcDateTime.ToUnixEpochSeconds and UtcDateTime.ToUnixEpochMilliseconds are now called ToUnixTimeSeconds and ToUnixTimeMilliseconds to be consistent with everything else
-- Checking difference between UtcDateTime requires a ulong now, and there is a method to get the absolute difference in milliseconds
-- Operator - for subtracting a TimeSpan from a UtcDateTime, to mirror the + operator
-- Some internal constants on UtcDateTime are now public, and other constants on UtcDateTime are named to be more clear as to what they mean. They are also renamed from UnixEpoch to UnixTime.
-- Rfc3339 can be parsed, which is a strict profile of ISO-8601. Specifically, it is the extended format, with or without milliseconds, and either Z or a timezone offset. Missing a timezone offset is not allowed.
-- Rfc3339 can be formatted using Iso8601Format.ExtendedFormat_UtcTz or Iso8601Format.ExtendedFormat_FullTz, or UtcDateTime.FormatExtendedFormatUtc.
-	 </PackageReleaseNotes>
+    <PackageReleaseNotes>- Implicit cast operator for Opt, and ValueOrDefault method</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
