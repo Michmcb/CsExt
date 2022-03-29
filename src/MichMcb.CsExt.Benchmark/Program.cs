@@ -14,7 +14,7 @@
 			//BenchmarkRunner.Run<HashSetVsArray>();
 			//BenchmarkRunner.Run<ArrListAdd>();
 			//BenchmarkRunner.Run<ArrListIterate>();
-			BenchmarkRunner.Run<Maybe>();
+			BenchmarkRunner.Run<Randoms>();
 			Console.WriteLine("Enter to exit");
 			Console.ReadLine();
 		}

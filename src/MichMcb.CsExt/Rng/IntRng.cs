@@ -3,7 +3,6 @@
 	using System;
 	using System.Runtime.CompilerServices;
 	using System.Buffers.Binary;
-
 	/// <summary>
 	/// A random number generator, implemented as a linear congruential generator, that produces <see cref="int"/>.
 	/// Depending on the .NET version used, it can be faster than <see cref="Random"/>.

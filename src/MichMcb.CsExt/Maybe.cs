@@ -41,16 +41,25 @@
 		/// Gets the value, or <paramref name="ifNone"/> if <see cref="Ok"/> is false.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TVal ValueOr([AllowNull] TVal ifNone) => Ok ? value : ifNone!;
+		public TVal ValueOr([AllowNull] TVal ifNone)
+		{
+			return Ok ? value : ifNone!;
+		}
 		/// <summary>
 		/// Gets the value, or throws a <see cref="NoValueException"/>, passing the string representation of the error.
 		/// </summary>
-		public TVal ValueOrException() => Ok ? value : throw new NoValueException(error?.ToString());
+		public TVal ValueOrException()
+		{
+			return Ok ? value : throw new NoValueException(error?.ToString());
+		}
 		/// <summary>
 		/// Gets the error, or <paramref name="ifNone"/> if <see cref="Ok"/> is true.
 		/// </summary>
 		[return: NotNullIfNotNull("ifNone")]
-		public TErr ErrorOr([AllowNull] TErr ifNone) => Ok ? ifNone! : error;
+		public TErr ErrorOr([AllowNull] TErr ifNone)
+		{
+			return Ok ? ifNone! : error;
+		}
 		/// <summary>
 		/// Returns the value of <see cref="Ok"/>. If true, then <paramref name="val"/> is set. Otherwise, <paramref name="error"/> is set.
 		/// </summary>
@@ -136,11 +145,17 @@
 		/// Equivalent to calling the constructor and passing <paramref name="value"/>.
 		/// </summary>
 		/// <param name="value">The value.</param>
-		public static Maybe<TVal, TErr> Value(TVal value) => new(value);
+		public static Maybe<TVal, TErr> Value(TVal value)
+		{
+			return new(value);
+		}
 		/// <summary>
 		/// Equivalent to calling the constructor and passing <paramref name="err"/>.
 		/// </summary>
 		/// <param name="err">The error.</param>
-		public static Maybe<TVal, TErr> Error(TErr err) => new(err);
+		public static Maybe<TVal, TErr> Error(TErr err)
+		{
+			return new(err);
+		}
 	}
 }

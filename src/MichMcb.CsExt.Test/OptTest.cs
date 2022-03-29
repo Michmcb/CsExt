@@ -21,6 +21,15 @@
 			Assert.Equal("hello", opt.ValueOrDefault(string.Empty));
 		}
 		[Fact]
+		public static void ValueOrException()
+		{
+			Opt<string?> opt = default;
+			Assert.Throws<NoValueException>(() => opt.ValueOrException());
+
+			opt = "hello";
+			Assert.Equal("hello", opt.ValueOrException());
+		}
+		[Fact]
 		public static void ImplicitCast()
 		{
 			Opt<string?> opt = "hello";

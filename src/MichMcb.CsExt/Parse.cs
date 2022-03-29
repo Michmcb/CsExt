@@ -1,7 +1,6 @@
 ﻿namespace MichMcb.CsExt
 {
 	using System;
-
 	/// <summary>
 	/// Methods for parsing.
 	/// </summary>

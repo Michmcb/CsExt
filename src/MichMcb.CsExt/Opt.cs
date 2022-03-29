@@ -41,9 +41,16 @@
 			return hasVal ? val : ifNone;
 		}
 		/// <summary>
+		/// Gets the value, or throws a <see cref="NoValueException"/>.
+		/// </summary>
+		public TVal ValueOrException()
+		{
+			return hasVal ? val : throw new NoValueException("Opt instance had no value.");
+		}
+		/// <summary>
 		/// Equivalent to creating a new instance.
 		/// </summary>
 		/// <param name="val">The value.</param>
-		public static implicit operator Opt<TVal>(TVal val) => new Opt<TVal>(val);
+		public static implicit operator Opt<TVal>(TVal val) => new(val);
 	}
 }
