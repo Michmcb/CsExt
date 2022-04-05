@@ -61,7 +61,7 @@
 		/// <param name="s">The string to parse.</param>
 		/// <param name="allowSpaceInsteadOfT">If true, an empty space is allowed instead of T or t to separate date/time. Otherwise, only T or t is allowed.</param>
 		/// <returns>A <see cref="Rfc3339"/> on success, or an error message on failure.</returns>
-		public static Maybe<Rfc3339, string> Parse(in ReadOnlySpan<char> s, bool allowSpaceInsteadOfT = false)
+		public static Maybe<Rfc3339, string> Parse(ReadOnlySpan<char> s, bool allowSpaceInsteadOfT = false)
 		{
 #pragma warning disable IDE0057 // Use range operator
 			if (s.Length < 20)

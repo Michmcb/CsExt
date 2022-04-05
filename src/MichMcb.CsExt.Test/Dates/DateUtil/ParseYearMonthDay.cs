@@ -3,7 +3,6 @@
 	using System;
 	using Xunit;
 	using MichMcb.CsExt.Dates;
-
 	public static class ParseYearMonthDay
 	{
 		[Fact]

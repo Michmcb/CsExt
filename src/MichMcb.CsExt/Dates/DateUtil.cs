@@ -25,14 +25,96 @@
 			return new DateTime(milliseconds * TimeSpan.TicksPerMillisecond + UtcDateTime.UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
+		/// Returns a string, either yyyy-MM-dd or yyyyMMdd.
+		/// </summary>
+		/// <param name="date">The date.</param>
+		/// <param name="dashes">Whether or not to include dashes.</param>
+		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
+		public static string YearMonthDayToString(DateTime date, bool dashes)
+		{
+			UtcDateTime.DateTimePartsFromTotalMilliseconds(date.Ticks / TimeSpan.TicksPerMillisecond, out int y, out int m, out int d, out _, out _, out _, out _);
+			return YearMonthDayToString(y, m, d, dashes);
+		}
+#if NET6_0_OR_GREATER
+		/// <summary>
+		/// Returns a string, either yyyy-MM-dd or yyyyMMdd.
+		/// </summary>
+		/// <param name="date">The date.</param>
+		/// <param name="dashes">Whether or not to include dashes.</param>
+		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
+		public static string YearMonthDayToString(DateOnly date, bool dashes)
+		{
+			UtcDateTime.DatePartsFromTotalDays(date.DayNumber, out int y, out int m, out int d);
+			return YearMonthDayToString(y, m, d, dashes);
+		}
+#endif
+		/// <summary>
+		/// Returns a string, either yyyy-MM-dd or yyyyMMdd.
+		/// </summary>
+		/// <param name="year">The year.</param>
+		/// <param name="month">The month.</param>
+		/// <param name="day">The day.</param>
+		/// <param name="dashes">Whether or not to include dashes.</param>
+		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
+		public static string YearMonthDayToString(int year, int month, int day, bool dashes)
+		{
+#if NETSTANDARD2_0
+			char[] str = new char[dashes ? 10 : 8];
+			WriteYearMonthDay(str, year, month, day, dashes);
+			return new string(str);
+#else
+			return string.Create(dashes ? 10 : 8, (year, month, day, dashes), (dest, ymd) => WriteYearMonthDay(dest, ymd.year, ymd.month, ymd.day, ymd.dashes));
+#endif
+		}
+		/// <summary>
+		/// Writes as yyyy-MM-dd or yyyyMMdd to <paramref name="str"/>, which much be able to hold 8 or 10 chars.
+		/// </summary>
+		/// <param name="str">The span into which to write the date.</param>
+		/// <param name="year">The year.</param>
+		/// <param name="month">The month.</param>
+		/// <param name="day">The day.</param>
+		/// <param name="dashes">Whether or not to include dashes.</param>
+		/// <returns>The number of chars written, or nothing if <paramref name="str"/> is not large enough.</returns>
+		public static Opt<int> WriteYearMonthDay(Span<char> str, int year, int month, int day, bool dashes)
+		{
+			if (dashes)
+			{
+				if (str.Length < 10)
+				{
+					return default;
+				}
+				// 0123456789
+				// yyyy-MM-dd
+				str[4] = '-';
+				str[7] = '-';
+				Formatting.Write4Digits((uint)year, str, 0);
+				Formatting.Write2Digits((uint)month, str, 5);
+				Formatting.Write2Digits((uint)day, str, 8);
+				return 10;
+			}
+			else
+			{
+				if (str.Length < 8)
+				{
+					return default;
+				}
+				// 01234567
+				// yyyyMMdd
+				Formatting.Write4Digits((uint)year, str, 0);
+				Formatting.Write2Digits((uint)month, str, 4);
+				Formatting.Write2Digits((uint)day, str, 6);
+				return 8;
+			}
+		}
+		/// <summary>
 		/// Parses <paramref name="str"/> as yyyy-MM-dd or yyyyMMdd. String must be exactly 10 or 8 chars long.
 		/// </summary>
 		/// <param name="str">The string to parse.</param>
 		/// <returns>The parsed Date, or an error message.</returns>
 #if NET6_0_OR_GREATER
-		public static Maybe<DateOnly, string> ParseYearMonthDay(in ReadOnlySpan<char> str)
+		public static Maybe<DateOnly, string> ParseYearMonthDay(ReadOnlySpan<char> str)
 #else
-		public static Maybe<DateTime, string> ParseYearMonthDay(in ReadOnlySpan<char> str)
+		public static Maybe<DateTime, string> ParseYearMonthDay(ReadOnlySpan<char> str)
 #endif
 		{
 			return str.Length switch

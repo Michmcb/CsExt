@@ -68,7 +68,7 @@
 		/// </summary>
 		/// <param name="s">The string to parse.</param>
 		/// <returns>A <see cref="Iso8601"/> on success, or an error message on failure.</returns>
-		public static Maybe<Iso8601, string> Parse(in ReadOnlySpan<char> s)
+		public static Maybe<Iso8601, string> Parse(ReadOnlySpan<char> s)
 		{
 #pragma warning disable IDE0057 // Use range operator
 			if (s.Length == 0)

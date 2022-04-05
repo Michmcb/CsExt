@@ -8,6 +8,7 @@
 	/// A random number generator, implemented as a linear congruential generator, that produces <see cref="uint"/>.
 	/// Faster than <see cref="Random"/>.
 	/// </summary>
+	[Obsolete("Use PcgRng instead")]
 	public sealed class UIntRng
 	{
 		// Add 2 after we convert to a double, otherwise we'll overflow
@@ -62,7 +63,7 @@
 		/// Fills <paramref name="span"/> with random numbers. Not thread-safe.
 		/// </summary>
 		/// <param name="span">The span to fill with random numbers</param>
-		public void NextBytes(in Span<byte> span)
+		public void NextBytes(Span<byte> span)
 		{
 			int i;
 			// We'll fill the span in 4-byte increments 

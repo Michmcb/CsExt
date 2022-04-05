@@ -13,7 +13,7 @@
 		/// </summary>
 		/// <param name="s">The string to parse.</param>
 		/// <returns>The parsed integer, or an error message if a non-latin digit was found.</returns>
-		public static Maybe<int, string> LatinInt(in ReadOnlySpan<char> s)
+		public static Maybe<int, string> LatinInt(ReadOnlySpan<char> s)
 		{
 			int result = 0;
 			int mult = 1;

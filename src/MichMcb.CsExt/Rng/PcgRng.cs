@@ -2,15 +2,12 @@
 {
 	using System;
 	using System.Buffers.Binary;
-	using System.Runtime.CompilerServices;
-
 	/// <summary>
 	/// A random number generator, implemented as a permuted congruential generator.
 	/// Ported from here: https://www.pcg-random.org/download.html
 	/// </summary>
-	public sealed class PcgRng
+	public sealed class PcgRng : IRng
 	{
-		private const double UIntMaxDouble = uint.MaxValue + 1d;
 		private ulong state;
 		private readonly ulong increment;
 		/// <summary>
@@ -95,16 +92,24 @@
 		/// <summary>
 		/// Returns a double that is 0.0 or larger and less than 1.0.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public double NextDouble()
 		{
 			// Using this for a clamped range is faster than doing the method for debiased integer multiplication (by Lemire)
-			return NextUInt32() / UIntMaxDouble;
+			return NextUInt32() / RngConst.UIntMaxValuePlusOne;
+		}
+		/// <summary>
+		/// Gets a number of random bytes.
+		/// </summary>
+		public byte[] NextBytes(int count)
+		{
+			byte[] b = new byte[count];
+			FillBytes(b);
+			return b;
 		}
 		/// <summary>
 		/// Fills <paramref name="span"/> with random bytes.
 		/// </summary>
-		public void NextBytes(in Span<byte> span)
+		public void FillBytes(Span<byte> span)
 		{
 			int i;
 			// We'll fill the span in 4-byte increments 

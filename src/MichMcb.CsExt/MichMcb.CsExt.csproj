@@ -5,15 +5,13 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>2.4.0</Version>
+    <Version>2.5.0</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Added One, which can be used to wrap a single value and treat it as a IReadOnlyList, saves an array allocation.
-- Opt has ValueOrException(), just like Maybe now
-- Added a PCG (Permuted congruential generator) RNG, which can return ints, uints, doubles, and fill byte spans
-	 </PackageReleaseNotes>
+    <PackageReleaseNotes>- Removed One, may as well just use an array because it's still an allocation
+- Method for making a year/month/day string</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -21,8 +19,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
-    <FileVersion>2.4.0.0</FileVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
+    <FileVersion>2.5.0.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

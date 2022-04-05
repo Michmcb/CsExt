@@ -21,7 +21,7 @@
 		/// <summary>
 		/// Shim for string.Concat to be able to concatenate some <see cref="ReadOnlySpan{T}"/>
 		/// </summary>
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1)
 		{
 			char[] chars = new char[span0.Length + span1.Length];
 			Span<char> str = chars;
@@ -32,7 +32,7 @@
 		/// <summary>
 		/// Shim for string.Concat to be able to concatenate some <see cref="ReadOnlySpan{T}"/>
 		/// </summary>
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1, in ReadOnlySpan<char> span2)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1, ReadOnlySpan<char> span2)
 		{
 			char[] chars = new char[span0.Length + span1.Length + span2.Length];
 			Span<char> str = chars;
@@ -44,7 +44,7 @@
 		/// <summary>
 		/// Shim for string.Concat to be able to concatenate some <see cref="ReadOnlySpan{T}"/>
 		/// </summary>
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1, in ReadOnlySpan<char> span2, in ReadOnlySpan<char> span3)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1, ReadOnlySpan<char> span2, ReadOnlySpan<char> span3)
 		{
 			char[] chars = new char[span0.Length + span1.Length + span2.Length + span3.Length];
 			Span<char> str = chars;
@@ -59,7 +59,7 @@
 		/// Calls <see cref="string.Concat(ReadOnlySpan{char}, ReadOnlySpan{char})"/>.
 		/// </summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1)
 		{
 			return string.Concat(span0, span1);
 		}
@@ -67,7 +67,7 @@
 		/// Calls <see cref="string.Concat(ReadOnlySpan{char}, ReadOnlySpan{char}, ReadOnlySpan{char})"/>.
 		/// </summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1, in ReadOnlySpan<char> span2)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1, ReadOnlySpan<char> span2)
 		{
 			return string.Concat(span0, span1, span2);
 		}
@@ -75,7 +75,7 @@
 		/// Calls <see cref="string.Concat(ReadOnlySpan{char}, ReadOnlySpan{char}, ReadOnlySpan{char}, ReadOnlySpan{char})"/>.
 		/// </summary>
 		[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
-		public static string StringConcat(in ReadOnlySpan<char> span0, in ReadOnlySpan<char> span1, in ReadOnlySpan<char> span2, in ReadOnlySpan<char> span3)
+		public static string StringConcat(ReadOnlySpan<char> span0, ReadOnlySpan<char> span1, ReadOnlySpan<char> span2, ReadOnlySpan<char> span3)
 		{
 			return string.Concat(span0, span1, span2, span3);
 		}

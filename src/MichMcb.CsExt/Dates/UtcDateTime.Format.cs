@@ -10,7 +10,7 @@
 		/// <param name="str">The string to parse.</param>
 		/// <param name="allowSpaceInsteadOfT">If true, an empty space is allowed instead of T or t to separate date/time. Otherwise, only T or t is allowed.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
-		public static Maybe<UtcDateTime, string> TryParseRfc3339String(in ReadOnlySpan<char> str, bool allowSpaceInsteadOfT = false)
+		public static Maybe<UtcDateTime, string> TryParseRfc3339String(ReadOnlySpan<char> str, bool allowSpaceInsteadOfT = false)
 		{
 			return Rfc3339.Parse(str, allowSpaceInsteadOfT).Success(out Rfc3339? rfc, out string? err)
 				? MillisFromYearMonthDay(rfc.Year, rfc.Month, rfc.Day).Success(out long timeMs, out err)
@@ -27,7 +27,7 @@
 		/// </summary>
 		/// <param name="str">The string to parse</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
-		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str)
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str)
 		{
 			return TryParseIso8601String(str, default, false);
 		}
@@ -40,7 +40,7 @@
 		/// <param name="str">The string to parse</param>
 		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. Use <see cref="TimeZoneInfo.Local"/> if you want to interpret this as the local timezone.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
-		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing)
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing)
 		{
 			return TryParseIso8601String(str, timezoneWhenMissing, true);
 		}
@@ -54,7 +54,7 @@
 		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. Use <see cref="TimeZoneInfo.Local"/> if you want to interpret this as the local timezone.</param>
 		/// <param name="allowMissingTimezone">If true, a timezone designator is allowed to be missing, and will be assumed to be <paramref name="timezoneWhenMissing"/>. Otherwise, a timezone designator is required.</param>
 		/// <returns>A UtcDateTime if parsing was successful, or an error message otherwise.</returns>
-		public static Maybe<UtcDateTime, string> TryParseIso8601String(in ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing, bool allowMissingTimezone)
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str, TimeSpan timezoneWhenMissing, bool allowMissingTimezone)
 		{
 			ReadOnlySpan<char> ts = str.Trim();
 			if (!Iso8601.Parse(ts).Success(out Iso8601? iso, out string? errMsg))

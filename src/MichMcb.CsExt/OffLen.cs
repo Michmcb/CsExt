@@ -70,7 +70,7 @@
 		/// <param name="span">The span to take a slice of.</param>
 		/// <returns>A slice of <paramref name="span"/></returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ReadOnlySpan<T> Slice<T>(in ReadOnlySpan<T> span)
+		public ReadOnlySpan<T> Slice<T>(ReadOnlySpan<T> span)
 		{
 			return span.Slice(Offset, Length);
 		}

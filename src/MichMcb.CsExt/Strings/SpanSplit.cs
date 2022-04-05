@@ -15,7 +15,7 @@ namespace MichMcb.CsExt.Strings
 		/// <param name="str">The string to split.</param>
 		/// <param name="separator">The character that delimits slices.</param>
 		/// <param name="options">Whether to trim substrings and remove empty entries.</param>
-		public SpanSplit(in ReadOnlySpan<char> str, char separator, StringSplitOptions options)
+		public SpanSplit(ReadOnlySpan<char> str, char separator, StringSplitOptions options)
 		{
 			Str = str;
 			Separator = separator;

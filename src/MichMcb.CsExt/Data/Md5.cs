@@ -45,7 +45,7 @@ namespace MichMcb.CsExt.Data
 		/// Fills <paramref name="target"/> with bytes which represents this MD5.
 		/// </summary>
 		/// <param name="target">The span to fill with bytes.</param>
-		public void FillSpan(in Span<byte> target)
+		public void FillSpan(Span<byte> target)
 		{
 			BinaryPrimitives.WriteInt64LittleEndian(target, Upper8);
 			BinaryPrimitives.WriteInt64LittleEndian(target[8..], Lower8);

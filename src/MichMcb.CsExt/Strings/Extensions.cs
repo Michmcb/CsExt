@@ -199,7 +199,7 @@
 			}
 			return lineBreaks;
 
-			static int LastIndexOfWhitespace(in ReadOnlySpan<char> str, int start, int finish)
+			static int LastIndexOfWhitespace(ReadOnlySpan<char> str, int start, int finish)
 			{
 				for (int i = start; i >= finish; i--)
 				{

@@ -10,7 +10,6 @@
 	public readonly struct Opt<TVal>
 	{
 		private readonly TVal val;
-		private readonly bool hasVal;
 		/// <summary>
 		/// Creates a new instance with the provided value.
 		/// </summary>
@@ -18,7 +17,7 @@
 		public Opt(TVal val)
 		{
 			this.val = val;
-			hasVal = true;
+			Ok = true;
 		}
 		/// <summary>
 		/// Returns true if a value is present, false otherwise.
@@ -28,8 +27,12 @@
 		public bool HasVal([NotNullWhen(true)] out TVal value)
 		{
 			value = val;
-			return hasVal;
+			return Ok;
 		}
+		/// <summary>
+		/// True if a value is present, false otherwise.
+		/// </summary>
+		public bool Ok { get; }
 		/// <summary>
 		/// Returns the value if one is present, otherwise returns <paramref name="ifNone"/>.
 		/// </summary>
@@ -38,14 +41,14 @@
 		[return: NotNullIfNotNull("ifNone")]
 		public TVal ValueOrDefault(TVal ifNone)
 		{
-			return hasVal ? val : ifNone;
+			return Ok ? val : ifNone;
 		}
 		/// <summary>
 		/// Gets the value, or throws a <see cref="NoValueException"/>.
 		/// </summary>
 		public TVal ValueOrException()
 		{
-			return hasVal ? val : throw new NoValueException("Opt instance had no value.");
+			return Ok ? val : throw new NoValueException("Opt instance had no value.");
 		}
 		/// <summary>
 		/// Equivalent to creating a new instance.

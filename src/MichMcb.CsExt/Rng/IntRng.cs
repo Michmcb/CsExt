@@ -9,6 +9,7 @@
 	/// If using .net5.0 it can be 28 times faster.
 	/// If using .net6.0 it can be 9 times faster.
 	/// </summary>
+	[Obsolete("Use PcgRng instead")]
 	public sealed class IntRng
 	{
 		// Add 2 after we convert to a double, otherwise we'll overflow
@@ -62,7 +63,7 @@
 		/// Fills <paramref name="span"/> with random numbers. Not thread-safe.
 		/// </summary>
 		/// <param name="span">The span to fill with random numbers</param>
-		public void NextBytes(in Span<byte> span)
+		public void NextBytes(Span<byte> span)
 		{
 			int i;
 			// We'll fill the span in 4-byte increments 
