@@ -24,10 +24,10 @@
 		[Fact]
 		public static void ToDotNetDateTimes()
 		{
-			DateTime converted1 = new UtcDateTime(2001, 2, 3, 4, 5, 6, 700);
+			DateTime converted1 = new UtcDateTime(2001, 2, 3, 4, 5, 6, 700).ToDateTime();
 			Assert.Equal(new DateTime(2001, 2, 3, 4, 5, 6, 700, DateTimeKind.Utc), converted1);
 
-			DateTimeOffset converted2 = new UtcDateTime(2001, 2, 3, 4, 5, 6, 700);
+			DateTimeOffset converted2 = new UtcDateTime(2001, 2, 3, 4, 5, 6, 700).ToDateTime();
 			Assert.Equal(new DateTimeOffset(2001, 2, 3, 4, 5, 6, 700, TimeSpan.Zero), converted2);
 		}
 	}

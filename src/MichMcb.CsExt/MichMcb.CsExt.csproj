@@ -10,8 +10,9 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Removed One, may as well just use an array because it's still an allocation
-- Method for making a year/month/day string</PackageReleaseNotes>
+    <PackageReleaseNotes>- ReadOnlyList, ReadOnlySet, ReadOnlyCollection, ReadOnlyDictionary, and extension methods to create these from .NET types
+- LcgRng added
+- UtcDateTime has had some From/To methods added. Implicit cast operators removed. Also Added FromMilliseconds as UtcDateTime will eventually be using Ticks like .NET DateTime is, less of a hassle and less CPU cycles wasted converting.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>

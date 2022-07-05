@@ -288,23 +288,5 @@
 
 			return (hour * MillisPerHour) + ((minute - tzTotalMins) * MillisPerMinute) + (second * MillisPerSecond) + millis;
 		}
-		/// <summary>
-		/// Creates a new instance from the provided <paramref name="dateTime"/>. If <paramref name="dateTime"/>.DateTimeKind is Unspecified, throws <see cref="ArgumentException"/>, unless <paramref name="treatUnspecifiedAsUtc"/> is true.
-		/// </summary>
-		/// <param name="dateTime">The <see cref="DateTime"/> to convert.</param>
-		/// <param name="treatUnspecifiedAsUtc">If true, and the kind of <paramref name="dateTime"/> is <see cref="DateTimeKind.Unspecified"/>, then treats <paramref name="dateTime"/> as if it were UTC.</param>
-		/// <returns>A <see cref="UtcDateTime"/>.</returns>
-		/// <exception cref="ArgumentException"></exception>
-		public static UtcDateTime FromDateTime(DateTime dateTime, bool treatUnspecifiedAsUtc)
-		{
-			return dateTime.Kind switch
-			{
-				DateTimeKind.Utc => new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond),
-				DateTimeKind.Local => new UtcDateTime(dateTime.ToUniversalTime().Ticks / TimeSpan.TicksPerMillisecond),
-				_ => treatUnspecifiedAsUtc
-					? new UtcDateTime(dateTime.Ticks / TimeSpan.TicksPerMillisecond)
-					: throw new ArgumentException("Provided DateTime has an Unspecified kind; it must be either Utc or Local. Use DateTime.SpecifyKind() or DateTime.ToUniversalTime() to fix this if you know what the kind should be.", nameof(dateTime)),
-			};
-		}
 	}
 }
