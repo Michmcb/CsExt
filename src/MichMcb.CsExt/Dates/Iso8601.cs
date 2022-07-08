@@ -384,7 +384,7 @@
 				{
 					return Compat.StringConcat("Failed to parse millisecond because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
 				}
-				parts |= Iso8601Parts.Millis;
+				parts |= Iso8601Parts.Fractional;
 			}
 			// No timezone, exit
 			if (s.Length == end)

@@ -9,7 +9,7 @@
 		Hour = 3,
 		Minute = 4,
 		Second = 5,
-		Millisecond = 6
+		Millisecond = 6,
 	}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

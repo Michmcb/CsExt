@@ -3,8 +3,8 @@
 	using System;
 
 	/// <summary>
-	/// A lexer/parser which picks out the ranges in an RFC3339 string. RFC3339 is a stricter form of ISO-8601; specifically, it is
-	/// ISO-8601 
+	/// A lexer/parser which picks out the ranges in an RFC3339 string. RFC3339 is a stricter form of ISO-8601; specifically, it is identical to the
+	/// ISO-8601 extended format, UTC, with or without milliseconds.
 	/// </summary>
 	public sealed class Rfc3339
 	{
@@ -63,6 +63,7 @@
 		/// <returns>A <see cref="Rfc3339"/> on success, or an error message on failure.</returns>
 		public static Maybe<Rfc3339, string> Parse(ReadOnlySpan<char> s, bool allowSpaceInsteadOfT = false)
 		{
+			// TODO add a write method for Rfc3339, maybe. It can just call through to a Iso8601Format instance.
 #pragma warning disable IDE0057 // Use range operator
 			if (s.Length < 20)
 			{

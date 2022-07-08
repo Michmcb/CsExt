@@ -11,7 +11,7 @@
 		public static void HashCodeCalculatedOnMilliseconds()
 		{
 			UtcDateTime udt = new(2021, 01, 25, 10, 15, 30, 937);
-			Assert.Equal(udt.TotalMilliseconds.GetHashCode(), udt.GetHashCode());
+			Assert.Equal(udt.Ticks.GetHashCode(), udt.GetHashCode());
 		}
 		[Fact]
 		public static void EqualsMethod()
@@ -39,10 +39,10 @@
 			UtcDateTime udt1 = new(2021, 01, 25, 10, 15, 30, 500);
 			UtcDateTime udt2 = new(2021, 01, 25, 10, 15, 30, 250);
 
-			Assert.False(udt1.Equals(udt2, 0));
-			Assert.False(udt1.Equals(udt2, 249));
-			Assert.True(udt1.Equals(udt2, 250));
-			Assert.True(udt1.Equals(udt2, 251));
+			Assert.False(udt1.Equals(udt2, TimeSpan.FromMilliseconds(0)));
+			Assert.False(udt1.Equals(udt2, TimeSpan.FromMilliseconds(249)));
+			Assert.True(udt1.Equals(udt2, TimeSpan.FromMilliseconds(250)));
+			Assert.True(udt1.Equals(udt2, TimeSpan.FromMilliseconds(251)));
 		}
 		[Fact]
 		public static void CompareTo()

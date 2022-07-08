@@ -23,7 +23,7 @@
 			dest[offset] = (char)('0' + val);
 		}
 		/// <summary>
-		/// Writes a four-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 999.
+		/// Writes a three-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 999.
 		/// Based on this: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,6 +50,99 @@
 			Debug.Assert(val <= 9999);
 
 			uint temp = '0' + val;
+			val /= 10;
+			dest[offset + 3] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 2] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 1] = (char)(temp - (val * 10));
+
+			dest[offset] = (char)('0' + val);
+		}
+		/// <summary>
+		/// Writes a three-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 99999.
+		/// Based on this: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Write5Digits(uint val, Span<char> dest, int offset = 0)
+		{
+			Debug.Assert(val <= 99999);
+
+			uint temp = '0' + val;
+			val /= 10;
+			dest[offset + 4] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 3] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 2] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 1] = (char)(temp - (val * 10));
+
+			dest[offset] = (char)('0' + val);
+		}
+		/// <summary>
+		/// Writes a three-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 999999.
+		/// Based on this: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Write6Digits(uint val, Span<char> dest, int offset = 0)
+		{
+			Debug.Assert(val <= 999999);
+
+			uint temp = '0' + val;
+			val /= 10;
+			dest[offset + 5] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 4] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 3] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 2] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 1] = (char)(temp - (val * 10));
+
+			dest[offset] = (char)('0' + val);
+		}
+		/// <summary>
+		/// Writes a three-digit value to <paramref name="dest"/>. Parameter <paramref name="val"/> must be within range 0 to 9999999.
+		/// Based on this: <see href="https://github.com/dotnet/corefx/blob/master/src/Common/src/CoreLib/System/Globalization/DateTimeFormat.cs"/> 
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static void Write7Digits(uint val, Span<char> dest, int offset = 0)
+		{
+			Debug.Assert(val <= 9999999);
+
+			uint temp = '0' + val;
+			val /= 10;
+			dest[offset + 6] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 5] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
+			val /= 10;
+			dest[offset + 4] = (char)(temp - (val * 10));
+
+			temp = '0' + val;
 			val /= 10;
 			dest[offset + 3] = (char)(temp - (val * 10));
 

@@ -16,54 +16,54 @@
 		/// A good default format.
 		/// This is known in ISO-8601 as "Extended Format"
 		/// </summary>
-		Format_ExtendedFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc | Separator_All,
+		Format_ExtendedFormat_UtcTz = YearMonthDay | HourMinuteSecondFractional | Tz_Utc | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss.sss+00:00
 		/// </summary>
-		Format_ExtendedFormat_FullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute | Separator_All,
+		Format_ExtendedFormat_FullTz = YearMonthDay | HourMinuteSecondFractional | Tz_HourMinute | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss.sss
 		/// </summary>
-		Format_ExtendedFormat_LocalTz = YearMonthDay | HourMinuteSecondMillis | Separator_All,
+		Format_ExtendedFormat_LocalTz = YearMonthDay | HourMinuteSecondFractional | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ssZ
 		/// </summary>
-		Format_ExtendedFormat_NoMillis_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc | Separator_All,
+		Format_ExtendedFormat_NoFractional_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss+00:00
 		/// </summary>
-		Format_ExtendedFormat_NoMillis_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute | Separator_All,
+		Format_ExtendedFormat_NoFractional_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute | Separator_All,
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss
 		/// </summary>
-		Format_ExtendedFormat_NoMillis_LocalTz = YearMonthDay | HourMinuteSecond | Separator_All,
+		Format_ExtendedFormat_NoFractional_LocalTz = YearMonthDay | HourMinuteSecond | Separator_All,
 
 		/// <summary>
 		/// yyyyMMddTHHmmss.sssZ
 		/// Everything, except without separators
 		/// This is known in ISO-8601 as "Basic Format"
 		/// </summary>
-		Format_BasicFormat_UtcTz = YearMonthDay | HourMinuteSecondMillis | Tz_Utc,
+		Format_BasicFormat_UtcTz = YearMonthDay | HourMinuteSecondFractional | Tz_Utc,
 		/// <summary>
 		/// yyyyMMddTHHmmss.sss+0000
 		/// </summary>
-		Format_BasicFormat_FullTz = YearMonthDay | HourMinuteSecondMillis | Tz_HourMinute,
+		Format_BasicFormat_FullTz = YearMonthDay | HourMinuteSecondFractional | Tz_HourMinute,
 		/// <summary>
 		/// yyyyMMddTHHmmss.sss
 		/// </summary>
-		Format_BasicFormat_LocalTz = YearMonthDay | HourMinuteSecondMillis,
+		Format_BasicFormat_LocalTz = YearMonthDay | HourMinuteSecondFractional,
 		/// <summary>
 		/// yyyyMMddTHHmmssZ
 		/// </summary>
-		Format_BasicFormat_NoMillis_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc,
+		Format_BasicFormat_NoFractional_UtcTz = YearMonthDay | HourMinuteSecond | Tz_Utc,
 		/// <summary>
 		/// yyyyMMddTHHmmss+0000
 		/// </summary>
-		Format_BasicFormat_NoMillis_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute,
+		Format_BasicFormat_NoFractional_FullTz = YearMonthDay | HourMinuteSecond | Tz_HourMinute,
 		/// <summary>
 		/// yyyyMMddTHHmmss
 		/// </summary>
-		Format_BasicFormat_NoMillis_LocalTz = YearMonthDay | HourMinuteSecond,
+		Format_BasicFormat_NoFractional_LocalTz = YearMonthDay | HourMinuteSecond,
 
 		/// <summary>
 		/// yyyy-MM-dd
@@ -154,9 +154,9 @@
 		YearWeekDay = Year | Week | Day,
 
 		/// <summary>
-		/// Millisecond
+		/// Fractional
 		/// </summary>
-		Millis = 0b0000_0001_0000_0000, // TODO Change "Millis" enum to "Fractional".
+		Fractional = 0b0000_0001_0000_0000,
 		/// <summary>
 		/// Second
 		/// </summary>
@@ -170,9 +170,9 @@
 		/// </summary>
 		Hour = 0b0000_1000_0000_0000,
 		/// <summary>
-		/// Hour, Minute, Second, and Millisecond
+		/// Hour, Minute, Second, and Fractional
 		/// </summary>
-		HourMinuteSecondMillis = Hour | Minute | Second | Millis,
+		HourMinuteSecondFractional = Hour | Minute | Second | Fractional,
 		/// <summary>
 		/// Hour, Minute, Second
 		/// </summary>
