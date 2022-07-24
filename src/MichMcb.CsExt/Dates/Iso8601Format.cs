@@ -3,7 +3,7 @@
 	using System;
 	/// <summary>
 	/// A validated format for ISO-8601 strings. To create one of these you need to use <see cref="TryCreate(Iso8601Parts, int)"/>,
-	/// or use one of the static predefined ones.
+	/// or use one of the static predefined ones. Note that you can invoke <see cref="WithDecimalPlaces(int)"/> to change the number of decimal places used.
 	/// </summary>
 	public readonly struct Iso8601Format
 	{
@@ -99,6 +99,26 @@
 		/// The number of decimal places for the fractional part, not counting the dot.
 		/// </summary>
 		public int DecimalPlaces { get; }
+		/// <summary>
+		/// Creates a copy of this format, with a different number of decimal places.
+		/// </summary>
+		/// <param name="decimalPlaces">The new number of decimal places.</param>
+		/// <returns>An <see cref="Iso8601Format"/></returns>
+		public Iso8601Format WithDecimalPlaces(int decimalPlaces)
+		{
+			if (decimalPlaces < 0)
+			{
+				throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "Decimal places cannot be less than zero");
+			}
+
+			return decimalPlaces == 0
+				? DecimalPlaces == 0
+					? new(Format, LengthRequired, decimalPlaces) // Both are zero
+					: new(Format, LengthRequired - DecimalPlaces + decimalPlaces - 1, decimalPlaces) // new is 0, old is nonzero. Minus 1 extra to remove the dot
+				: DecimalPlaces == 0
+					? new(Format, LengthRequired - DecimalPlaces + decimalPlaces + 1, decimalPlaces) // old is 0, new is nonzero. Add 1 extra to add the dot
+					: new(Format, LengthRequired - DecimalPlaces + decimalPlaces, decimalPlaces); // both are nonzero, no adjustment needed
+		}
 		/// <summary>
 		/// Returns an <see cref="Iso8601Format"/> from the options provided.
 		/// </summary>
@@ -502,7 +522,7 @@
 		/// <summary>
 		/// An optimized method for writing using the format <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>, with or without millseconds.
 		/// </summary>
-		/// <param name="destination">The destination to write to. Must be 16 long if <paramref name="decimalPlaces"/> is 0, or 17 + <paramref name="decimalPlaces"/> otherwise.</param>
+		/// <param name="destination">The destination to write to. Must be 20 long if <paramref name="decimalPlaces"/> is 0, or 21 + <paramref name="decimalPlaces"/> otherwise.</param>
 		/// <param name="ticks">The ticks.</param>
 		/// <param name="decimalPlaces">The number of decimal places to include.</param>
 		/// <returns>The number of chars written, or if <paramref name="destination"/> is too small, the space required as a negative number.</returns>
