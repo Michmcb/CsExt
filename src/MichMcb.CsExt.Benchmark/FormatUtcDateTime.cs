@@ -30,7 +30,7 @@
 		[Benchmark]
 		public void TryFormat()
 		{
-			utcNow.TryFormat(mem.Span, TimeSpan.Zero, format: Iso8601Parts.Format_ExtendedFormat_UtcTz);
+			utcNow.Format(mem.Span, Tz.Utc, Iso8601Format.ExtendedFormat_UtcTz);
 		}
 	}
 }

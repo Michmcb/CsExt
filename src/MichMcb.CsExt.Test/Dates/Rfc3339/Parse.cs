@@ -4,7 +4,7 @@
 	using MichMcb.CsExt.Dates;
 	public static class Parse
 	{
-		private static void Check(Rfc3339 r, int year, int month, int day, int hour, int minute, int second, int millis, int timezoneMinutesOffset)
+		private static void Check(Rfc3339 r, int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
 		{
 			Assert.Equal(year, r.Year);
 			Assert.Equal(month, r.Month);
@@ -13,49 +13,52 @@
 			Assert.Equal(minute, r.Minute);
 			Assert.Equal(second, r.Second);
 			Assert.Equal(millis, r.Millis);
-			Assert.Equal(timezoneMinutesOffset, r.TimezoneMinutesOffset);
+			Assert.Equal(timezone, r.Timezone);
 		}
 		[Fact]
 		public static void Ok()
 		{
+			Tz tzPlus10 = Tz.TryCreate(10, 0).ValueOrException();
+			Tz tzMinus10 = Tz.TryCreate(-10, 0).ValueOrException();
+
 			Rfc3339 r = Rfc3339.Parse("1234-05-15T10:20:30Z").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 0, 0);
+			Check(r, 1234, 5, 15, 10, 20, 30, 0, default);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.1Z").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 100, 0);
+			Check(r, 1234, 5, 15, 10, 20, 30, 100, default);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.12Z").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 120, 0);
+			Check(r, 1234, 5, 15, 10, 20, 30, 120, default);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.123Z").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 123, 0);
+			Check(r, 1234, 5, 15, 10, 20, 30, 123, default);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30+10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 0, 600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 0, tzPlus10);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.3+10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 300, 600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 300, tzPlus10);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.32+10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 320, 600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 320, tzPlus10);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.321+10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 321, 600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 321, tzPlus10);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30-10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 0, -600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 0, tzMinus10);
 
 			r = Rfc3339.Parse("1234-05-15T10:20:30.4-10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 400, -600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 400, tzMinus10);
 
 			r = Rfc3339.Parse("1234-05-15t10:20:30.45-10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 450, -600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 450, tzMinus10);
 
 			r = Rfc3339.Parse("1234-05-15t10:20:30.456-10:00").ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 456, -600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 456, tzMinus10);
 
 			r = Rfc3339.Parse("1234-05-15 10:20:30.456-10:00", allowSpaceInsteadOfT: true).ValueOrException();
-			Check(r, 1234, 5, 15, 10, 20, 30, 456, -600);
+			Check(r, 1234, 5, 15, 10, 20, 30, 456, tzMinus10);
 		}
 		[Fact]
 		public static void Fail()
@@ -86,6 +89,11 @@
 
 			Assert.Equal("Failed to parse timezone hours because Found a non-latin digit in the string: 1x. String: 1234-05-15T10:20:30.123+1x:00", Rfc3339.Parse("1234-05-15T10:20:30.123+1x:00").ErrorOr(null));
 			Assert.Equal("Failed to parse timezone minutes because Found a non-latin digit in the string: x0. String: 1234-05-15T10:20:30.123+10:x0", Rfc3339.Parse("1234-05-15T10:20:30.123+10:x0").ErrorOr(null));
+
+			Assert.Equal("Timezone hour was out of range. It must be between -12 to 14, inclusive. Its value is: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+99:00").ErrorOr(null));
+			Assert.Equal("Timezone hour was out of range. It must be between -12 to 14, inclusive. Its value is: -99", Rfc3339.Parse("1234-05-15T10:20:30.123-99:00").ErrorOr(null));
+
+			Assert.Equal("Timezone minute was out of range. It must be between 0 to 59, inclusive. Its value is: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+10:99").ErrorOr(null));
 
 		}
 	}

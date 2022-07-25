@@ -4,74 +4,6 @@
 	public readonly partial struct UtcDateTime
 	{
 		/// <summary>
-		/// 9999-12-31 23:59:59.9999999, represented as ticks elapsed since 0001-01-01 00:00:00
-		/// </summary>
-		public const long MaxTicks = 3155378975999999999;
-		/// <summary>
-		/// 1970-01-01 00:00:00, represented as days elapsed since 0001-01-01 00:00:00
-		/// </summary>
-		public const int UnixEpochDays = DaysPer400Years * 4 + DaysPer100Years * 3 + DaysPer4Years * 17 + DaysPerYear;
-		/// <summary>
-		/// 1970-01-01 00:00:00, represented as ticks elapsed since 0001-01-01 00:00:00
-		/// </summary>
-		public const long UnixEpochTicks = TimeSpan.TicksPerDay * UnixEpochDays;
-		///// <summary>
-		///// 1970-01-01 00:00:00, represented as milliseconds elapsed since 0001-01-01 00:00:00
-		///// </summary>
-		//public const long UnixEpochMillis = 62135596800000;
-		///// <summary>
-		///// 1970-01-01 00:00:00, represented as milliseconds elapsed since 0001-01-01 00:00:00
-		///// </summary>
-		//public const long UnixEpochSeconds = 62135596800;
-		///// <summary>
-		///// 0001-01-01 00:00:00, represented as milliseconds elapsed since 1970-01-01 00:00:00
-		///// </summary>
-		//public const long MinMillisAsUnixTime = -UnixEpochMillis;
-		///// <summary>
-		///// 9999-12-31 23:59:59.999, represented as milliseconds elapsed since 1970-01-01 00:00:00
-		///// </summary>
-		//public const long MaxMillisAsUnixTime = MaxMillis - UnixEpochMillis;
-		///// <summary>
-		///// 0001-01-01 00:00:00, represented as seconds elapsed since 1970-01-01 00:00:00
-		///// </summary>
-		//public const long MinSecondsAsUnixTime = -UnixEpochSeconds;
-		///// <summary>
-		///// 9999-12-31 23:59:59, represented as seconds elapsed since 1970-01-01 00:00:00
-		///// </summary>
-		//public const long MaxSecondsAsUnixTime = 315537897599 - UnixEpochSeconds;
-		///// <summary>
-		///// Milliseconds in a second
-		///// </summary>
-		//public const long MillisPerSecond = 1000;
-		///// <summary>
-		///// Milliseconds in a minute
-		///// </summary>
-		//public const long MillisPerMinute = MillisPerSecond * 60;
-		///// <summary>
-		///// Milliseconds in an hour
-		///// </summary>
-		//public const long MillisPerHour = MillisPerMinute * 60;
-		///// <summary>
-		///// Milliseconds in an hour
-		///// </summary>
-		//public const long MillisPerDay = MillisPerHour * 24;
-		/// <summary>
-		/// Days in a non-leap year
-		/// </summary>
-		public const int DaysPerYear = 365;
-		/// <summary>
-		/// Every 4 years, there's 1 leap year.
-		/// </summary>
-		public const int DaysPer4Years = 365 * 3 + 366;
-		/// <summary>
-		/// In 100 years, there's 24 leap years and 76 non-leap years (a year divisible by 100 is NOT a leap year)
-		/// </summary>
-		public const int DaysPer100Years = (365 * 76) + (366 * 24);
-		/// <summary>
-		/// In 400 years, there's 97 leap years and 303 non-leap years (a year divisible by 400 IS a leap year)
-		/// </summary>
-		public const int DaysPer400Years = DaysPer100Years * 4 + 1;
-		/// <summary>
 		/// The total number of days in all months, no leap years
 		/// </summary>
 		internal static readonly int[] TotalDaysFromStartYearToMonth = new int[] { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
@@ -84,16 +16,16 @@
 			// Most of this code is written by myself. However, the two Adjustments and the optimization of (days >> 5) + 1 comes from the .NET Source for DateTime
 
 			// The way we'll do this is first, get the number of groups of 400 years, then deduct that from our totalDays.
-			int y400 = totalDays / DaysPer400Years;
-			totalDays -= DaysPer400Years * y400;
-			int y100 = totalDays / DaysPer100Years;
+			int y400 = totalDays / DotNetTime.DaysPer400Years;
+			totalDays -= DotNetTime.DaysPer400Years * y400;
+			int y100 = totalDays / DotNetTime.DaysPer100Years;
 			if (y100 == 4)
 			{
 				y100 = 3; // Adjustment
 			}
-			totalDays -= DaysPer100Years * y100;
-			int y4 = totalDays / DaysPer4Years;
-			totalDays -= DaysPer4Years * y4;
+			totalDays -= DotNetTime.DaysPer100Years * y100;
+			int y4 = totalDays / DotNetTime.DaysPer4Years;
+			totalDays -= DotNetTime.DaysPer4Years * y4;
 			int y1 = totalDays / 365;
 			if (y1 == 4)
 			{
@@ -149,7 +81,7 @@
 			DatePartsFromTotalDays((int)(ticks / TimeSpan.TicksPerDay), out year, out month, out day);
 		}
 		/// <summary>
-		/// Calculates a year/month/day/hour/minute/second/millis/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
+		/// Calculates a year/month/day/hour/minute/second/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
 		/// </summary>
 		public static void DateTimePartsNoMillisFromTicks(long ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int remainder)
 		{
@@ -284,7 +216,7 @@
 		/// <param name="millis">The milliseconds.</param>
 		/// <param name="tzTotalMins">The timezone offset, in minutes.</param>
 		/// <returns>The total ticks, or an error message.</returns>
-		public static Maybe<long, string> TicksFromHourMinuteSecondMillisTimezoneOffset(int hour, int minute, int second, int millis, int tzTotalMins)
+		public static Maybe<long, string> TicksFromHourMinuteSecondMillisTimezoneOffset(int hour, int minute, int second, int millis, Tz tzTotalMins)
 		{
 			if (hour < 0 || hour > 23)
 			{
@@ -302,29 +234,17 @@
 			{
 				return "Millisecond must be at least 0 and at most 999";
 			}
-			if (tzTotalMins < -840 || tzTotalMins > 840)
-			{
-				return "Timezone Total Minutes must be at least -840 (-14:00) and at most 840 (+14:00)";
-			}
 
-			return (hour * TimeSpan.TicksPerHour) + ((minute - tzTotalMins) * TimeSpan.TicksPerMinute) + (second * TimeSpan.TicksPerSecond) + (millis * TimeSpan.TicksPerMillisecond);
+			return (hour * TimeSpan.TicksPerHour) + (minute * TimeSpan.TicksPerMinute) + (second * TimeSpan.TicksPerSecond) + (millis * TimeSpan.TicksPerMillisecond) - tzTotalMins.Ticks;
 		}
 		/// <summary>
 		/// Calculates the total ticks from all of the provided parts. <paramref name="extraTicks"/> is intended for sub-millisecond accuracy.
 		/// </summary>
-		/// <param name="year"></param>
-		/// <param name="month"></param>
-		/// <param name="day"></param>
-		/// <param name="hour"></param>
-		/// <param name="minute"></param>
-		/// <param name="second"></param>
-		/// <param name="millis"></param>
-		/// <param name="extraTicks"></param>
-		/// <returns></returns>
+		/// <returns>The total ticks, or an error message.</returns>
 		public static Maybe<long, string> TicksFromAll(int year, int month, int day, int hour, int minute, int second, int millis, int extraTicks)
 		{
 			return TicksFromYearMonthDay(year, month, day).Success(out long dTicks, out string errMsg)
-				&& TicksFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, 0).Success(out long tTicks, out errMsg)
+				&& TicksFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, default).Success(out long tTicks, out errMsg)
 				? dTicks + tTicks + extraTicks
 				: errMsg;
 		}

@@ -3,7 +3,7 @@
 	/// <summary>
 	/// The type of a timezone designator.
 	/// </summary>
-	public enum TimezoneType
+	public enum TimeZoneType
 	{
 		/// <summary>
 		/// UTC, the default.

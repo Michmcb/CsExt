@@ -28,6 +28,18 @@
 		/// The ISO day of week.
 		/// </summary>
 		public IsoDayOfWeek WeekDay { get; }
+#if NET6_0_OR_GREATER
+		/// <summary>
+		/// Creates a new instance from the specified <paramref name="dateOnly"/>.
+		/// </summary>
+		/// <param name="dateOnly">The UtcDateTime.</param>
+		/// <returns>The ISO Year, Week, and Weekday.</returns>
+		public static IsoYearWeek Create(DateOnly dateOnly)
+		{
+			dateOnly.GetDateParts(out int year, out int month, out int day);
+			return TryCreate(year, month, day).ValueOrException();
+		}
+#endif
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="dateTime"/>.
 		/// </summary>
@@ -36,17 +48,17 @@
 		public static IsoYearWeek Create(DateTime dateTime)
 		{
 			dateTime.GetDateParts(out int year, out int month, out int day);
-			return Create(year, month, day).ValueOrException();
+			return TryCreate(year, month, day).ValueOrException();
 		}
 		/// <summary>
-		/// Creates a new instance from the specified <paramref name="dateTime"/>.
+		/// Creates a new instance from the specified <paramref name="utcDateTime"/>.
 		/// </summary>
-		/// <param name="dateTime">The UtcDateTime.</param>
+		/// <param name="utcDateTime">The UtcDateTime.</param>
 		/// <returns>The ISO Year, Week, and Weekday.</returns>
-		public static IsoYearWeek Create(UtcDateTime dateTime)
+		public static IsoYearWeek Create(UtcDateTime utcDateTime)
 		{
-			dateTime.GetDateParts(out int year, out int month, out int day);
-			return Create(year, month, day).ValueOrException();
+			utcDateTime.GetDateParts(out int year, out int month, out int day);
+			return TryCreate(year, month, day).ValueOrException();
 		}
 		/// <summary>
 		/// Creates a new instance from the specified year, month, and day.
@@ -57,13 +69,23 @@
 		/// <param name="month">The month</param>
 		/// <param name="day">The day</param>
 		/// <returns>The ISO Year, Week, and Weekday, or an error message.</returns>
-		public static Maybe<IsoYearWeek, string> Create(int year, int month, int day)
+		public static Maybe<IsoYearWeek, string> TryCreate(int year, int month, int day)
 		{
 			// Thanks to https://en.wikipedia.org/wiki/ISO_week_date#Calculating_the_week_number_from_a_month_and_day_of_the_month_or_ordinal_date
 			if (UtcDateTime.TotalDaysFromYear(year).Failure(out int totalDays, out string err))
 			{
 				return err;
 			}
+			if (month < 1 || month > 12)
+			{
+				return "Month must be at least 1 and at most 12";
+			}
+			int daysInMonth = DateTime.DaysInMonth(year, month);
+			if (day < 1 || day > daysInMonth)
+			{
+				return "Day must be at least 1 and at most " + daysInMonth;
+			}
+
 
 			int dayOfYear = (DateTime.IsLeapYear(year) ? UtcDateTime.TotalDaysFromStartLeapYearToMonth : UtcDateTime.TotalDaysFromStartYearToMonth)[month - 1] + day;
 			int isoDayOfWeek = ((totalDays + dayOfYear - 1) % 7) + 1;

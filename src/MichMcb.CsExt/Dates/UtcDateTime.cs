@@ -16,7 +16,7 @@
 		/// <summary>
 		/// 1970-01-01 00:00:00
 		/// </summary>
-		public static readonly UtcDateTime UnixEpoch = new(UnixEpochTicks);
+		public static readonly UtcDateTime UnixEpoch = new(DotNetTime.UnixEpochTicks);
 		/// <summary>
 		/// 0001-01-01 00:00:00
 		/// </summary>
@@ -24,16 +24,16 @@
 		/// <summary>
 		/// 9999-12-31 23:59:59.9999999
 		/// </summary>
-		public static readonly UtcDateTime MaxValue = new(MaxTicks);
+		public static readonly UtcDateTime MaxValue = new(DotNetTime.MaxTicks);
 		/// <summary>
 		/// Creates a new instance, as ticks elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		/// <param name="ticks">Ticks elapsed since 0001-01-01 00:00:00</param>
 		public UtcDateTime(long ticks)
 		{
-			if (ticks < 0 || ticks > MaxTicks)
+			if (ticks < 0 || ticks > DotNetTime.MaxTicks)
 			{
-				throw new ArgumentOutOfRangeException(nameof(ticks), "Ticks must be at least 0 and at most " + MaxTicks.ToString());
+				throw new ArgumentOutOfRangeException(nameof(ticks), "Ticks must be at least 0 and at most " + DotNetTime.MaxTicks.ToString());
 			}
 			Ticks = ticks;
 		}
@@ -50,7 +50,7 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			if (!TicksFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, 0).Success(out long tms, out string err))
+			if (!TicksFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, default).Success(out long tms, out string err))
 			{
 				throw new ArgumentOutOfRangeException(null, err);
 			}
@@ -125,16 +125,16 @@
 			get
 			{
 				int totalDays = TotalDays;
-				int y400 = totalDays / DaysPer400Years;
-				totalDays -= DaysPer400Years * y400;
-				int y100 = totalDays / DaysPer100Years;
+				int y400 = totalDays / DotNetTime.DaysPer400Years;
+				totalDays -= DotNetTime.DaysPer400Years * y400;
+				int y100 = totalDays / DotNetTime.DaysPer100Years;
 				if (y100 == 4)
 				{
 					y100 = 3; // Adjustment
 				}
-				totalDays -= DaysPer100Years * y100;
-				int y4 = totalDays / DaysPer4Years;
-				totalDays -= DaysPer4Years * y4;
+				totalDays -= DotNetTime.DaysPer100Years * y100;
+				int y4 = totalDays / DotNetTime.DaysPer4Years;
+				totalDays -= DotNetTime.DaysPer4Years * y4;
 				int y1 = totalDays / 365;
 				if (y1 == 4)
 				{
@@ -157,7 +157,7 @@
 		/// </summary>
 		public TimeSpan TimeOfDay => new(Ticks % TimeSpan.TicksPerDay);
 		/// <summary>
-		/// The number of milliseconds elapsed since 0001-01-01 00:00:00 represented by this instance
+		/// The number of 100-nanosecond intervals elapsed since 0001-01-01 00:00:00 represented by this instance
 		/// </summary>
 		public long Ticks { get; }
 		/// <summary>
@@ -300,40 +300,23 @@
 				_ => throw new ArgumentOutOfRangeException(nameof(truncateTo), "Parameter was not a valid value for DateTimePart"),
 			};
 		}
-		///// <summary>
-		///// Returns the number of seconds elapsed since 1970-01-01 00:00:00.
-		///// </summary>
-		//public long ToUnixTimeSeconds()
-		//{
-		//	return (Ticks - UnixEpochTicks) / TimeSpan.TicksPerSecond;
-		//}
-		///// <summary>
-		///// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
-		///// </summary>
-		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		//public static UtcDateTime FromUnixTimeSeconds(long seconds)
-		//{
-		//	throw new NotImplementedException("Make a UnixTime type");
-		//	//return FromUnixTimeMilliseconds(seconds * MillisPerSecond);
-		//}
-		///// <summary>
-		///// Returns the number of milliseconds elapsed since 1970-01-01 00:00:00.
-		///// </summary>
-		//public long ToUnixTimeMilliseconds()
-		//{
-		//	return (Ticks - UnixEpochTicks) / TimeSpan.TicksPerMillisecond;
-		//}
-		///// <summary>
-		///// Creates a new instance from the provided seconds, interpreted as milliseconds since the Unix Epoch (1970-01-01 00:00:00).
-		///// </summary>
-		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		//public static UtcDateTime FromUnixTimeMilliseconds(long milliseconds)
-		//{
-		//	throw new NotImplementedException("Make a UnixTimeMs type");
-		//	//return milliseconds < MinMillisAsUnixTime || milliseconds > MaxMillisAsUnixTime
-		//	//	? throw new ArgumentOutOfRangeException(nameof(milliseconds), "Unix Epoch milliseconds must be at least " + MinMillisAsUnixTime + " and at most " + MaxMillisAsUnixTime)
-		//	//	: FromMilliseconds(milliseconds + UnixEpochMillis);
-		//}
+		/// <summary>
+		/// Returns the number of seconds elapsed since 1970-01-01 00:00:00.
+		/// Equivalent to <see cref="DotNetTime.TicksToUnixTimeSeconds(long)"/>.
+		/// </summary>
+		public long ToUnixTimeSeconds()
+		{
+			return DotNetTime.TicksToUnixTimeSeconds(Ticks);
+		}
+		/// <summary>
+		/// Creates a new instance from the provided seconds, interpreted as seconds since the Unix Epoch (1970-01-01 00:00:00).
+		/// Equivalent to <see cref="DotNetTime.UnixTimeSecondsToTicks(long)"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static UtcDateTime FromUnixTimeSeconds(long seconds)
+		{
+			return new UtcDateTime(DotNetTime.UnixTimeSecondsToTicks(seconds));
+		}
 		/// <summary>
 		/// Returns a <see cref="DateTime"/> with the provided <paramref name="kind"/>.
 		/// If <paramref name="kind"/> is <see cref="DateTimeKind.Unspecified"/> or an undefined value, throws an <see cref="ArgumentOutOfRangeException"/>.
@@ -379,14 +362,22 @@
 		{
 			return new(dateTimeOffset.UtcTicks);
 		}
+#if NET6_0_OR_GREATER
 		/// <summary>
-		/// Returns a <see cref="UtcDateTime"/> from the provided milliseconds
+		/// Returns a <see cref="DateOnly"/>.
 		/// </summary>
-		/// <returns></returns>
-		public static UtcDateTime FromMilliseconds(long ms)
+		public DateOnly ToDateOnly()
 		{
-			return new(ms * TimeSpan.TicksPerMillisecond);
+			return DateOnly.FromDayNumber(TotalDays);
 		}
+		/// <summary>
+		/// Returns a <see cref="UtcDateTime"/> from the provided <paramref name="dateOnly"/> and <paramref name="timeOnly"/>.
+		/// </summary>
+		public static UtcDateTime FromDateOnly(DateOnly dateOnly, TimeOnly timeOnly)
+		{
+			return new((TimeSpan.TicksPerDay * dateOnly.DayNumber) + timeOnly.Ticks);
+		}
+#endif
 		/// <summary>
 		/// Returns true of <paramref name="obj"/> is a <see cref="UtcDateTime"/> and they refer to the same point in time.
 		/// </summary>

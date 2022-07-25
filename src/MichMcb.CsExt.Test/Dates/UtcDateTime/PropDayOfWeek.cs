@@ -28,5 +28,11 @@
 				udt = udt.AddDays(1);
 			}
 		}
+		[Fact]
+		public static void InvalidEnumValue()
+		{
+			Assert.Throws<ArgumentOutOfRangeException>(() => ((DayOfWeek)1000).IsoDayOfWeek());
+			Assert.Throws<ArgumentOutOfRangeException>(() => ((IsoDayOfWeek)1000).DayOfWeek());
+		}
 	}
 }

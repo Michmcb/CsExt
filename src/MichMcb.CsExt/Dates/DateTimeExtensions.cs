@@ -36,8 +36,8 @@
 		public static long ToUnixTimeSeconds(this DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc
-				? ((dt.Ticks - UtcDateTime.UnixEpochTicks) / TimeSpan.TicksPerSecond)
-				: ((dt.ToUniversalTime().Ticks - UtcDateTime.UnixEpochTicks) / TimeSpan.TicksPerSecond);
+				? ((dt.Ticks - DotNetTime.UnixEpochTicks) / TimeSpan.TicksPerSecond)
+				: ((dt.ToUniversalTime().Ticks - DotNetTime.UnixEpochTicks) / TimeSpan.TicksPerSecond);
 		}
 		/// <summary>
 		/// Converts a <see cref="DateTime"/> to milliseconds that have elapsed since 1970-01-01 00:00:00.
@@ -47,8 +47,8 @@
 		public static long ToUnixTimeMilliseconds(this DateTime dt)
 		{
 			return dt.Kind == DateTimeKind.Utc
-				? ((dt.Ticks - UtcDateTime.UnixEpochTicks) / TimeSpan.TicksPerMillisecond)
-				: ((dt.ToUniversalTime().Ticks - UtcDateTime.UnixEpochTicks) / TimeSpan.TicksPerMillisecond);
+				? ((dt.Ticks - DotNetTime.UnixEpochTicks) / TimeSpan.TicksPerMillisecond)
+				: ((dt.ToUniversalTime().Ticks - DotNetTime.UnixEpochTicks) / TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
 		/// Returns a truncated instance so that it is only accurate to the part specified by <paramref name="truncateTo"/>.

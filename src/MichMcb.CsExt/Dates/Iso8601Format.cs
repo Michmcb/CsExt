@@ -33,15 +33,15 @@
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ssZ
 		/// </summary>
-		public static readonly Iso8601Format ExtendedFormat_NoMillis_UtcTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz, 20, 0);
+		public static readonly Iso8601Format ExtendedFormat_NoFractional_UtcTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz, 20, 0);
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss+00:00
 		/// </summary>
-		public static readonly Iso8601Format ExtendedFormat_NoMillis_FullTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_FullTz, 25, 0);
+		public static readonly Iso8601Format ExtendedFormat_NoFractional_FullTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_FullTz, 25, 0);
 		/// <summary>
 		/// yyyy-MM-ddTHH:mm:ss
 		/// </summary>
-		public static readonly Iso8601Format ExtendedFormat_NoMillis_LocalTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_LocalTz, 19, 0);
+		public static readonly Iso8601Format ExtendedFormat_NoFractional_LocalTz = new(Iso8601Parts.Format_ExtendedFormat_NoFractional_LocalTz, 19, 0);
 		/// <summary>
 		/// yyyyMMddTHHmmss.sssZ
 		/// Everything, except without separators
@@ -59,15 +59,15 @@
 		/// <summary>
 		/// yyyyMMddTHHmmssZ
 		/// </summary>
-		public static readonly Iso8601Format BasicFormat_NoMillis_UtcTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz, 16, 0);
+		public static readonly Iso8601Format BasicFormat_NoFractional_UtcTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz, 16, 0);
 		/// <summary>
 		/// yyyyMMddTHHmmss+0000
 		/// </summary>
-		public static readonly Iso8601Format BasicFormat_NoMillis_FullTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_FullTz, 20, 0);
+		public static readonly Iso8601Format BasicFormat_NoFractional_FullTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_FullTz, 20, 0);
 		/// <summary>
 		/// yyyyMMddTHHmmss
 		/// </summary>
-		public static readonly Iso8601Format BasicFormat_NoMillis_LocalTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_LocalTz, 15, 0);
+		public static readonly Iso8601Format BasicFormat_NoFractional_LocalTz = new(Iso8601Parts.Format_BasicFormat_NoFractional_LocalTz, 15, 0);
 		/// <summary>
 		/// yyyy-MM-dd
 		/// </summary>
@@ -110,14 +110,13 @@
 			{
 				throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "Decimal places cannot be less than zero");
 			}
-
 			return decimalPlaces == 0
 				? DecimalPlaces == 0
-					? new(Format, LengthRequired, decimalPlaces) // Both are zero
-					: new(Format, LengthRequired - DecimalPlaces + decimalPlaces - 1, decimalPlaces) // new is 0, old is nonzero. Minus 1 extra to remove the dot
+					? new(Format & ~Iso8601Parts.Fractional, LengthRequired, decimalPlaces) // Both are zero
+					: new(Format & ~Iso8601Parts.Fractional, LengthRequired - DecimalPlaces + decimalPlaces - 1, decimalPlaces) // new is 0, old is nonzero. Minus 1 extra to remove the dot
 				: DecimalPlaces == 0
-					? new(Format, LengthRequired - DecimalPlaces + decimalPlaces + 1, decimalPlaces) // old is 0, new is nonzero. Add 1 extra to add the dot
-					: new(Format, LengthRequired - DecimalPlaces + decimalPlaces, decimalPlaces); // both are nonzero, no adjustment needed
+					? new(Format | Iso8601Parts.Fractional, LengthRequired - DecimalPlaces + decimalPlaces + 1, decimalPlaces) // old is 0, new is nonzero. Add 1 extra to add the dot
+					: new(Format | Iso8601Parts.Fractional, LengthRequired - DecimalPlaces + decimalPlaces, decimalPlaces); // both are nonzero, no adjustment needed
 		}
 		/// <summary>
 		/// Returns an <see cref="Iso8601Format"/> from the options provided.
@@ -127,77 +126,85 @@
 		/// <param name="decimalPlaces">How many decimal places to write, or none. If less than 0, throws <see cref="ArgumentOutOfRangeException"/>.</param>
 		/// <returns>An <see cref="Iso8601Format"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="decimalPlaces"/> is less than 0.</exception>
-		public static Iso8601Format GetFormat(TimezoneType tz = TimezoneType.Utc, bool extended = true, int decimalPlaces = 0)
+		public static Iso8601Format GetFormat(TimeZoneType tz = TimeZoneType.Utc, bool extended = true, int decimalPlaces = 3)
 		{
 			if (decimalPlaces < 0)
 			{
 				throw new ArgumentOutOfRangeException(nameof(decimalPlaces), "Decimal places cannot be less than zero");
 			}
-			int lengthForMillis = decimalPlaces == 0 ? 0 : decimalPlaces + 1;
+			int lengthForFrac = decimalPlaces == 0 ? 0 : decimalPlaces + 1;
+			Iso8601Parts fracFlag = decimalPlaces == 0 ? Iso8601Parts.None : Iso8601Parts.Fractional;
 			switch (tz)
 			{
 				default:
-				case TimezoneType.Utc:
+				case TimeZoneType.Utc:
 					// +1 for the timezone, just Z
 					return extended
-						? new(Iso8601Parts.Format_ExtendedFormat_UtcTz, ExtendedFormat_BaseLength + lengthForMillis + 1, decimalPlaces)
-						: new(Iso8601Parts.Format_BasicFormat_UtcTz, BasicFormat_BaseLength + lengthForMillis + 1, decimalPlaces);
-				case TimezoneType.Full:
+						? new(Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz | fracFlag, ExtendedFormat_BaseLength + lengthForFrac + 1, decimalPlaces)
+						: new(Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz | fracFlag, BasicFormat_BaseLength + lengthForFrac + 1, decimalPlaces);
+				case TimeZoneType.Full:
 					// +6 for the timezone if it is extended, +5 otherwise
 					// +00:00 vs +0000
 					int tzLen = extended ? 6 : 5;
 					return extended
-						? new(Iso8601Parts.Format_ExtendedFormat_FullTz, ExtendedFormat_BaseLength + lengthForMillis + tzLen, decimalPlaces)
-						: new(Iso8601Parts.Format_BasicFormat_FullTz, BasicFormat_BaseLength + lengthForMillis + tzLen, decimalPlaces);
-				case TimezoneType.Local:
+						? new(Iso8601Parts.Format_ExtendedFormat_NoFractional_FullTz | fracFlag, ExtendedFormat_BaseLength + lengthForFrac + tzLen, decimalPlaces)
+						: new(Iso8601Parts.Format_BasicFormat_NoFractional_FullTz | fracFlag, BasicFormat_BaseLength + lengthForFrac + tzLen, decimalPlaces);
+				case TimeZoneType.Local:
 					// +0 for the timezone
 					return extended
-						? new(Iso8601Parts.Format_ExtendedFormat_LocalTz, ExtendedFormat_BaseLength + lengthForMillis, decimalPlaces)
-						: new(Iso8601Parts.Format_BasicFormat_LocalTz, BasicFormat_BaseLength + lengthForMillis, decimalPlaces);
+						? new(Iso8601Parts.Format_ExtendedFormat_NoFractional_LocalTz | fracFlag, ExtendedFormat_BaseLength + lengthForFrac, decimalPlaces)
+						: new(Iso8601Parts.Format_BasicFormat_NoFractional_LocalTz | fracFlag, BasicFormat_BaseLength + lengthForFrac, decimalPlaces);
 			}
 		}
 		/// <summary>
 		/// Returns the length of the string that will be created if a <see cref="UtcDateTime"/> is formatted using <paramref name="format"/>.
 		/// Or if <paramref name="format"/> is not a valid format, returns that error message.
-		/// The default value for <paramref name="format"/> is the same as <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>.
+		/// If <paramref name="format"/> is <see cref="Iso8601Parts.None"/>, then <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/> is used.
 		/// Note there are also constant lengths exposed on this class for predefined formats, saving a call to this function.
 		/// </summary>
 		/// <param name="format">The format.</param>
 		/// <param name="decimalPlaces">The number of decimal places for the fractional part.</param>
 		/// <returns>Length on success, or an error message on failure.</returns>
-		public static Maybe<Iso8601Format, string> TryCreate(Iso8601Parts format, int decimalPlaces = 3)
+		public static Maybe<Iso8601Format, string> TryCreate(Iso8601Parts format, int decimalPlaces)
 		{
 			// Commonly used formats, known to be valid
 			// But they only use 3 decimal places
-			if (decimalPlaces == 3)
+			if (decimalPlaces < 0)
+			{
+				return "Decimal places cannot be less than zero";
+			}
+			if (decimalPlaces > 0)
 			{
 				switch (format)
 				{
+					// The reason why have this case is because if we say Iso8601Format = default, then it has to be able to format something
+					case Iso8601Parts.None: return ExtendedFormat_UtcTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_ExtendedFormat_UtcTz: return ExtendedFormat_UtcTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_ExtendedFormat_FullTz: return ExtendedFormat_FullTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_ExtendedFormat_LocalTz: return ExtendedFormat_LocalTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_BasicFormat_UtcTz: return BasicFormat_UtcTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_BasicFormat_FullTz: return BasicFormat_FullTz.WithDecimalPlaces(decimalPlaces);
+					case Iso8601Parts.Format_BasicFormat_LocalTz: return BasicFormat_LocalTz.WithDecimalPlaces(decimalPlaces);
+				}
+			}
+			else
+			{
+				switch (format)
+				{
+					// The reason why have this case is because if we say Iso8601Format = default, then it has to be able to format something
 					case Iso8601Parts.None:
-					case Iso8601Parts.Format_ExtendedFormat_UtcTz: return ExtendedFormat_UtcTz;
-					case Iso8601Parts.Format_ExtendedFormat_FullTz: return ExtendedFormat_FullTz;
-					case Iso8601Parts.Format_ExtendedFormat_LocalTz: return ExtendedFormat_LocalTz;
-					case Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz: return ExtendedFormat_NoMillis_UtcTz;
-					case Iso8601Parts.Format_ExtendedFormat_NoFractional_FullTz: return ExtendedFormat_NoMillis_FullTz;
-					case Iso8601Parts.Format_ExtendedFormat_NoFractional_LocalTz: return ExtendedFormat_NoMillis_LocalTz;
-					case Iso8601Parts.Format_BasicFormat_UtcTz: return BasicFormat_UtcTz;
-					case Iso8601Parts.Format_BasicFormat_FullTz: return BasicFormat_FullTz;
-					case Iso8601Parts.Format_BasicFormat_LocalTz: return BasicFormat_LocalTz;
-					case Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz: return BasicFormat_NoMillis_UtcTz;
-					case Iso8601Parts.Format_BasicFormat_NoFractional_FullTz: return BasicFormat_NoMillis_FullTz;
-					case Iso8601Parts.Format_BasicFormat_NoFractional_LocalTz: return BasicFormat_NoMillis_LocalTz;
+					case Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz: return ExtendedFormat_NoFractional_UtcTz;
+					case Iso8601Parts.Format_ExtendedFormat_NoFractional_FullTz: return ExtendedFormat_NoFractional_FullTz;
+					case Iso8601Parts.Format_ExtendedFormat_NoFractional_LocalTz: return ExtendedFormat_NoFractional_LocalTz;
+					case Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz: return BasicFormat_NoFractional_UtcTz;
+					case Iso8601Parts.Format_BasicFormat_NoFractional_FullTz: return BasicFormat_NoFractional_FullTz;
+					case Iso8601Parts.Format_BasicFormat_NoFractional_LocalTz: return BasicFormat_NoFractional_LocalTz;
 					case Iso8601Parts.Format_DateOnly: return DateOnly;
 					case Iso8601Parts.Format_DateOnlyWithoutSeparators: return DateOnlyWithoutSeparators;
 					case Iso8601Parts.Format_DateOrdinal: return DateOrdinal;
-					default:
-						break;
 				}
 			}
 
-			if (format == Iso8601Parts.None)
-			{
-				return "Nothing was provided for the format";
-			}
 			int length;
 			Iso8601Parts d = format & Iso8601Parts.Mask_Date;
 			Iso8601Parts t = format & Iso8601Parts.Mask_Time;
@@ -291,11 +298,11 @@
 			return new Iso8601Format(format, length, decimalPlaces);
 		}
 		/// <summary>
-		/// Creates a new string containing date and time represented by <paramref name="ticks"/>.
+		/// Creates a new string containing date and time represented by <paramref name="ticks"/> and <paramref name="timezone"/>.
 		/// </summary>
 		/// <param name="ticks">The ticks.</param>
 		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
-		public string CreateString(long ticks, TimeSpan? timezone = null)
+		public string CreateString(long ticks, Tz? timezone = null)
 		{
 #if !NETSTANDARD2_0
 			return string.Create(LengthRequired, this, (dest, inst) => inst.WriteString(dest, ticks, timezone));
@@ -304,24 +311,30 @@
 #endif
 		}
 		/// <summary>
-		/// Writes to <paramref name="destination"/> a string containing the date and time represented by <paramref name="ticks"/>.
+		/// Writes to <paramref name="destination"/> a string containing the date and time represented by <paramref name="ticks"/> and <paramref name="timezone"/>.
 		/// If successful, returns the number of chars written.
 		/// If <paramref name="destination"/> is too small, returns 0.
 		/// </summary>
 		/// <param name="destination">The destination to write to.</param>
 		/// <param name="ticks">The ticks.</param>
 		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
-		/// <returns>The number of chars written, or 0 if <paramref name="destination"/> is too small.</returns>
-		public int WriteString(Span<char> destination, long ticks, TimeSpan? timezone = null)
+		/// <returns>The number of chars written, or the length required (<see cref="LengthRequired"/>) as a negative number if <paramref name="destination"/> is too small.</returns>
+		public int WriteString(Span<char> destination, long ticks, Tz? timezone = null)
 		{
 			if (destination.Length < LengthRequired)
 			{
-				return 0;
+				return -LengthRequired;
 			}
+			// We clamp the ticks so they can't be larger than MaxMillis or lower than zero.
+			ticks = ticks > DotNetTime.MaxTicks
+				? DotNetTime.MaxTicks
+				: ticks < 0
+					? 0
+					: ticks;
 			switch (Format)
 			{
 				// This fall-through is intentional; when format is default, then Iso8601Parts will be None, and that corresponds to extended format, UTC.
-				case Iso8601Parts.None:
+				case Iso8601Parts.None: return FormatExtendedFormatUtc(destination, ticks, 0);
 				case Iso8601Parts.Format_ExtendedFormat_UtcTz: return FormatExtendedFormatUtc(destination, ticks, DecimalPlaces);
 				case Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz: return FormatExtendedFormatUtc(destination, ticks, DecimalPlaces);
 				case Iso8601Parts.Format_BasicFormat_UtcTz: return FormatBasicFormatUtc(destination, ticks, DecimalPlaces);
@@ -338,26 +351,25 @@
 
 			// If we're writing a UTC Timezone designator, timezone is meaningless and our offset is 0
 			// If we're writing unqualified or hour/min, we need to take timezone into account. So we'll either write the value of timezone later, or just assume that it was local
-			TimeSpan tz;
-			long tzOffsetTicks;
+			Tz tz;
 			if (ftz == Iso8601Parts.Tz_Utc)
 			{
-				tzOffsetTicks = 0;
-				tz = TimeSpan.Zero;
+				tz = Tz.Utc;
 			}
 			else
 			{
-				tz = timezone ?? TimeZoneInfo.Local.BaseUtcOffset;
-				tzOffsetTicks = tz.Ticks;
+				// Timezone offset 
+				tz = timezone ?? Tz.TryFromTimeSpan(TimeZoneInfo.Local.BaseUtcOffset, clamp: true).ValueOrException();
+				ticks += tz.Ticks;
 			}
 
-			// We clamp the milliseconds so they can't be larger than MaxMillis or lower than zero.
-			long ticksWithOffset = ticks + tzOffsetTicks;
-			ticks = ticksWithOffset > UtcDateTime.MaxTicks
-				? UtcDateTime.MaxTicks
-				: ticksWithOffset < 0
+			// Have to clamp again since the timezone may have pushed us out of range
+			ticks = ticks > DotNetTime.MaxTicks
+				? DotNetTime.MaxTicks
+				: ticks < 0
 					? 0
-					: ticksWithOffset;
+					: ticks;
+
 			UtcDateTime.DateTimePartsNoMillisFromTicks(ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
 
 			int i = 0;
@@ -366,7 +378,7 @@
 			if ((Format & Iso8601Parts.YearWeek) == Iso8601Parts.YearWeek)
 			{
 				// We know this will never fail because we got this out of the method above
-				IsoYearWeek isoYearWeek = IsoYearWeek.Create(year, month, day).ValueOrException();
+				IsoYearWeek isoYearWeek = IsoYearWeek.TryCreate(year, month, day).ValueOrException();
 				Formatting.Write4Digits((uint)isoYearWeek.Year, destination, 0);
 				i += 4;
 				if (seps)
@@ -463,22 +475,22 @@
 					destination[i++] = 'Z';
 					break;
 				case Iso8601Parts.Tz_Hour:
-					destination[i++] = tzOffsetTicks >= 0 ? '+' : '-';
-					int tzi = Math.Abs(tz.Hours);
-					Formatting.Write2Digits((uint)tzi, destination, i);
+					destination[i++] = tz.Ticks >= 0 ? '+' : '-';
+					int tzh = Math.Abs(tz.Hours);
+					Formatting.Write2Digits((uint)tzh, destination, i);
 					i += 2;
 					break;
 				case Iso8601Parts.Tz_HourMinute:
-					destination[i++] = tzOffsetTicks >= 0 ? '+' : '-';
-					tzi = Math.Abs(tz.Hours);
-					Formatting.Write2Digits((uint)tzi, destination, i);
+					destination[i++] = tz.Ticks >= 0 ? '+' : '-';
+					tzh = Math.Abs(tz.Hours);
+					Formatting.Write2Digits((uint)tzh, destination, i);
 					i += 2;
 					if ((Format & Iso8601Parts.Separator_Tz) == Iso8601Parts.Separator_Tz)
 					{
 						destination[i++] = ':';
 					}
-					tzi = Math.Abs(tz.Minutes);
-					Formatting.Write2Digits((uint)tzi, destination, i);
+					int tzm = Math.Abs(tz.Minutes);
+					Formatting.Write2Digits((uint)tzm, destination, i);
 					i += 2;
 					break;
 			}
@@ -521,6 +533,7 @@
 		}
 		/// <summary>
 		/// An optimized method for writing using the format <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>, with or without millseconds.
+		/// Confirms to RFC-3339.
 		/// </summary>
 		/// <param name="destination">The destination to write to. Must be 20 long if <paramref name="decimalPlaces"/> is 0, or 21 + <paramref name="decimalPlaces"/> otherwise.</param>
 		/// <param name="ticks">The ticks.</param>
