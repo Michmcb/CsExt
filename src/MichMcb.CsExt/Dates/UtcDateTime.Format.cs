@@ -157,41 +157,6 @@
 		{
 			return format.CreateString(Ticks, timezone);
 		}
-		///// <summary>
-		///// Formats this instance as an ISO-8601 string according to the rules specified by <paramref name="format"/>.
-		///// Note that if you omit the Time, this may cause data loss; when read again, time is assumed to be 00:00 of whatever timezone the string is interpreted as.
-		///// </summary>
-		///// <param name="format">How to format the string.</param>
-		///// <param name="decimalPlaces">The number of decimal places for the fractional part.</param>
-		///// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
-		///// <returns>An ISO-8601 representing this UtcDateTime, or an error message.</returns>
-		//public Maybe<string, string> TryToIso8601String(Iso8601Parts format, int decimalPlaces, Tz? timezone)
-		//{
-		//	return Iso8601Format.TryCreate(format, decimalPlaces).Success(out Iso8601Format fmt, out string? errMsg)
-		//		? Maybe<string, string>.Value(ToIso8601StringAsFormat(fmt, timezone))
-		//		: Maybe<string, string>.Error(errMsg);
-		//}
-		///// <summary>
-		///// Formats this UtcDateTime to <paramref name="destination"/> as an ISO-8601 string, according to the rules specified by <paramref name="format"/>.
-		///// The provided <paramref name="timezone"/> specifies the timezone designator to use and then writes the string according to the <paramref name="format"/>.
-		///// Note that if <paramref name="timezone"/> is provided and <paramref name="format"/> specifies a UTC Timezone designator or no Timezone designator (Local) this doesn't have any effect; use Tz_Hour or Tz_HourMinute.
-		///// </summary>
-		///// <param name="destination">The destination to write to. If this doesn't have the length required to hold the resultant string, returns an error.</param>
-		///// <param name="decimalPlaces">The number of decimal places for the fractional part.</param>
-		///// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
-		///// <param name="format">How to format the string. By default, this is <see cref="Iso8601Parts.Format_ExtendedFormat_UtcTz"/>.</param>
-		///// <returns>The numbers of chars written, or an error message.</returns>
-		//public Maybe<int, string> TryFormat(Span<char> destination, int decimalPlaces, Tz? timezone, Iso8601Parts format = Iso8601Parts.Format_ExtendedFormat_UtcTz)
-		//{
-		//	if (!Iso8601Format.TryCreate(format, decimalPlaces).Success(out Iso8601Format fmt, out string? errMsg))
-		//	{
-		//		return errMsg;
-		//	}
-		//	int w = Format(destination, timezone, fmt);
-		//	return w > 0
-		//		? string.Concat("Destination span is too small. Required length is ", fmt.LengthRequired, " but the destination span length is only ", destination.Length)
-		//		: w;
-		//}
 		/// <summary>
 		/// Formats this UtcDateTime to <paramref name="destination"/> as an ISO-8601 string, according to the rules specified by <paramref name="format"/>.
 		/// The provided <paramref name="timezone"/> specifies the timezone designator to use and then writes the string according to the <paramref name="format"/>.
