@@ -9,6 +9,14 @@ namespace MichMcb.CsExt.Dates
 	{
 		/// <summary>
 		/// Calculates a year/month/day given <paramref name="dateOnly"/>.
+		/// Identical to <see cref="Deconstruct(DateOnly, out int, out int, out int)"/>.
+		/// </summary>
+		public static void GetDateParts(this DateOnly dateOnly, out int year, out int month, out int day)
+		{
+			UtcDateTime.DatePartsFromTotalDays(dateOnly.DayNumber, out year, out month, out day);
+		}
+		/// <summary>
+		/// Calculates a year/month/day given <paramref name="dateOnly"/>.
 		/// </summary>
 		public static void Deconstruct(this DateOnly dateOnly, out int year, out int month, out int day)
 		{

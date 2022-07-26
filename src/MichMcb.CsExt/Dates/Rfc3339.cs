@@ -3,15 +3,16 @@
 	using System;
 
 	/// <summary>
-	/// A lexer/parser which picks out the ranges in an RFC3339 string. RFC3339 is a stricter form of ISO-8601; specifically, it is
-	/// ISO-8601 
+	/// A lexer/parser which picks out the ranges in an RFC3339 string. RFC3339 is a stricter form of ISO-8601; specifically, it is identical to the
+	/// ISO-8601 extended format, UTC, with or without milliseconds.
+	/// If you want to write RFC3339 strings, use the format <see cref="Iso8601Format.ExtendedFormat_UtcTz"/>, or call the method <see cref="Iso8601Format.FormatExtendedFormatUtc"/>.
 	/// </summary>
 	public sealed class Rfc3339
 	{
 		/// <summary>
 		/// Creates a new instance.
 		/// </summary>
-		public Rfc3339(int year, int month, int day, int hour, int minute, int second, int millis, int timezoneMinutesOffset)
+		public Rfc3339(int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
 		{
 			Year = year;
 			Month = month;
@@ -20,7 +21,7 @@
 			Minute = minute;
 			Second = second;
 			Millis = millis;
-			TimezoneMinutesOffset = timezoneMinutesOffset;
+			Timezone = timezone;
 		}
 		/// <summary>
 		/// The year component.
@@ -51,9 +52,9 @@
 		/// </summary>
 		public int Millis { get; }
 		/// <summary>
-		/// The timezone offset, in minutes.
+		/// The timezone offset.
 		/// </summary>
-		public int TimezoneMinutesOffset { get; }
+		public Tz Timezone { get; }
 		/// <summary>
 		/// Parses <paramref name="s"/> as an RFC3339 string, returning the components of the string.
 		/// Makes sure that it's well formed.
@@ -94,29 +95,29 @@
 			// yyyy-MM-ddTHH:mm:ss+00:00
 			// yyyy-MM-ddTHH:mm:ss.nnn+00:00
 			// 01234567890123456789012345678
-			if (CsExt.Parse.LatinInt(s.Slice(0, 4)).Failure(out int year, out string err))
+			if (CsExt.Parse.LatinInt(s.Slice(0, 4)).Failure(out int year, out string errMsg))
 			{
-				return Compat.StringConcat("Failed to parse year because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse year because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
-			if (CsExt.Parse.LatinInt(s.Slice(5, 2)).Failure(out int month, out err))
+			if (CsExt.Parse.LatinInt(s.Slice(5, 2)).Failure(out int month, out errMsg))
 			{
-				return Compat.StringConcat("Failed to parse month because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse month because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
-			if (CsExt.Parse.LatinInt(s.Slice(8, 2)).Failure(out int day, out err))
+			if (CsExt.Parse.LatinInt(s.Slice(8, 2)).Failure(out int day, out errMsg))
 			{
-				return Compat.StringConcat("Failed to parse day because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse day because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
-			if (CsExt.Parse.LatinInt(s.Slice(11, 2)).Failure(out int hour, out err))
+			if (CsExt.Parse.LatinInt(s.Slice(11, 2)).Failure(out int hour, out errMsg))
 			{
-				return Compat.StringConcat("Failed to parse hour because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse hour because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
-			if (CsExt.Parse.LatinInt(s.Slice(14, 2)).Failure(out int minute, out err))
+			if (CsExt.Parse.LatinInt(s.Slice(14, 2)).Failure(out int minute, out errMsg))
 			{
-				return Compat.StringConcat("Failed to parse minute because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse minute because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
-			if (CsExt.Parse.LatinInt(s.Slice(17, 2)).Failure(out int second, out err))
+			if (CsExt.Parse.LatinInt(s.Slice(17, 2)).Failure(out int second, out errMsg))
 			{
-				return Compat.StringConcat("Failed to parse second because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+				return Compat.StringConcat("Failed to parse second because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 			}
 			int next = 19;
 			char c = s[19];
@@ -139,7 +140,7 @@
 
 				// Then parse it
 				(int offset, int length) = OffLen.StartEnd(20, next);
-				if (CsExt.Parse.LatinInt(s.Slice(offset, length > 3 ? 3 : length)).Success(out millis, out err))
+				if (CsExt.Parse.LatinInt(s.Slice(offset, length > 3 ? 3 : length)).Success(out millis, out errMsg))
 				{
 					switch (length)
 					{
@@ -156,7 +157,7 @@
 				else
 				{
 					// I don't think this will ever happen, because we stop once we hit a non-digit, it's practically guaranteed that we're going to parse a string entirely comprised of digits
-					return Compat.StringConcat("Failed to parse millisecond because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+					return Compat.StringConcat("Failed to parse millisecond because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 				}
 			}
 			else
@@ -170,7 +171,7 @@
 				return Compat.StringConcat("Found end of string when trying to parse timezone: ".AsSpan(), s);
 			}
 			char tzc = s[next];
-			int timezoneMinutes;
+			Tz timezone;
 			switch (tzc)
 			{
 				case 'Z':
@@ -178,7 +179,7 @@
 					{
 						return Compat.StringConcat("String has Z as a timezone, but has extra chars following the end of the string: ".AsSpan(), s);
 					}
-					timezoneMinutes = 0;
+					timezone = Tz.Utc;
 					break;
 				case '+':
 				case '-':
@@ -191,23 +192,24 @@
 					{
 						return Compat.StringConcat("Separator for timezone must be colon (:): ".AsSpan(), s);
 					}
-					if (CsExt.Parse.LatinInt(s.Slice(next + 1, 2)).Failure(out int tzh, out err))
+					if (CsExt.Parse.LatinInt(s.Slice(next + 1, 2)).Failure(out int tzh, out errMsg))
 					{
-						return Compat.StringConcat("Failed to parse timezone hours because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+						return Compat.StringConcat("Failed to parse timezone hours because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 					}
-					if (CsExt.Parse.LatinInt(s.Slice(next + 4, 2)).Failure(out int tzm, out err))
+					if (CsExt.Parse.LatinInt(s.Slice(next + 4, 2)).Failure(out int tzm, out errMsg))
 					{
-						return Compat.StringConcat("Failed to parse timezone minutes because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
+						return Compat.StringConcat("Failed to parse timezone minutes because ".AsSpan(), errMsg.AsSpan(), ". String: ".AsSpan(), s);
 					}
-					timezoneMinutes = tzc == '+'
-						? (tzh * 60) + tzm
-						: (-tzh * 60) - tzm;
+					if (Tz.TryCreate(tzc == '+' ? tzh : -tzh, tzm).Failure(out timezone, out var err))
+					{
+						return err.Message ?? "Unknown error parsing Timezone";
+					}
 					break;
 				default:
 					return Compat.StringConcat("Timezone designator is not Z, +, or -. String: ".AsSpan(), s);
 			}
 
-			return new Rfc3339(year, month, day, hour, minute, second, millis, timezoneMinutes);
+			return new Rfc3339(year, month, day, hour, minute, second, millis, timezone);
 #pragma warning restore IDE0057 // Use range operator
 		}
 	}

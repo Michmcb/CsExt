@@ -13,16 +13,7 @@
 		/// <returns>A DateTime with a Kind of Utc.</returns>
 		public static DateTime DateTimeFromUnixTimeSeconds(long seconds)
 		{
-			return new DateTime(seconds * TimeSpan.TicksPerSecond + UtcDateTime.UnixEpochTicks, DateTimeKind.Utc);
-		}
-		/// <summary>
-		/// Converts a Unix time expressed as the number of <paramref name="milliseconds"/> that have elapsed since 1970-01-01 00:00:00 UTC.
-		/// </summary>
-		/// <param name="milliseconds">The milliseconds</param>
-		/// <returns>A DateTime with a Kind of Utc</returns>
-		public static DateTime DateTimeFromUnixTimeMilliseconds(long milliseconds)
-		{
-			return new DateTime(milliseconds * TimeSpan.TicksPerMillisecond + UtcDateTime.UnixEpochTicks, DateTimeKind.Utc);
+			return new DateTime(seconds * TimeSpan.TicksPerSecond + DotNetTime.UnixEpochTicks, DateTimeKind.Utc);
 		}
 		/// <summary>
 		/// Returns a string, either yyyy-MM-dd or yyyyMMdd.
@@ -32,7 +23,7 @@
 		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
 		public static string YearMonthDayToString(DateTime date, bool dashes)
 		{
-			UtcDateTime.DateTimePartsFromTotalMilliseconds(date.Ticks / TimeSpan.TicksPerMillisecond, out int y, out int m, out int d, out _, out _, out _, out _);
+			UtcDateTime.DateTimePartsFromTicks(date.Ticks, out int y, out int m, out int d, out _, out _, out _, out _, out _);
 			return YearMonthDayToString(y, m, d, dashes);
 		}
 #if NET6_0_OR_GREATER
@@ -67,21 +58,21 @@
 #endif
 		}
 		/// <summary>
-		/// Writes as yyyy-MM-dd or yyyyMMdd to <paramref name="str"/>, which much be able to hold 8 or 10 chars.
+		/// Writes as yyyy-MM-dd or yyyyMMdd to <paramref name="str"/>, which must be able to hold 8 or 10 chars.
 		/// </summary>
 		/// <param name="str">The span into which to write the date.</param>
 		/// <param name="year">The year.</param>
 		/// <param name="month">The month.</param>
 		/// <param name="day">The day.</param>
 		/// <param name="dashes">Whether or not to include dashes.</param>
-		/// <returns>The number of chars written, or nothing if <paramref name="str"/> is not large enough.</returns>
-		public static Opt<int> WriteYearMonthDay(Span<char> str, int year, int month, int day, bool dashes)
+		/// <returns>The number of chars written, or the length required as a negative number on failure.</returns>
+		public static int WriteYearMonthDay(Span<char> str, int year, int month, int day, bool dashes)
 		{
 			if (dashes)
 			{
 				if (str.Length < 10)
 				{
-					return default;
+					return -10;
 				}
 				// 0123456789
 				// yyyy-MM-dd
@@ -96,7 +87,7 @@
 			{
 				if (str.Length < 8)
 				{
-					return default;
+					return -8;
 				}
 				// 01234567
 				// yyyyMMdd

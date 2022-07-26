@@ -6,7 +6,7 @@
 	/// </summary>
 	public sealed class Iso8601
 	{
-		internal Iso8601(int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, int? timezoneMinutesOffset, Iso8601Parts partsFound)
+		internal Iso8601(int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, Tz? timezone, Iso8601Parts partsFound)
 		{
 			Year = year;
 			MonthOrWeek = monthOrWeek;
@@ -15,7 +15,7 @@
 			Minute = minute;
 			Second = second;
 			Millis = millis;
-			TimezoneMinutesOffset = timezoneMinutesOffset;
+			Timezone = timezone;
 			PartsFound = partsFound;
 			// 214 748 364 7
 		}
@@ -54,10 +54,10 @@
 		/// </summary>
 		public int Millis { get; }
 		/// <summary>
-		/// The timezone offset, in minutes.
+		/// The timezone offset.
 		/// Can be positive or negative, or zero for UTC, or null if there was no timezone designator on the input string (which means use the local timezone).
 		/// </summary>
-		public int? TimezoneMinutesOffset { get; }
+		public Tz? Timezone { get; }
 		/// <summary>
 		/// Each individual part that was found when parsing an ISO-8601 string.
 		/// </summary>
@@ -74,7 +74,7 @@
 			if (s.Length == 0)
 			{
 				return "String was empty";
-			}	
+			}
 			// We always require a Year so it's never set to default
 			int year;
 			int monthOrWeek;
@@ -83,7 +83,7 @@
 			int minute = 0;
 			int second = 0;
 			int millis = 0;
-			int? tz = null;
+			Tz? tz = null;
 			#region DatePart
 			int start;
 			int end;
@@ -384,7 +384,7 @@
 				{
 					return Compat.StringConcat("Failed to parse millisecond because ".AsSpan(), err.AsSpan(), ". String: ".AsSpan(), s);
 				}
-				parts |= Iso8601Parts.Millis;
+				parts |= Iso8601Parts.Fractional;
 			}
 			// No timezone, exit
 			if (s.Length == end)
@@ -402,7 +402,7 @@
 				case 'z':
 				case 'Z':
 					parts |= Iso8601Parts.Tz_Utc;
-					tz = 0;
+					tz = Tz.Utc;
 					break;
 				case '-':
 				case '+':
@@ -410,18 +410,15 @@
 					bool negate = s[end] == '-';
 					// offset by 1 so we're on the digit
 					{
+						int tzh;
 						// Hours
 						start = ++end;
 						end += 2;
 						if (s.Length >= end)
 						{
-							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Success(out int tzh, out string err))
+							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out tzh, out string errMsg))
 							{
-								tz = negate ? -tzh * 60 : tzh * 60;
-							}
-							else
-							{
-								return err;
+								return errMsg;
 							}
 							parts |= Iso8601Parts.Tz_Hour;
 						}
@@ -432,6 +429,14 @@
 						// This is OK; just hours for a Timezone is acceptable
 						if (s.Length == end)
 						{
+							if (Tz.TryCreate(negate ? -tzh : tzh, 0).Success(out Tz theTz, out ErrState<string> err))
+							{
+								tz = theTz;
+							}
+							else
+							{
+								return err.Message ?? "Unknown error parsing timezone";
+							}
 							goto success;
 						}
 						// If we ended up on a separator, advance by 1
@@ -444,13 +449,17 @@
 						end += 2;
 						if (s.Length >= end)
 						{
-							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Success(out int tzm, out string err))
+							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out int tzm, out string errMsg))
 							{
-								tz += negate ? -tzm : tzm;
+								return errMsg;
+							}
+							if (Tz.TryCreate(negate ? -tzh : tzh, tzm).Success(out Tz theTz, out ErrState<string> err))
+							{
+								tz = theTz;
 							}
 							else
 							{
-								return err;
+								return err.Message ?? "Unknown error parsing timezone";
 							}
 							parts |= Iso8601Parts.Tz_HourMinute | (sep ? Iso8601Parts.Separator_Tz : 0);
 						}
@@ -475,7 +484,7 @@
 					minute: minute,
 					second: second,
 					millis: millis,
-					timezoneMinutesOffset: tz,
+					timezone: tz,
 					partsFound: parts
 				);
 #pragma warning restore IDE0057 // Use range operator
