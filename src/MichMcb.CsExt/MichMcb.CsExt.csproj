@@ -10,9 +10,13 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- ReadOnlyList, ReadOnlySet, ReadOnlyCollection, ReadOnlyDictionary, and extension methods to create these from .NET types
-- LcgRng added
-- UtcDateTime has had some From/To methods added. Implicit cast operators removed. Also Added FromMilliseconds as UtcDateTime will eventually be using Ticks like .NET DateTime is, less of a hassle and less CPU cycles wasted converting.</PackageReleaseNotes>
+    <PackageReleaseNotes>- UtcDateTime uses the same Ticks as DateTime now (as it should have always been doing).
+- DateOnly extensions for getting year/month/day.
+- Useful constants moved to a static class DotNetTime, as well as UnixTime conversions.
+- Tz type added, for use as a Timezone which can never be outside of the range +14:00 to -14:00. Can be converted from TimeSpan.
+- Iso8601Format does all the string formatting now, and can format strings with however many decimal places as desired.
+- IsoYearWeek can accept a DateTime and DateOnly as well, for ease of use. It also checks to make sure year/month/day are legal values.
+- ErrState added, to hold an error message as well as an additional state object.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
