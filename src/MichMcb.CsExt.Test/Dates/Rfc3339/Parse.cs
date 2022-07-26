@@ -90,11 +90,10 @@
 			Assert.Equal("Failed to parse timezone hours because Found a non-latin digit in the string: 1x. String: 1234-05-15T10:20:30.123+1x:00", Rfc3339.Parse("1234-05-15T10:20:30.123+1x:00").ErrorOr(null));
 			Assert.Equal("Failed to parse timezone minutes because Found a non-latin digit in the string: x0. String: 1234-05-15T10:20:30.123+10:x0", Rfc3339.Parse("1234-05-15T10:20:30.123+10:x0").ErrorOr(null));
 
-			Assert.Equal("Timezone hour was out of range. It must be between -12 to 14, inclusive. Its value is: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+99:00").ErrorOr(null));
-			Assert.Equal("Timezone hour was out of range. It must be between -12 to 14, inclusive. Its value is: -99", Rfc3339.Parse("1234-05-15T10:20:30.123-99:00").ErrorOr(null));
+			Assert.Equal("Timezone hours out of range. Hours: 99 Minutes: 0", Rfc3339.Parse("1234-05-15T10:20:30.123+99:00").ErrorOr(null));
+			Assert.Equal("Timezone hours out of range. Hours: -99 Minutes: 0", Rfc3339.Parse("1234-05-15T10:20:30.123-99:00").ErrorOr(null));
 
-			Assert.Equal("Timezone minute was out of range. It must be between 0 to 59, inclusive. Its value is: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+10:99").ErrorOr(null));
-
+			Assert.Equal("Timezone minutes out of range. Hours: 10 Minutes: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+10:99").ErrorOr(null));
 		}
 	}
 }

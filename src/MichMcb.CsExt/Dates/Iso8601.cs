@@ -416,9 +416,9 @@
 						end += 2;
 						if (s.Length >= end)
 						{
-							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out tzh, out string err))
+							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out tzh, out string errMsg))
 							{
-								return err;
+								return errMsg;
 							}
 							parts |= Iso8601Parts.Tz_Hour;
 						}
@@ -429,13 +429,13 @@
 						// This is OK; just hours for a Timezone is acceptable
 						if (s.Length == end)
 						{
-							if (Tz.TryCreate(negate ? -tzh : tzh, 0).Success(out Tz theTz, out string err))
+							if (Tz.TryCreate(negate ? -tzh : tzh, 0).Success(out Tz theTz, out ErrState<string> err))
 							{
 								tz = theTz;
 							}
 							else
 							{
-								return err;
+								return err.Message ?? "Unknown error parsing timezone";
 							}
 							goto success;
 						}
@@ -449,17 +449,17 @@
 						end += 2;
 						if (s.Length >= end)
 						{
-							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out int tzm, out string err))
+							if (CsExt.Parse.LatinInt(s.Slice(start, end - start)).Failure(out int tzm, out string errMsg))
 							{
-								return err;
+								return errMsg;
 							}
-							if (Tz.TryCreate(negate ? -tzh : tzh, tzm).Success(out Tz theTz, out err))
+							if (Tz.TryCreate(negate ? -tzh : tzh, tzm).Success(out Tz theTz, out ErrState<string> err))
 							{
 								tz = theTz;
 							}
 							else
 							{
-								return err;
+								return err.Message ?? "Unknown error parsing timezone";
 							}
 							parts |= Iso8601Parts.Tz_HourMinute | (sep ? Iso8601Parts.Separator_Tz : 0);
 						}

@@ -58,21 +58,21 @@
 #endif
 		}
 		/// <summary>
-		/// Writes as yyyy-MM-dd or yyyyMMdd to <paramref name="str"/>, which much be able to hold 8 or 10 chars.
+		/// Writes as yyyy-MM-dd or yyyyMMdd to <paramref name="str"/>, which must be able to hold 8 or 10 chars.
 		/// </summary>
 		/// <param name="str">The span into which to write the date.</param>
 		/// <param name="year">The year.</param>
 		/// <param name="month">The month.</param>
 		/// <param name="day">The day.</param>
 		/// <param name="dashes">Whether or not to include dashes.</param>
-		/// <returns>The number of chars written, or nothing if <paramref name="str"/> is not large enough.</returns>
-		public static Opt<int> WriteYearMonthDay(Span<char> str, int year, int month, int day, bool dashes)
+		/// <returns>The number of chars written, or the length required as a negative number on failure.</returns>
+		public static int WriteYearMonthDay(Span<char> str, int year, int month, int day, bool dashes)
 		{
 			if (dashes)
 			{
 				if (str.Length < 10)
 				{
-					return default;
+					return -10;
 				}
 				// 0123456789
 				// yyyy-MM-dd
@@ -87,7 +87,7 @@
 			{
 				if (str.Length < 8)
 				{
-					return default;
+					return -8;
 				}
 				// 01234567
 				// yyyyMMdd

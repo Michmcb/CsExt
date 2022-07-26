@@ -20,8 +20,8 @@
 		public static void Bad()
 		{
 			Span<char> undersized = stackalloc char[5];
-			Assert.False(DateUtil.WriteYearMonthDay(undersized, 2010, 12, 1, true).Ok);
-			Assert.False(DateUtil.WriteYearMonthDay(undersized, 2010, 12, 1, false).Ok);
+			Assert.Equal(-10, DateUtil.WriteYearMonthDay(undersized, 2010, 12, 1, true));
+			Assert.Equal(-8, DateUtil.WriteYearMonthDay(undersized, 2010, 12, 1, false));
 		}
 	}
 }

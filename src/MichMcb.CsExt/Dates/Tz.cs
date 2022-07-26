@@ -3,7 +3,7 @@
 	using System;
 
 	/// <summary>
-	/// Represents a TimeZone. Similar to <see cref="TimeSpan"/>, but this only allows a range of +14:00 to -12:00.
+	/// Represents a TimeZone. Similar to <see cref="TimeSpan"/>, but this only allows a range of +14:00 to -14:00.
 	/// </summary>
 	public readonly struct Tz : IEquatable<Tz>
 	{
@@ -14,7 +14,7 @@
 		/// <summary>
 		/// The minimum number of ticks this can hold, corresponding to <see cref="MinValue"/>.
 		/// </summary>
-		public const long MinTicks = -12 * TimeSpan.TicksPerHour;
+		public const long MinTicks = -14 * TimeSpan.TicksPerHour;
 		/// <summary>
 		/// +14:00
 		/// </summary>
@@ -38,6 +38,18 @@
 				throw new ArgumentOutOfRangeException(nameof(ticks), "Ticks was out of range. Its value is: " + ticks);
 			}
 			Ticks = ticks;
+		}
+		/// <summary>
+		/// Equivalent to <see cref="TryCreate(int, int)"/>, except throws <see cref="ArgumentOutOfRangeException"/> on failure.
+		/// </summary>
+		/// <param name="hours">The hours.</param>
+		/// <param name="minutes">The minutes.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public Tz(int hours, int minutes)
+		{
+			Ticks = TryCreate(hours, minutes).Success(out Tz tz, out ErrState<string> err)
+				? tz.Ticks
+				: throw new ArgumentOutOfRangeException(err.State, err.Message);
 		}
 		/// <summary>
 		/// The timezone offset, in ticks.
@@ -76,48 +88,61 @@
 		}
 		/// <summary>
 		/// Attempts to create a <see cref="Tz"/> from <paramref name="timespan"/>.
-		/// If <paramref name="clamp"/> is true, then this will always succeed, and the value will never be larger than <see cref="MaxValue"/> or smaller than <see cref="MinValue"/>.
+		/// If <paramref name="timespan"/> is too small, returns <see cref="MinTicks"/>.
+		/// If <paramref name="timespan"/> is too large, returns <see cref="MaxTicks"/>.
 		/// </summary>
 		/// <param name="timespan">The <see cref="TimeSpan"/>.</param>
-		/// <param name="clamp">If false, returns <see cref="Nil"/> on failure. Otherwise, this method never fails.</param>
-		/// <returns>A <see cref="Tz"/>, or nothing on failure.</returns>
-		public static Maybe<Tz, Nil> TryFromTimeSpan(TimeSpan timespan, bool clamp = false)
+		/// <returns>A <see cref="Tz"/> if successful.</returns>
+		public static Maybe<Tz, long> TryFromTimeSpan(TimeSpan timespan)
 		{
-			return clamp
-				? timespan.Ticks > MaxTicks
+			return timespan.Ticks > MaxTicks
+					? MaxTicks
+					: timespan.Ticks < MinTicks
+						? MinTicks
+						: new Tz(timespan.Ticks);
+		}
+		/// <summary>
+		/// Creates a <see cref="Tz"/> from <paramref name="timespan"/>.
+		/// If <paramref name="timespan"/> is too small or too large, the return value is clamped.
+		/// </summary>
+		/// <param name="timespan">The <see cref="TimeSpan"/>.</param>
+		/// <returns>A <see cref="Tz"/>.</returns>
+		public static Tz FromTimeSpanClamped(TimeSpan timespan)
+		{
+			return timespan.Ticks > MaxTicks
 					? MaxValue
 					: timespan.Ticks < MinTicks
 						? MinValue
-						: new Tz(timespan.Ticks)
-				: timespan.Ticks <= MaxTicks && timespan.Ticks >= MinTicks
-					? new Tz(timespan.Ticks)
-					: Nil.Inst;
+						: new Tz(timespan.Ticks);
 		}
 		/// <summary>
 		/// Attempts to create a new instance with the hour and minute provided.
-		/// For negative timezones, <paramref name="hour"/> must be negative. Negative values for <paramref name="minute"/> are converted to positive values.
+		/// For negative timezones, <paramref name="hours"/> must be negative. Negative values for <paramref name="minutes"/> are converted to positive values.
 		/// </summary>
-		/// <param name="hour">The hour. Negative for negative timezones.</param>
-		/// <param name="minute">The minute. Doesn't matter if it's negative or positive.</param>
-		/// <returns>A <see cref="Tz"/> if <paramref name="hour"/> and <paramref name="minute"/> are within the acceptable range, or an error message otherwise.</returns>
-		public static Maybe<Tz, string> TryCreate(int hour, int minute)
+		/// <param name="hours">The hour. Negative for negative timezones.</param>
+		/// <param name="minutes">The minute. Doesn't matter if it's negative or positive.</param>
+		/// <returns>A <see cref="Tz"/> if <paramref name="hours"/> and <paramref name="minutes"/> are within the acceptable range. On failure, State is the parameter name which is out of range.</returns>
+		public static Maybe<Tz, ErrState<string>> TryCreate(int hours, int minutes)
 		{
-			if (minute > 59 || minute < -59)
+			if (hours < -14 || hours > 14)
 			{
-				return "Timezone minute was out of range. It must be between 0 to 59, inclusive. Its value is: " + minute;
+				return ErrState.New(nameof(hours), string.Concat("Timezone hours out of range. Hours: ", hours, " Minutes: " + minutes));
 			}
-			if (hour < -12 || hour > 14)
+			if (minutes != 0 && (hours == 14 || hours == -14))
 			{
-				return "Timezone hour was out of range. It must be between -12 to 14, inclusive. Its value is: " + hour;
+				return ErrState.New(nameof(minutes), string.Concat("Timezone hours and minutes out of range. Hours: ", hours, " Minutes: " + minutes));
 			}
-			long th = TimeSpan.TicksPerHour * hour;
-			long tm = minute < 0 ? TimeSpan.TicksPerMinute * -minute : TimeSpan.TicksPerMinute * minute;
+			if (minutes > 59 || minutes < -59)
+			{
+				return ErrState.New(nameof(minutes), string.Concat("Timezone minutes out of range. Hours: ", hours, " Minutes: " + minutes));
+			}
+			long th = TimeSpan.TicksPerHour * hours;
+			long tm = minutes < 0 ? TimeSpan.TicksPerMinute * -minutes : TimeSpan.TicksPerMinute * minutes;
 			long t = th < 0
 				? th - tm
 				: th + tm;
-			return t < MinTicks || t > MaxTicks
-				? string.Concat("Timezone was out of range. Hours: ", hour, " Minutes: ", minute)
-				: new Tz(t);
+			// Should never be out of range
+			return new Tz(t);
 		}
 		/// <inheritdoc/>
 		public override bool Equals(object? obj)

@@ -298,47 +298,55 @@
 			return new Iso8601Format(format, length, decimalPlaces);
 		}
 		/// <summary>
-		/// Creates a new string containing date and time represented by <paramref name="ticks"/> and <paramref name="timezone"/>.
+		/// Calls <see cref="CreateString(long, Tz?)"/>, passing in <see cref="DateTimeOffset.UtcTicks"/> and <see cref="DateTimeOffset.Offset"/> converted to a <see cref="Tz"/>.
 		/// </summary>
-		/// <param name="ticks">The ticks.</param>
+		/// <param name="dateTimeOffset">The <see cref="DateTimeOffset"/>.</param>
+		public string CreateString(DateTimeOffset dateTimeOffset)
+		{
+			return CreateString(dateTimeOffset.UtcTicks, Tz.FromTimeSpanClamped(dateTimeOffset.Offset));
+		}
+		/// <summary>
+		/// Creates a new string containing date and time represented by <paramref name="utcTicks"/> and <paramref name="timezone"/>.
+		/// </summary>
+		/// <param name="utcTicks">The ticks.</param>
 		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
-		public string CreateString(long ticks, Tz? timezone = null)
+		public string CreateString(long utcTicks, Tz? timezone = null)
 		{
 #if !NETSTANDARD2_0
-			return string.Create(LengthRequired, this, (dest, inst) => inst.WriteString(dest, ticks, timezone));
+			return string.Create(LengthRequired, this, (dest, inst) => inst.WriteString(dest, utcTicks, timezone));
 #else
-			return Compat.StringCreate(LengthRequired, this, (dest, inst) => inst.WriteString(dest, ticks, timezone));
+			return Compat.StringCreate(LengthRequired, this, (dest, inst) => inst.WriteString(dest, utcTicks, timezone));
 #endif
 		}
 		/// <summary>
-		/// Writes to <paramref name="destination"/> a string containing the date and time represented by <paramref name="ticks"/> and <paramref name="timezone"/>.
+		/// Writes to <paramref name="destination"/> a string containing the date and time represented by <paramref name="utcTicks"/> and <paramref name="timezone"/>.
 		/// If successful, returns the number of chars written.
 		/// If <paramref name="destination"/> is too small, returns 0.
 		/// </summary>
 		/// <param name="destination">The destination to write to.</param>
-		/// <param name="ticks">The ticks.</param>
+		/// <param name="utcTicks">The ticks, in UTC.</param>
 		/// <param name="timezone">For non-UTC timezone designators or a local designator, writes the time with this offset. Null means the <see cref="TimeZoneInfo.BaseUtcOffset"/> of <see cref="TimeZoneInfo.Local"/>. If using UTC timezone designator this is ignored.</param>
 		/// <returns>The number of chars written, or the length required (<see cref="LengthRequired"/>) as a negative number if <paramref name="destination"/> is too small.</returns>
-		public int WriteString(Span<char> destination, long ticks, Tz? timezone = null)
+		public int WriteString(Span<char> destination, long utcTicks, Tz? timezone = null)
 		{
 			if (destination.Length < LengthRequired)
 			{
 				return -LengthRequired;
 			}
-			// We clamp the ticks so they can't be larger than MaxMillis or lower than zero.
-			ticks = ticks > DotNetTime.MaxTicks
+			// We clamp the ticks so they can't be larger than MaxTicks or lower than zero.
+			utcTicks = utcTicks > DotNetTime.MaxTicks
 				? DotNetTime.MaxTicks
-				: ticks < 0
+				: utcTicks < 0
 					? 0
-					: ticks;
+					: utcTicks;
 			switch (Format)
 			{
-				// This fall-through is intentional; when format is default, then Iso8601Parts will be None, and that corresponds to extended format, UTC.
-				case Iso8601Parts.None: return FormatExtendedFormatUtc(destination, ticks, 0);
-				case Iso8601Parts.Format_ExtendedFormat_UtcTz: return FormatExtendedFormatUtc(destination, ticks, DecimalPlaces);
-				case Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz: return FormatExtendedFormatUtc(destination, ticks, DecimalPlaces);
-				case Iso8601Parts.Format_BasicFormat_UtcTz: return FormatBasicFormatUtc(destination, ticks, DecimalPlaces);
-				case Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz: return FormatBasicFormatUtc(destination, ticks, DecimalPlaces);
+				// This fall-through is intentional; when format is default(Iso8601Format), then Iso8601Parts will be None, and that corresponds to extended format, UTC.
+				case Iso8601Parts.None: return FormatExtendedFormatUtc(destination, utcTicks, 0);
+				case Iso8601Parts.Format_ExtendedFormat_UtcTz: return FormatExtendedFormatUtc(destination, utcTicks, DecimalPlaces);
+				case Iso8601Parts.Format_ExtendedFormat_NoFractional_UtcTz: return FormatExtendedFormatUtc(destination, utcTicks, DecimalPlaces);
+				case Iso8601Parts.Format_BasicFormat_UtcTz: return FormatBasicFormatUtc(destination, utcTicks, DecimalPlaces);
+				case Iso8601Parts.Format_BasicFormat_NoFractional_UtcTz: return FormatBasicFormatUtc(destination, utcTicks, DecimalPlaces);
 				default:
 					break;
 			}
@@ -359,18 +367,18 @@
 			else
 			{
 				// Timezone offset 
-				tz = timezone ?? Tz.TryFromTimeSpan(TimeZoneInfo.Local.BaseUtcOffset, clamp: true).ValueOrException();
-				ticks += tz.Ticks;
+				tz = timezone ?? Tz.FromTimeSpanClamped(TimeZoneInfo.Local.BaseUtcOffset);
+				utcTicks += tz.Ticks;
 			}
 
 			// Have to clamp again since the timezone may have pushed us out of range
-			ticks = ticks > DotNetTime.MaxTicks
+			utcTicks = utcTicks > DotNetTime.MaxTicks
 				? DotNetTime.MaxTicks
-				: ticks < 0
+				: utcTicks < 0
 					? 0
-					: ticks;
+					: utcTicks;
 
-			UtcDateTime.DateTimePartsNoMillisFromTicks(ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
+			UtcDateTime.DateTimePartsNoMillisFromTicks(utcTicks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
 
 			int i = 0;
 
