@@ -50,6 +50,13 @@
 			day = totalDays - totalDaysFromStartYearToMonth[month - 1] + 1;
 		}
 		/// <summary>
+		/// Calculates a year/month/day given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
+		/// </summary>
+		public static void DatePartsFromTicks(long ticks, out int year, out int month, out int day)
+		{
+			DatePartsFromTotalDays((int)(ticks / TimeSpan.TicksPerDay), out year, out month, out day);
+		}
+		/// <summary>
 		/// Calculates an hour/minute/second/millis/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
 		/// </summary>
 		public static void TimePartsFromTicks(long ticks, out int hour, out int minute, out int second, out int millis, out int remainder)
@@ -70,15 +77,14 @@
 			second = (int)(ticks / TimeSpan.TicksPerSecond % 60);
 			remainder = (int)(ticks % TimeSpan.TicksPerSecond);
 		}
+		
 		/// <summary>
 		/// Calculates a year/month/day/hour/minute/second/millis/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
 		/// </summary>
 		public static void DateTimePartsFromTicks(long ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int remainder)
 		{
 			TimePartsFromTicks(ticks, out hour, out minute, out second, out millis, out remainder);
-
-			// We know the total number of days easily.
-			DatePartsFromTotalDays((int)(ticks / TimeSpan.TicksPerDay), out year, out month, out day);
+			DatePartsFromTicks(ticks, out year, out month, out day);
 		}
 		/// <summary>
 		/// Calculates a year/month/day/hour/minute/second/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
@@ -86,9 +92,7 @@
 		public static void DateTimePartsNoMillisFromTicks(long ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int remainder)
 		{
 			TimePartsNoMillisFromTicks(ticks, out hour, out minute, out second, out remainder);
-
-			// We know the total number of days easily.
-			DatePartsFromTotalDays((int)(ticks / TimeSpan.TicksPerDay), out year, out month, out day);
+			DatePartsFromTicks(ticks, out year, out month, out day);
 		}
 		/// <summary>
 		/// Returns the total number of days elapsed since 0001-01-01, as of <paramref name="year"/>.

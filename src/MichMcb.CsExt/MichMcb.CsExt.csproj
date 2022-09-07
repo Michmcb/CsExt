@@ -5,13 +5,12 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>3.1</Version>
+    <Version>3.1.1</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Fixed outdated doco on UtcDateTime
-- UtcDateTime has addition and subtraction operators for TimeOnly</PackageReleaseNotes>
+    <PackageReleaseNotes>- Convenience method on UtcDateTime to calculate year/month/day directly from ticks instead of having to divide by TimeSpan.TicksPerDay.</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -19,8 +18,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>3.1</AssemblyVersion>
-    <FileVersion>3.1</FileVersion>
+    <AssemblyVersion>3.1.1</AssemblyVersion>
+    <FileVersion>3.1.1</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
