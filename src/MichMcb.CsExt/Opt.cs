@@ -1,5 +1,6 @@
 ﻿namespace MichMcb.CsExt
 {
+	using System;
 	using System.Diagnostics.CodeAnalysis;
 
 	/// <summary>
@@ -46,9 +47,26 @@
 		/// <summary>
 		/// Gets the value, or throws a <see cref="NoValueException"/>.
 		/// </summary>
+		[Obsolete("Prefer the overloads taking a message or a func")]
 		public TVal ValueOrException()
 		{
 			return Ok ? val : throw new NoValueException("Opt instance had no value.");
+		}
+		/// <summary>
+		/// Gets the value, or throws a <see cref="NoValueException"/> with the provided <paramref name="message"/>.
+		/// </summary>
+		/// <param name="message">The message to set on the <see cref="NoValueException"/>.</param>
+		public TVal ValueOrException(string message)
+		{
+			return Ok ? val : throw new NoValueException(message);
+		}
+		/// <summary>
+		/// Gets the value, or throws the exception returned by <paramref name="getException"/>.
+		/// </summary>
+		/// <param name="getException">Creates an exception to throw.</param>
+		public TVal ValueOrException(Func<Exception> getException)
+		{
+			return Ok ? val : throw getException();
 		}
 		/// <summary>
 		/// Equivalent to creating a new instance.

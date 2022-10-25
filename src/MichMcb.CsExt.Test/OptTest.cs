@@ -1,5 +1,6 @@
 ﻿namespace MichMcb.CsExt.Test
 {
+	using System.IO;
 	using Xunit;
 
 	public static class OptTest
@@ -25,9 +26,14 @@
 		{
 			Opt<string?> opt = default;
 			Assert.Throws<NoValueException>(() => opt.ValueOrException());
+			Assert.Equal("Message", Assert.Throws<NoValueException>(() => opt.ValueOrException("Message")).Message);
+			FileNotFoundException ex = Assert.Throws<FileNotFoundException>(() => opt.ValueOrException(() => new FileNotFoundException("Hello")));
+			Assert.Equal("Hello", ex.Message);
 
 			opt = "hello";
 			Assert.Equal("hello", opt.ValueOrException());
+			Assert.Equal("hello", opt.ValueOrException("Message"));
+			Assert.Equal("hello", opt.ValueOrException(() => new FileNotFoundException("Hello")));
 		}
 		[Fact]
 		public static void ImplicitCast()

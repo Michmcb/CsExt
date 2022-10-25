@@ -2,6 +2,8 @@
 namespace MichMcb.CsExt.Strings
 {
 	using System;
+	using System.Collections.Generic;
+
 	/// <summary>
 	/// Splits a span into ranges. Works like <see cref="string.Split(char, StringSplitOptions)"/>, only it uses a <see cref="ReadOnlySpan{T}"/> of <see cref="char"/>.
 	/// </summary>
@@ -35,6 +37,19 @@ namespace MichMcb.CsExt.Strings
 		/// The options to use when splitting.
 		/// </summary>
 		public StringSplitOptions Options { get; }
+		/// <summary>
+		/// Gets all the ranges and returns them as a list.
+		/// </summary>
+		/// <returns></returns>
+		public List<Range> All()
+		{
+			List<Range> result = new();
+			while (Next().HasVal(out Range r))
+			{
+				result.Add(r);
+			}
+			return result;
+		}
 		/// <summary>
 		/// Gets the next range which can be used to slice the original string.
 		/// </summary>
