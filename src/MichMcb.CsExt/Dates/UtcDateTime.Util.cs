@@ -13,41 +13,11 @@
 		/// </summary>
 		public static void DatePartsFromTotalDays(int totalDays, out int year, out int month, out int day)
 		{
-			// Most of this code is written by myself. However, the two Adjustments and the optimization of (days >> 5) + 1 comes from the .NET Source for DateTime
-
-			// The way we'll do this is first, get the number of groups of 400 years, then deduct that from our totalDays.
-			int y400 = totalDays / DotNetTime.DaysPer400Years;
-			totalDays -= DotNetTime.DaysPer400Years * y400;
-			int y100 = totalDays / DotNetTime.DaysPer100Years;
-			if (y100 == 4)
-			{
-				y100 = 3; // Adjustment
-			}
-			totalDays -= DotNetTime.DaysPer100Years * y100;
-			int y4 = totalDays / DotNetTime.DaysPer4Years;
-			totalDays -= DotNetTime.DaysPer4Years * y4;
-			int y1 = totalDays / 365;
-			if (y1 == 4)
-			{
-				y1 = 3; // Adjustment 
-			}
-
-			totalDays -= y1 * 365;
-
-			year = y400 * 400 + y100 * 100 + y4 * 4 + y1 + 1;
-
-			// Here, our years are relative to year 1, not year 0, so we need to use a special leap year calculation
-			bool leapYear = y1 == 3 && (y4 != 24 || y100 == 3);
-			int[] totalDaysFromStartYearToMonth = leapYear ? TotalDaysFromStartLeapYearToMonth : TotalDaysFromStartYearToMonth;
-
-			// Bitshifting right 5 bytes, because all months have less than 32 days.
-			// It saves us a bit of checking in the loop
-			month = (totalDays >> 5) + 1;
-			while (totalDays >= totalDaysFromStartYearToMonth[month])
-			{
-				month++;
-			}
-			day = totalDays - totalDaysFromStartYearToMonth[month - 1] + 1;
+#if NET6_0_OR_GREATER
+			DateOnly.FromDayNumber(totalDays).Deconstruct(out year, out month, out day);
+#else
+			new DateTime(totalDays * TimeSpan.TicksPerDay).GetDateParts(out year, out month, out day);
+#endif
 		}
 		/// <summary>
 		/// Calculates a year/month/day given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
@@ -77,7 +47,6 @@
 			second = (int)(ticks / TimeSpan.TicksPerSecond % 60);
 			remainder = (int)(ticks % TimeSpan.TicksPerSecond);
 		}
-		
 		/// <summary>
 		/// Calculates a year/month/day/hour/minute/second/millis/remainder given <paramref name="ticks"/>, which is interpreted as the number of ticks elapsed since 0001-01-01.
 		/// </summary>

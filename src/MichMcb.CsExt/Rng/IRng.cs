@@ -21,7 +21,6 @@
 		/// <returns>A random integer that is equal to or greater than <paramref name="minValue"/>, and less than <paramref name="maxValue"/>.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="minValue"/> is larger than <paramref name="maxValue"/></exception>
 		int NextInt32(int minValue, int maxValue);
-
 		/// <summary>
 		/// Returns a random integer.
 		/// </summary>
@@ -37,7 +36,7 @@
 		/// <exception cref="ArgumentOutOfRangeException">If <paramref name="minValue"/> is larger than <paramref name="maxValue"/></exception>
 		uint NextUInt32(uint minValue, uint maxValue);
 		/// <summary>
-		/// Returns a double that is 0.0 or larger and less than 1.0.
+		/// Returns a double that is greater than or equal to 0.0 and less than 1.0.
 		/// </summary>
 		double NextDouble();
 		/// <summary>

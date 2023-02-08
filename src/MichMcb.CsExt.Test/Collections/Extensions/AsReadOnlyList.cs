@@ -10,11 +10,11 @@
 		public static void List()
 		{
 			IList<int> list = new List<int>() { 1, 2, 3, 4, 5 };
-			CheckList(list, list.AsReadOnly());
+			CheckList(list, Extensions.AsReadOnly(list));
 			CheckList(list, new ReadOnlyList<int>(list));
 
 			list = new int[] { 5, 4, 3, 2, 1 };
-			CheckList(list, list.AsReadOnly());
+			CheckList(list, Extensions.AsReadOnly(list));
 			CheckList(list, new ReadOnlyList<int>(list));
 		}
 		private static void CheckList(IList<int> expected, IReadOnlyList<int> actual)
@@ -65,7 +65,7 @@
 				[4] = 4,
 				[5] = 5,
 			};
-			CheckDict(dict, dict.AsReadOnly());
+			CheckDict(dict, Extensions.AsReadOnly(dict));
 			CheckDict(dict, new ReadOnlyDictionary<int, int>(dict));
 		}
 		private static void CheckDict(IDictionary<int, int> expected, IReadOnlyDictionary<int, int> actual)

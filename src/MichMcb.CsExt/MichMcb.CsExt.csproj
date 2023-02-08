@@ -1,17 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net5.0;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <RootNamespace>MichMcb.CsExt</RootNamespace>
-    <Version>3.1.2</Version>
+    <Version>3.2.0</Version>
     <Description>A library full of helpful stuff. It's just a collection of functions I've created. This particular library is mainly stuff that I make for myself that I feel like sharing.</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Ghost.png</PackageIcon>
     <RepositoryUrl>https://github.com/Michmcb/CsExt</RepositoryUrl>
-    <PackageReleaseNotes>- Opt can throw any kind of exception or just accept a custom message.
-- SpanSplit has a convenience method to collect all the Ranges into a List.</PackageReleaseNotes>
+    <PackageReleaseNotes>- Fixed up tests and added some new ones
+- .NET 5 dropped as it is out of support, and .NET 7 added
+- UtcDateTime now simply wraps a DateTime (should've done this in the first place really)
+- A few more convenience properties on UtcDateTime, and Micro/Nanosecond if using .NET 7
+- Some more methods on UtcDateTime to match DateTime
+- UtcDateTime implements IParseable&lt;UtcDateTime&gt; if using .NET 7
+- Parse.LatinInt fixed so it correctly detects overflow
+- LcgRng and PcgRng now increment the seed when minValue and maxValue are the same value
+- RandomRng added, which just wraps a Random instance</PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/Michmcb/CsExt</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
@@ -19,8 +26,8 @@
     <Product />
     <Company />
     <Copyright></Copyright>
-    <AssemblyVersion>3.1.2</AssemblyVersion>
-    <FileVersion>3.1.2</FileVersion>
+    <AssemblyVersion>3.2.0</AssemblyVersion>
+    <FileVersion>3.2.0</FileVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 

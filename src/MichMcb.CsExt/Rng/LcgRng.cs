@@ -77,9 +77,7 @@
 		public int NextInt32(int minValue, int maxValue)
 		{
 			return minValue <= maxValue
-				? minValue != maxValue
-					? (int)(((long)maxValue - minValue) * NextDouble()) + minValue
-					: minValue
+				? (int)(((long)maxValue - minValue) * NextDouble()) + minValue
 				: throw new ArgumentOutOfRangeException(nameof(minValue), "minValue is larger than maxValue");
 		}
 		/// <summary>
@@ -94,9 +92,7 @@
 		public uint NextUInt32(uint minValue, uint maxValue)
 		{
 			return minValue <= maxValue
-				? minValue != maxValue
-					? (uint)(((ulong)maxValue - minValue) * NextDouble()) + minValue
-					: minValue
+				? (uint)(((ulong)maxValue - minValue) * NextDouble()) + minValue
 				: throw new ArgumentOutOfRangeException(nameof(minValue), "minValue is larger than maxValue");
 		}
 		/// <summary>

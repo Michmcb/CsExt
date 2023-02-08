@@ -2,7 +2,7 @@
 {
 	using System.Collections;
 	using System.Collections.Generic;
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 	/// <summary>
 	/// Wraps a <see cref="ISet{T}"/>, to make it a <see cref="IReadOnlySet{T}"/>.
 	/// </summary>

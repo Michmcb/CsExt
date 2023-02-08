@@ -37,7 +37,7 @@
 				? realDict
 				: new ReadOnlyDictionary<TKey, TValue>(dictionary);
 		}
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 		/// <summary>
 		/// Returns <paramref name="set"/> as a <see cref="IReadOnlySet{T}"/>. Does not copy the set.
 		/// </summary>

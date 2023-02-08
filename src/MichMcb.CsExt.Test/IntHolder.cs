@@ -1,6 +1,8 @@
 ﻿namespace MichMcb.CsExt.Test
 {
+	using MichMcb.CsExt.Rng;
 	using System.Threading.Tasks;
+	using Xunit;
 
 	public sealed class IntHolder
 	{

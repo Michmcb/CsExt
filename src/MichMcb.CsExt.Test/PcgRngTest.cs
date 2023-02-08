@@ -3,45 +3,56 @@
 	using MichMcb.CsExt.Rng;
 	using System;
 	using Xunit;
-
-	public static class PcgRngTest
+	public static class RngTest
 	{
+		private static readonly IRng[] rngs = new IRng[] { new PcgRng(), new LcgRng(), new RandomRng(Random.Shared) };
 		[Fact]
 		public static void DoesntCrashIGuess()
 		{
-			PcgRng rng1 = new();
-			rng1.NextInt32();
+			foreach (var rng in rngs)
+			{
+				rng.NextInt32();
+			}
 		}
 		[Fact]
 		public static void InitialSeed()
 		{
-			PcgRng rng1 = new(10, 123);
-			PcgRng rng2 = new(10, 123);
-			Assert.Equal(rng1.NextInt32(), rng2.NextInt32());
+			Check(new PcgRng(10, 123), new PcgRng(10, 123));
+			Check(new LcgRng(15), new LcgRng(15));
+			Check(new RandomRng(new(123)), new RandomRng(new(123)));
+
+			static void Check(IRng rng1, IRng rng2)
+			{
+				Assert.Equal(rng1.NextInt32(), rng2.NextInt32());
+				Assert.Equal(rng1.NextUInt32(), rng2.NextUInt32());
+				Assert.Equal(rng1.NextDouble(), rng2.NextDouble());
+				Assert.Equal(rng1.NextBytes(16), rng2.NextBytes(16));
+			}
 		}
 		[Fact]
 		public static void Range()
 		{
-			PcgRng rng = new();
-			for (int i = 0; i < 10_000_000; i++)
+			foreach (var rng in rngs)
 			{
-				int val = (int)rng.NextUInt32(10, 20);
-				Assert.InRange(val, 10, 19);
+				for (int i = 0; i < 10_000_000; i++)
+				{
+					int val = (int)rng.NextUInt32(10, 20);
+					Assert.InRange(val, 10, 19);
+				}
+				for (int i = 0; i < 10_000_000; i++)
+				{
+					int val = rng.NextInt32(10, 20);
+					Assert.InRange(val, 10, 19);
+				}
+				Assert.True(10 == rng.NextUInt32(10, 10));
+				Assert.Equal(10, rng.NextInt32(10, 10));
+				Assert.Throws<ArgumentOutOfRangeException>(() => rng.NextUInt32(10, 0));
+				Assert.Throws<ArgumentOutOfRangeException>(() => rng.NextInt32(10, 0));
 			}
-			for (int i = 0; i < 10_000_000; i++)
-			{
-				int val = rng.NextInt32(10, 20);
-				Assert.InRange(val, 10, 19);
-			}
-			Assert.True(10 == rng.NextUInt32(10, 10));
-			Assert.Equal(10, rng.NextInt32(10, 10));
-			Assert.Throws<ArgumentOutOfRangeException>(() => rng.NextUInt32(10, 0));
-			Assert.Throws<ArgumentOutOfRangeException>(() => rng.NextInt32(10, 0));
 		}
 		[Fact]
 		public static void Stuff()
 		{
-			// return (int)(((long)NextUInt32((uint)(minValue + 2147483648), (uint)(maxValue + 2147483648))) - 2147483648);
 			{
 				uint x = (uint)(int.MinValue + 2147483648);
 				Assert.True(x == uint.MinValue);
@@ -61,7 +72,7 @@
 			{
 				double UIntMaxDouble = uint.MaxValue + 1d;
 				Assert.Equal(0, 0 / UIntMaxDouble);
-				var xd = uint.MaxValue / UIntMaxDouble;
+				_ = uint.MaxValue / UIntMaxDouble;
 			}
 		}
 	}

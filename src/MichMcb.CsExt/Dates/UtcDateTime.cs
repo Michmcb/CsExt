@@ -6,11 +6,17 @@
 
 	/// <summary>
 	/// Represents a UTC Date Time, as ticks since 0001-01-01 00:00:00.000.
-	/// Unlike <see cref="DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.
-	/// This can be cast to and from <see cref="DateTime"/> (unless Kind is Unspecified), and <see cref="DateTimeOffset"/>.
+	/// Unlike <see cref="System.DateTime"/> and <see cref="DateTimeOffset"/>, this is only ever UTC, which can help if you want to differentiate by type.
+	/// This can be cast to and from <see cref="System.DateTime"/> (unless Kind is Unspecified), and <see cref="DateTimeOffset"/>.
 	/// </summary>
-	public readonly partial struct UtcDateTime : IEquatable<UtcDateTime>, IComparable<UtcDateTime>
+	public readonly partial struct UtcDateTime
+		: IEquatable<UtcDateTime>
+		, IComparable<UtcDateTime>
+#if NET7_0_OR_GREATER
+		, ISpanParsable<UtcDateTime>
+#endif
 	{
+		private readonly DateTime _dt;
 		/// <summary>
 		/// 1970-01-01 00:00:00
 		/// </summary>
@@ -23,17 +29,17 @@
 		/// 9999-12-31 23:59:59.9999999
 		/// </summary>
 		public static readonly UtcDateTime MaxValue = new(DotNetTime.MaxTicks);
+		private UtcDateTime(DateTime dt)
+		{
+			_dt = dt;
+		}
 		/// <summary>
 		/// Creates a new instance, as ticks elapsed since 0001-01-01 00:00:00
 		/// </summary>
 		/// <param name="ticks">Ticks elapsed since 0001-01-01 00:00:00</param>
 		public UtcDateTime(long ticks)
 		{
-			if (ticks < 0 || ticks > DotNetTime.MaxTicks)
-			{
-				throw new ArgumentOutOfRangeException(nameof(ticks), "Ticks must be at least 0 and at most " + DotNetTime.MaxTicks.ToString());
-			}
-			Ticks = ticks;
+			_dt = new(ticks, DateTimeKind.Utc);
 		}
 		/// <summary>
 		/// Creates a new instance, with the hours, minutes, seconds, and milliseconds parts set to 0
@@ -48,69 +54,63 @@
 		/// </summary>
 		public UtcDateTime(int year, int month, int day, int hour, int minute, int second, int millis)
 		{
-			if (!TicksFromHourMinuteSecondMillisTimezoneOffset(hour, minute, second, millis, default).Success(out long tms, out string err))
-			{
-				throw new ArgumentOutOfRangeException(null, err);
-			}
-			if (!TicksFromYearMonthDay(year, month, day).Success(out long dms, out err))
-			{
-				throw new ArgumentOutOfRangeException(null, err);
-			}
-			Ticks = tms + dms;
+			_dt = new(year, month, day, hour, minute, second, millis, DateTimeKind.Utc);
 		}
 		/// <summary>
 		/// Returns an instance representing the current UTC time
 		/// </summary>
 		public static UtcDateTime Now => new(DateTime.UtcNow.Ticks);
 		/// <summary>
+		/// Identical to calling <see cref="Truncate(DateTimePart)"/> with <see cref="DateTimePart.Day"/>.
+		/// </summary>
+		public UtcDateTime Date => Truncate(DateTimePart.Day);
+		/// <summary>
+		/// Returns a <see cref="System.DateTime"/> whose kind is <see cref="DateTimeKind.Utc"/>.
+		/// </summary>
+		public DateTime DateTime => _dt;
+		/// <summary>
+		/// Returns a <see cref="System.DateTime"/> whose kind is <see cref="DateTimeKind.Local"/>.
+		/// Equivalent to calling <see cref="DateTime.ToLocalTime"/> on <see cref="DateTime"/>.
+		/// </summary>
+		public DateTime Local => _dt.ToLocalTime();
+		/// <summary>
 		/// Returns the Years part of this instance
 		/// </summary>
-		public int Year
-		{
-			get
-			{
-				DatePartsFromTotalDays((int)(Ticks / TimeSpan.TicksPerDay), out int year, out _, out _);
-				return year;
-			}
-		}
+		public int Year => _dt.Year;
 		/// <summary>
 		/// Returns the Months part of this instance
 		/// </summary>
-		public int Month
-		{
-			get
-			{
-				DatePartsFromTotalDays((int)(Ticks / TimeSpan.TicksPerDay), out _, out int month, out _);
-				return month;
-			}
-		}
+		public int Month => _dt.Month;
 		/// <summary>
 		/// Returns the Days part of this instance
 		/// </summary>
-		public int Day
-		{
-			get
-			{
-				DatePartsFromTotalDays((int)(Ticks / TimeSpan.TicksPerDay), out _, out _, out int day);
-				return day;
-			}
-		}
+		public int Day => _dt.Day;
 		/// <summary>
 		/// Returns the Hours part of this instance
 		/// </summary>
-		public int Hour => (int)(Ticks / TimeSpan.TicksPerHour % 24);
+		public int Hour => _dt.Hour;
 		/// <summary>
 		/// Returns the minutes part of this instance
 		/// </summary>
-		public int Minute => (int)(Ticks / TimeSpan.TicksPerMinute % 60);
+		public int Minute => _dt.Minute;
 		/// <summary>
 		/// Returns the seconds part of this instance
 		/// </summary>
-		public int Second => (int)(Ticks / TimeSpan.TicksPerSecond % 60);
+		public int Second => _dt.Second;
 		/// <summary>
 		/// Returns the milliseconds part of this instance
 		/// </summary>
-		public int Millisecond => (int)(Ticks / TimeSpan.TicksPerMillisecond % 1000);
+		public int Millisecond => _dt.Millisecond;
+#if NET7_0_OR_GREATER
+		/// <summary>
+		/// The microseconds component, expressed as a value between 0 and 999.
+		/// </summary>
+		public int Microsecond => _dt.Microsecond;
+		/// <summary>
+		/// The nanoseconds component, expressed as a value between 0 and 900 (in increments of 100 nanoseconds).
+		/// </summary>
+		public int Nanosecond => _dt.Nanosecond;
+#endif
 		/// <summary>
 		/// Returns the total number of days since 0001-01-01 represented by this instance
 		/// </summary>
@@ -118,46 +118,33 @@
 		/// <summary>
 		/// Returns the Day of the year, from 1 to 366
 		/// </summary>
-		public int DayOfYear
-		{
-			get
-			{
-				int totalDays = TotalDays;
-				int y400 = totalDays / DotNetTime.DaysPer400Years;
-				totalDays -= DotNetTime.DaysPer400Years * y400;
-				int y100 = totalDays / DotNetTime.DaysPer100Years;
-				if (y100 == 4)
-				{
-					y100 = 3; // Adjustment
-				}
-				totalDays -= DotNetTime.DaysPer100Years * y100;
-				int y4 = totalDays / DotNetTime.DaysPer4Years;
-				totalDays -= DotNetTime.DaysPer4Years * y4;
-				int y1 = totalDays / 365;
-				if (y1 == 4)
-				{
-					y1 = 3; // Adjustment
-				}
-
-				return (totalDays -= y1 * 365) + 1;
-			}
-		}
+		public int DayOfYear => _dt.DayOfYear;
 		/// <summary>
 		/// Gets the <see cref="System.DayOfWeek"/> represented by this instance
 		/// </summary>
-		public DayOfWeek DayOfWeek => (DayOfWeek)((TotalDays + 1) % 7); // 0001-01-00 is Sunday, but TotalDays = 0 is 0001-01-01. So by adding 1, we "align" ourselves with the DayOfWeek enum values.
+		public DayOfWeek DayOfWeek => _dt.DayOfWeek; 
 		/// <summary>
 		/// Gets the <see cref="Dates.IsoDayOfWeek"/> Day of Week represented by this instance
 		/// </summary>
-		public IsoDayOfWeek IsoDayOfWeek => (IsoDayOfWeek)(((TotalDays + 7) % 7) + 1); // Similar to the above, but ISO day of week goes 1-7, not 0-6, and starts on Monday instead of Sunday. So, we add 7 to align, and adjust up by 1 after the mod.
+		public IsoDayOfWeek IsoDayOfWeek => (IsoDayOfWeek)(((TotalDays + 7) % 7) + 1);
+		/*
+		 * 0001-01-00 is Sunday, but TotalDays = 0 is 0001-01-01. So by adding 1, we "align" ourselves with the DayOfWeek enum values.
+		 * ISO day of week goes 1-7, not 0-6, and starts on Monday instead of Sunday. So, we add 7 to align, and adjust up by 1 after the mod.
+		 */
 		/// <summary>
-		/// Returns the Time of Day as a TimeSpan
+		/// Returns the Time of Day as a <see cref="TimeSpan"/>.
 		/// </summary>
-		public TimeSpan TimeOfDay => new(Ticks % TimeSpan.TicksPerDay);
+		public TimeSpan TimeOfDay => _dt.TimeOfDay;
+#if NET6_0_OR_GREATER
+		/// <summary>
+		/// Returns the Time of Day as a <see cref="TimeOnly"/>.
+		/// </summary>
+		public TimeOnly Time => TimeOnly.FromTimeSpan(_dt.TimeOfDay);
+#endif
 		/// <summary>
 		/// The number of 100-nanosecond intervals elapsed since 0001-01-01 00:00:00 represented by this instance
 		/// </summary>
-		public long Ticks { get; }
+		public long Ticks => _dt.Ticks;
 		/// <summary>
 		/// Returns true if this instance represents the 29th of February
 		/// </summary>
@@ -184,26 +171,27 @@
 			DateTimePartsFromTicks(Ticks, out year, out month, out day, out hour, out minute, out second, out millis, out remainder);
 		}
 		/// <summary>
+		/// Adds the specified <paramref name="timeSpan"/> to this instance.
+		/// </summary>
+		public UtcDateTime Add(TimeSpan timeSpan)
+		{
+			return new(_dt.Add(timeSpan));
+		}
+		/// <summary>
+		/// Subtracts the specified <paramref name="timeSpan"/> from this instance.
+		/// </summary>
+		public UtcDateTime Subtract(TimeSpan timeSpan)
+		{
+			return new(_dt.Subtract(timeSpan));
+		}
+		/// <summary>
 		/// Adds the specified number of years to this instance.
 		/// If this instance represents the 29th of February, and the result is not a leap year, the result will be 28th February.
 		/// The reason is so the month doesn't change from February to March suddenly, which is weird.
 		/// </summary>
 		public UtcDateTime AddYears(int years)
 		{
-			if (years == 0)
-			{
-				return this;
-			}
-			Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int remainder);
-			// If it's not 29th february, we don't need any sort of special handling.
-			// if it is 29th February, we're still okay so long as the resultant year is also a leap year.
-			// If not, then we make it the 28th of February.
-			int newYear = year + years;
-			// We don't call Is29thFeb here, because that would call Deconstruct a 2nd time.
-
-			return !(month == 2 && day == 29) || DateTime.IsLeapYear(newYear)
-				? new(TicksFromAll(newYear, month, day, hour, minute, second, millis, remainder).ValueOrException())
-				: new(TicksFromAll(newYear, 2, 28, hour, minute, second, millis, remainder).ValueOrException());
+			return new(_dt.AddYears(years));
 		}
 		/// <summary>
 		/// Adds the specified number of months to this instance.
@@ -212,69 +200,49 @@
 		/// </summary>
 		public UtcDateTime AddMonths(int months)
 		{
-			if (months == 0)
-			{
-				return this;
-			}
-			Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int remainder);
-
-			int m = month - 1 + months;
-			int newMonth;
-			int newYear;
-			if (m > 0)
-			{
-				newMonth = m % 12 + 1;
-				newYear = year + (m / 12);
-			}
-			else
-			{
-				newMonth = 12 + (m + 1) % 12;
-				newYear = year + (m - 11) / 12;
-			}
-			int newDay = Math.Min(day, DateTime.DaysInMonth(newYear, newMonth));
-			return new UtcDateTime(TicksFromAll(newYear, newMonth, newDay, hour, minute, second, millis, remainder).ValueOrException());
+			return new(_dt.AddMonths(months));
 		}
 		/// <summary>
 		/// Adds <paramref name="days"/> to this instance
 		/// </summary>
 		public UtcDateTime AddDays(int days)
 		{
-			return new(Ticks + TimeSpan.TicksPerDay * days);
+			return new(_dt.AddDays(days));
 		}
 		/// <summary>
 		/// Adds <paramref name="hours"/> to this instance
 		/// </summary>
 		public UtcDateTime AddHours(int hours)
 		{
-			return new(Ticks + TimeSpan.TicksPerHour * hours);
+			return new(_dt.AddHours(hours));
 		}
 		/// <summary>
 		/// Adds <paramref name="minutes"/> to this instance
 		/// </summary>
 		public UtcDateTime AddMinutes(int minutes)
 		{
-			return new(Ticks + TimeSpan.TicksPerMinute * minutes);
+			return new(_dt.AddMinutes(minutes));
 		}
 		/// <summary>
 		/// Adds <paramref name="seconds"/> to this instance
 		/// </summary>
 		public UtcDateTime AddSeconds(int seconds)
 		{
-			return new(Ticks + TimeSpan.TicksPerSecond * seconds);
+			return new(_dt.AddSeconds(seconds));
 		}
 		/// <summary>
 		/// Adds <paramref name="millis"/> to this instance
 		/// </summary>
 		public UtcDateTime AddMilliseconds(long millis)
 		{
-			return new(Ticks + TimeSpan.TicksPerMillisecond * millis);
+			return new(_dt.AddMilliseconds(millis));
 		}
 		/// <summary>
 		/// Adds <paramref name="ticks"/> to this instance.
 		/// </summary>
 		public UtcDateTime AddTicks(long ticks)
 		{
-			return new(Ticks + ticks);
+			return new(_dt.AddTicks(ticks));
 		}
 		/// <summary>
 		/// Returns a truncated instance so that it is only accurate to the part specified by <paramref name="truncateTo"/>.
@@ -316,22 +284,23 @@
 			return new UtcDateTime(DotNetTime.UnixTimeSecondsToTicks(seconds));
 		}
 		/// <summary>
-		/// Returns a <see cref="DateTime"/> with the provided <paramref name="kind"/>.
+		/// Returns a <see cref="System.DateTime"/> with the provided <paramref name="kind"/>.
+		/// Equivalent to <see cref="DateTime"/> and <see cref="Local"/>.
 		/// If <paramref name="kind"/> is <see cref="DateTimeKind.Unspecified"/> or an undefined value, throws an <see cref="ArgumentOutOfRangeException"/>.
 		/// </summary>
 		public DateTime ToDateTime(DateTimeKind kind = DateTimeKind.Utc)
 		{
 			return kind switch
 			{
-				DateTimeKind.Utc => new(Ticks, DateTimeKind.Utc),
-				DateTimeKind.Local => new DateTime(Ticks, DateTimeKind.Utc).ToLocalTime(),
+				DateTimeKind.Utc => _dt,
+				DateTimeKind.Local => Local,
 				_ => throw new ArgumentOutOfRangeException(nameof(kind), "Provided DateTimeKind must be Utc or Local, but it was " + kind.ToString()),
 			};
 		}
 		/// <summary>
 		/// Creates a new instance from the provided <paramref name="dateTime"/>. If <paramref name="dateTime"/>.DateTimeKind is Unspecified, throws <see cref="ArgumentException"/>, unless <paramref name="treatUnspecifiedAsUtc"/> is true.
 		/// </summary>
-		/// <param name="dateTime">The <see cref="DateTime"/> to convert.</param>
+		/// <param name="dateTime">The <see cref="System.DateTime"/> to convert.</param>
 		/// <param name="treatUnspecifiedAsUtc">If true, and the kind of <paramref name="dateTime"/> is <see cref="DateTimeKind.Unspecified"/>, then treats <paramref name="dateTime"/> as if it were UTC.</param>
 		/// <returns>A <see cref="UtcDateTime"/>.</returns>
 		/// <exception cref="ArgumentException"></exception>
@@ -339,7 +308,7 @@
 		{
 			return dateTime.Kind switch
 			{
-				DateTimeKind.Utc => new(dateTime.Ticks),
+				DateTimeKind.Utc => new(dateTime),
 				DateTimeKind.Local => new(dateTime.ToUniversalTime().Ticks),
 				_ => treatUnspecifiedAsUtc
 					? new(dateTime.Ticks)

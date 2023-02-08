@@ -20,7 +20,7 @@
 		/// </summary>
 		public static readonly Tz MaxValue = new(MaxTicks);
 		/// <summary>
-		/// -12:00
+		/// -14:00
 		/// </summary>
 		public static readonly Tz MinValue = new(MinTicks);
 		/// <summary>
@@ -96,10 +96,10 @@
 		public static Maybe<Tz, long> TryFromTimeSpan(TimeSpan timespan)
 		{
 			return timespan.Ticks > MaxTicks
-					? MaxTicks
-					: timespan.Ticks < MinTicks
-						? MinTicks
-						: new Tz(timespan.Ticks);
+				? MaxTicks
+				: timespan.Ticks < MinTicks
+					? MinTicks
+					: new Tz(timespan.Ticks);
 		}
 		/// <summary>
 		/// Creates a <see cref="Tz"/> from <paramref name="timespan"/>.
@@ -110,10 +110,10 @@
 		public static Tz FromTimeSpanClamped(TimeSpan timespan)
 		{
 			return timespan.Ticks > MaxTicks
-					? MaxValue
-					: timespan.Ticks < MinTicks
-						? MinValue
-						: new Tz(timespan.Ticks);
+				? MaxValue
+				: timespan.Ticks < MinTicks
+					? MinValue
+					: new Tz(timespan.Ticks);
 		}
 		/// <summary>
 		/// Attempts to create a new instance with the hour and minute provided.
@@ -164,7 +164,7 @@
 		/// </summary>
 		public override string ToString()
 		{
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 			return string.Create(6, this, (dest, obj) => obj.Write(dest, true));
 #else
 			return Compat.StringCreate(6, this, (dest, obj) => obj.Write(dest, true));
@@ -175,7 +175,7 @@
 		/// </summary>
 		public string ToString(bool colon)
 		{
-#if NET5_0_OR_GREATER
+#if NET6_0_OR_GREATER
 			return string.Create(colon ? 6 : 5, this, (dest, obj) => obj.Write(dest, colon));
 #else
 			return Compat.StringCreate(colon ? 6 : 5, this, (dest, obj) => obj.Write(dest, colon));

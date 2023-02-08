@@ -24,6 +24,7 @@
 		[Fact]
 		public static void ValueOrException()
 		{
+#pragma warning disable CS0618 // Type or member is obsolete
 			Opt<string?> opt = default;
 			Assert.Throws<NoValueException>(() => opt.ValueOrException());
 			Assert.Equal("Message", Assert.Throws<NoValueException>(() => opt.ValueOrException("Message")).Message);
@@ -34,6 +35,7 @@
 			Assert.Equal("hello", opt.ValueOrException());
 			Assert.Equal("hello", opt.ValueOrException("Message"));
 			Assert.Equal("hello", opt.ValueOrException(() => new FileNotFoundException("Hello")));
+#pragma warning restore CS0618 // Type or member is obsolete
 		}
 		[Fact]
 		public static void ImplicitCast()

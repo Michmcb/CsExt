@@ -1,4 +1,4 @@
-﻿#if NET6_0
+﻿#if NET6_0_OR_GREATER
 namespace MichMcb.CsExt.Dates
 {
 	using System;
@@ -13,14 +13,18 @@ namespace MichMcb.CsExt.Dates
 		/// </summary>
 		public static void GetDateParts(this DateOnly dateOnly, out int year, out int month, out int day)
 		{
-			UtcDateTime.DatePartsFromTotalDays(dateOnly.DayNumber, out year, out month, out day);
+			year = dateOnly.Year;
+			month= dateOnly.Month;
+			day = dateOnly.Day;
 		}
 		/// <summary>
 		/// Calculates a year/month/day given <paramref name="dateOnly"/>.
 		/// </summary>
 		public static void Deconstruct(this DateOnly dateOnly, out int year, out int month, out int day)
 		{
-			UtcDateTime.DatePartsFromTotalDays(dateOnly.DayNumber, out year, out month, out day);
+			year = dateOnly.Year;
+			month = dateOnly.Month;
+			day = dateOnly.Day;
 		}
 		/// <summary>
 		/// Writes <paramref name="dateOnly"/> as yyyy-MM-dd or yyyyMMdd.

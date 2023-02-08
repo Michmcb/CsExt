@@ -1,7 +1,7 @@
 ﻿namespace MichMcb.CsExt
 {
 	/// <summary>
-	/// A combination of an error code and a state object.
+	/// A combination of an error message and a state object.
 	/// </summary>
 	/// <typeparam name="T">The type of the state object.</typeparam>
 	public readonly struct ErrState<T> where T : class

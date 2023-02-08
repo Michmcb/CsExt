@@ -1,7 +1,6 @@
 ﻿namespace MichMcb.CsExt.Dates
 {
 	using System;
-
 	/// <summary>
 	/// Extensions methods for <see cref="DateTime"/>.
 	/// </summary>
@@ -12,21 +11,28 @@
 		/// </summary>
 		public static void GetTimeParts(this DateTime dt, out int hour, out int minute, out int second, out int millis, out int remainder)
 		{
-			UtcDateTime.TimePartsFromTicks(dt.Ticks, out hour, out minute, out second, out millis, out remainder);
+			hour = dt.Hour;
+			minute = dt.Minute;
+			second = dt.Second;
+			millis = dt.Millisecond;
+			remainder = (int)(dt.Ticks % TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
 		/// Calculates a year/month/day given <paramref name="dt"/>.
 		/// </summary>
 		public static void GetDateParts(this DateTime dt, out int year, out int month, out int day)
 		{
-			UtcDateTime.DatePartsFromTotalDays((int)(dt.Ticks / TimeSpan.TicksPerDay), out year, out month, out day);
+			year = dt.Year;
+			month = dt.Month;
+			day = dt.Day;
 		}
 		/// <summary>
 		/// Calculates a year/month/day/hour/minute/second/millisecond given <paramref name="dt"/>.
 		/// </summary>
 		public static void Deconstruct(this DateTime dt, out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int remainder)
 		{
-			UtcDateTime.DateTimePartsFromTicks(dt.Ticks, out year, out month, out day, out hour, out minute, out second, out millis, out remainder);
+			GetDateParts(dt, out year, out month, out day);
+			GetTimeParts(dt, out hour, out minute, out second, out millis, out remainder);
 		}
 		/// <summary>
 		/// Converts a <see cref="DateTime"/> to seconds that have elapsed since 1970-01-01 00:00:00.

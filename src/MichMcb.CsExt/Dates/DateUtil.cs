@@ -23,8 +23,7 @@
 		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
 		public static string YearMonthDayToString(DateTime date, bool dashes)
 		{
-			UtcDateTime.DateTimePartsFromTicks(date.Ticks, out int y, out int m, out int d, out _, out _, out _, out _, out _);
-			return YearMonthDayToString(y, m, d, dashes);
+			return YearMonthDayToString(date.Year, date.Month, date.Day, dashes);
 		}
 #if NET6_0_OR_GREATER
 		/// <summary>
@@ -35,8 +34,7 @@
 		/// <returns>A string in the form of yyyy-MM-dd if <paramref name="dashes"/> is true or yyyyMMdd if <paramref name="dashes"/> is false.</returns>
 		public static string YearMonthDayToString(DateOnly date, bool dashes)
 		{
-			UtcDateTime.DatePartsFromTotalDays(date.DayNumber, out int y, out int m, out int d);
-			return YearMonthDayToString(y, m, d, dashes);
+			return YearMonthDayToString(date.Year, date.Month, date.Day, dashes);
 		}
 #endif
 		/// <summary>
