@@ -87,6 +87,14 @@
 			minutes = (int)(t / TimeSpan.TicksPerMinute) % 60;
 		}
 		/// <summary>
+		/// Returns a <see cref="TimeSpan"/> with <see cref="Ticks"/>.
+		/// </summary>
+		/// <returns>A <see cref="TimeSpan"/> that represents a span of time identical to this <see cref="Tz"/>.</returns>
+		public TimeSpan AsTimeSpan()
+		{
+			return new TimeSpan(Ticks);
+		}
+		/// <summary>
 		/// Attempts to create a <see cref="Tz"/> from <paramref name="timespan"/>.
 		/// If <paramref name="timespan"/> is too small, returns <see cref="MinTicks"/>.
 		/// If <paramref name="timespan"/> is too large, returns <see cref="MaxTicks"/>.

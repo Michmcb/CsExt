@@ -32,23 +32,23 @@
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="dateOnly"/>.
 		/// </summary>
-		/// <param name="dateOnly">The UtcDateTime.</param>
+		/// <param name="dateOnly">The DateOnly.</param>
 		/// <returns>The ISO Year, Week, and Weekday.</returns>
 		public static IsoYearWeek Create(DateOnly dateOnly)
 		{
 			dateOnly.GetDateParts(out int year, out int month, out int day);
-			return TryCreate(year, month, day).ValueOrException();
+			return CreateUnchecked(year, month, day);
 		}
 #endif
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="dateTime"/>.
 		/// </summary>
-		/// <param name="dateTime">The UtcDateTime.</param>
+		/// <param name="dateTime">The DateTime.</param>
 		/// <returns>The ISO Year, Week, and Weekday.</returns>
 		public static IsoYearWeek Create(DateTime dateTime)
 		{
 			dateTime.GetDateParts(out int year, out int month, out int day);
-			return TryCreate(year, month, day).ValueOrException();
+			return CreateUnchecked(year, month, day);
 		}
 		/// <summary>
 		/// Creates a new instance from the specified <paramref name="utcDateTime"/>.
@@ -58,11 +58,11 @@
 		public static IsoYearWeek Create(UtcDateTime utcDateTime)
 		{
 			utcDateTime.GetDateParts(out int year, out int month, out int day);
-			return TryCreate(year, month, day).ValueOrException();
+			return CreateUnchecked(year, month, day);
 		}
 		/// <summary>
 		/// Creates a new instance from the specified year, month, and day.
-		/// Note that sometimes, the year you pass in will not be the same as the week that comes out.
+		/// Note that sometimes, the year you pass in will not be the same as the year that comes out.
 		/// This is normal, as for example, 2019-12-30 is the 1st week, 1st day of 2020 (i.e. 2020-W01-1).
 		/// </summary>
 		/// <param name="year">The year</param>
@@ -71,23 +71,36 @@
 		/// <returns>The ISO Year, Week, and Weekday, or an error message.</returns>
 		public static Maybe<IsoYearWeek, string> TryCreate(int year, int month, int day)
 		{
-			// Thanks to https://en.wikipedia.org/wiki/ISO_week_date#Calculating_the_week_number_from_a_month_and_day_of_the_month_or_ordinal_date
-			if (UtcDateTime.TotalDaysFromYear(year).Failure(out int totalDays, out string err))
-			{
-				return err;
-			}
-			if (month < 1 || month > 12)
-			{
-				return "Month must be at least 1 and at most 12";
-			}
-			int daysInMonth = DateTime.DaysInMonth(year, month);
-			if (day < 1 || day > daysInMonth)
-			{
-				return "Day must be at least 1 and at most " + daysInMonth;
-			}
-
+			string? e = DateUtil.ValidateDate(year, month, day);
+			if (e != null) return e;
 
 			int dayOfYear = (DateTime.IsLeapYear(year) ? UtcDateTime.TotalDaysFromStartLeapYearToMonth : UtcDateTime.TotalDaysFromStartYearToMonth)[month - 1] + day;
+			return TryCreateOrdinalDays(year, dayOfYear);
+		}
+		/// <summary>
+		/// Creates a new instance from the specified year and days.
+		/// Note that sometimes, the year you pass in will not be the same as the year that comes out.
+		/// This is normal, as for example, 2019-12-30 is the 1st week, 1st day of 2020 (i.e. 2020-W01-1).
+		/// </summary>
+		/// <param name="year">The year</param>
+		/// <param name="dayOfYear">The day of the year</param>
+		/// <returns>The ISO Year, Week, and Weekday, or an error message.</returns>
+		public static Maybe<IsoYearWeek, string> TryCreateOrdinalDays(int year, int dayOfYear)
+		{
+			string? e = DateUtil.ValidateOrdinalDays(year, dayOfYear);
+			if (e != null) return e;
+
+			return CreateUncheckedOrdinalDays(year, dayOfYear);
+		}
+		internal static IsoYearWeek CreateUnchecked(int year, int month, int day)
+		{
+			int dayOfYear = (DateTime.IsLeapYear(year) ? UtcDateTime.TotalDaysFromStartLeapYearToMonth : UtcDateTime.TotalDaysFromStartYearToMonth)[month - 1] + day;
+			return CreateUncheckedOrdinalDays(year, dayOfYear);
+		}
+		internal static IsoYearWeek CreateUncheckedOrdinalDays(int year, int dayOfYear)
+		{
+			int totalDays = UnsafeDate.TotalDaysFromYear(year);
+			// Thanks to https://en.wikipedia.org/wiki/ISO_week_date#Calculating_the_week_number_from_a_month_and_day_of_the_month_or_ordinal_date
 			int isoDayOfWeek = ((totalDays + dayOfYear - 1) % 7) + 1;
 			int w = (10 + dayOfYear - isoDayOfWeek) / 7;
 

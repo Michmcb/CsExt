@@ -6,22 +6,29 @@
 	/// </summary>
 	public sealed class Iso8601
 	{
-		internal Iso8601(int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, Tz? timezone, Iso8601Parts partsFound)
+		private Iso8601(Iso8601DatePart date, int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, Tz? timezone, Iso8601Parts partsFound)
 		{
+			Date = date;
+#pragma warning disable CS0618 // Type or member is obsolete
 			Year = year;
 			MonthOrWeek = monthOrWeek;
 			Day = day;
+#pragma warning restore CS0618 // Type or member is obsolete
 			Hour = hour;
 			Minute = minute;
 			Second = second;
 			Millis = millis;
 			Timezone = timezone;
 			PartsFound = partsFound;
-			// 214 748 364 7
 		}
+		/// <summary>
+		/// The date component.
+		/// </summary>
+		public Iso8601DatePart Date { get; }
 		/// <summary>
 		/// The year component.
 		/// </summary>
+		[Obsolete("Prefer using Iso8601DatePart instead")]
 		public int Year { get; }
 		/// <summary>
 		/// Either the month or the week component.
@@ -29,6 +36,7 @@
 		/// If <see cref="PartsFound"/> has the flag <see cref="Iso8601Parts.Week"/> set, this is the week.
 		/// If neither flags are set, this was not found. This can be the case if the ISO-8601 string only had Year and Day.
 		/// </summary>
+		[Obsolete("Prefer using Iso8601DatePart instead")]
 		public int MonthOrWeek { get; }
 		/// <summary>
 		/// The day component.
@@ -36,6 +44,7 @@
 		/// If <see cref="PartsFound"/> has flags <see cref="Iso8601Parts.Week"/> and <see cref="Iso8601Parts.Day"/> set, this is the day of the week.
 		/// If <see cref="PartsFound"/> only has the flag <see cref="Iso8601Parts.Day"/> set, then this is the day of the year.
 		/// </summary>
+		[Obsolete("Prefer using Iso8601DatePart instead")]
 		public int Day { get; }
 		/// <summary>
 		/// The hour component.
@@ -76,6 +85,7 @@
 				return "String was empty";
 			}
 			// We always require a Year so it's never set to default
+			Iso8601DatePart date;
 			int year;
 			int monthOrWeek;
 			int day;
@@ -96,6 +106,7 @@
 				start = 1;
 				end = 3;
 				year = monthOrWeek = day = 0;
+				date = default;
 				goto timeParse;
 			}
 			if (s.Length >= 4)
@@ -162,6 +173,10 @@
 							parts |= Iso8601Parts.Day;
 						}
 					}
+					if (!Iso8601DatePart.TryYearWeekDay(year, monthOrWeek, (IsoDayOfWeek)day).Success(out date, out err))
+					{
+						return Compat.StringConcat("Failed to parse weekday because ".AsSpan(), err.AsSpan(), " String: ".AsSpan(), s);
+					}
 				}
 				else
 				{
@@ -183,6 +198,10 @@
 				// Ordinal days so set MonthOrWeek to 0
 				monthOrWeek = 0;
 				parts = Iso8601Parts.YearDay | (sep ? Iso8601Parts.Separator_Date : 0);
+				if (!Iso8601DatePart.TryYearOrdinalDay(year, day).Success(out date, out err))
+				{
+					return Compat.StringConcat("Failed to parse ordinal days because ".AsSpan(), err.AsSpan(), " String: ".AsSpan(), s);
+				}
 			}
 			// Otherwise it's just the month as per normal
 			else
@@ -229,6 +248,10 @@
 				{
 					// If there wasn't a day, then assume it was the 1st day of the month
 					day = 1;
+				}
+				if (!Iso8601DatePart.TryYearMonthDay(year, monthOrWeek, day).Success(out date, out err))
+				{
+					return Compat.StringConcat("Failed to parse year/month/day because ".AsSpan(), err.AsSpan(), " String: ".AsSpan(), s);
 				}
 			}
 			// If we ONLY parsed the Year and Month, that's only valid if we got a separator. i.e. yyyy-MM is valid but yyyyMM is not.
@@ -475,19 +498,46 @@
 		#endregion
 
 		success:
-			return new Iso8601
-				(
-					year: year,
-					monthOrWeek: monthOrWeek,
-					day: day,
-					hour: hour,
-					minute: minute,
-					second: second,
-					millis: millis,
-					timezone: tz,
-					partsFound: parts
-				);
+			return TryCreate(date, year, monthOrWeek, day, hour, minute, second, millis, tz, parts);
 #pragma warning restore IDE0057 // Use range operator
+		}
+		/// <summary>
+		/// Attempts to create a new insance. Returns an error if any of the provided parameters fall outside the valid range.
+		/// </summary>
+		/// <returns>An <see cref="Iso8601"/> on success, or an error message on failure.</returns>
+		public static Maybe<Iso8601, string> TryCreate(Iso8601DatePart date, int year, int monthOrWeek, int day, int hour, int minute, int second, int millis, Tz? timezone, Iso8601Parts partsFound)
+		{
+			string? e = DateUtil.ValidateTime(hour, minute, second, millis);
+			if (e != null) return e;
+			return new Iso8601(date, year, monthOrWeek, day, hour, minute, second, millis, timezone, partsFound);
+		}
+		/// <summary>
+		/// Creates a new instance of <see cref="UtcDateTime"/> from this.
+		/// </summary>
+		/// <param name="timezoneWhenMissing">If a timezone is missing, uses this.</param>
+		/// <returns>A <see cref="UtcDateTime"/>.</returns>
+		public UtcDateTime GetUtcDateTime(Tz timezoneWhenMissing)
+		{
+			var d = Date.AsDate(DateTimeKind.Utc) + new TimeSpan(0, Hour, Minute, Second, Millis);
+			return new UtcDateTime(d.AddTicks(-(Timezone ?? timezoneWhenMissing).Ticks));
+		}
+		/// <summary>
+		/// Attempts to create a new instance of <see cref="UtcDateTime"/> from this.
+		/// If <see cref="Timezone"/> and <paramref name="timezoneWhenMissing"/> are null, returns an error message.
+		/// </summary>
+		/// <param name="timezoneWhenMissing">If a timezone is missing, uses this.</param>
+		/// <returns>A <see cref="UtcDateTime"/>, or an error message on failure.</returns>
+		public Maybe<UtcDateTime, string> TryGetUtcDateTime(Tz? timezoneWhenMissing)
+		{
+			Tz? tz = Timezone ?? timezoneWhenMissing;
+			if (tz.HasValue)
+			{
+				return GetUtcDateTime(tz.Value);
+			}
+			else
+			{
+				return "No timezone was found when parsing and no default timezone was provided.";
+			}
 		}
 	}
 }

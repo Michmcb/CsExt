@@ -15,7 +15,7 @@
 			//BenchmarkRunner.Run<HashSetVsArray>();
 			//BenchmarkRunner.Run<ArrListAdd>();
 			//BenchmarkRunner.Run<ArrListIterate>();
-			BenchmarkRunner.Run<ParseInt>();
+			BenchmarkRunner.Run<NewVsToString>();
 			Console.WriteLine("Enter to exit");
 			Console.ReadLine();
 		}

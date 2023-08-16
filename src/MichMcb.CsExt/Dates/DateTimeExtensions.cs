@@ -18,7 +18,7 @@
 			remainder = (int)(dt.Ticks % TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
-		/// Calculates a year/month/day given <paramref name="dt"/>.
+		/// Assigns the values of the year/month/day properties to <paramref name="year"/>, <paramref name="month"/>, and <paramref name="day"/>.
 		/// </summary>
 		public static void GetDateParts(this DateTime dt, out int year, out int month, out int day)
 		{

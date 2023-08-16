@@ -1,5 +1,6 @@
 ﻿namespace MichMcb.CsExt.Threads
 {
+	using System;
 	using System.Diagnostics;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -9,34 +10,44 @@
 	/// </summary>
 	public sealed class FixedCooldown
 	{
-		private int currentWaitTime;
+		private TimeSpan currentWaitTime;
 		private readonly Stopwatch stopwatch;
 		/// <summary>
 		/// Creates a new instance that is currently off cooldown, and so will not cause any delay on the first wait.
 		/// </summary>
 		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		[Obsolete("Prefer the TimeSpan constructor instead")]
 		public FixedCooldown(int cooldown)
+		{
+			stopwatch = new Stopwatch();
+			Cooldown = TimeSpan.FromMilliseconds(cooldown);
+		}
+		/// <summary>
+		/// Creates a new instance that is currently off cooldown, and so will not cause any delay on the first wait.
+		/// </summary>
+		/// <param name="cooldown">The cooldown.</param>
+		public FixedCooldown(TimeSpan cooldown)
 		{
 			stopwatch = new Stopwatch();
 			Cooldown = cooldown;
 		}
 		/// <summary>
-		/// The cooldown, in milliseconds.
+		/// The cooldown.
 		/// </summary>
-		public int Cooldown { get; set; }
+		public TimeSpan Cooldown { get; set; }
 		/// <summary>
 		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <see cref="Cooldown"/> milliseconds.
 		/// </summary>
 		public void Wait()
 		{
-			int waitingTime;
+			TimeSpan waitingTime;
 			lock (stopwatch)
 			{
 				// The difference between how long we have to wait and how long we've actually waited
-				waitingTime = currentWaitTime - (int)stopwatch.ElapsedMilliseconds;
+				waitingTime = currentWaitTime - stopwatch.Elapsed;
 				stopwatch.Restart();
 			}
-			if (waitingTime <= 0)
+			if (waitingTime <= TimeSpan.Zero)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
 				currentWaitTime = Cooldown;
@@ -56,14 +67,14 @@
 		/// </summary>
 		public Task WaitAsync()
 		{
-			int waitingTime;
+			TimeSpan waitingTime;
 			lock (stopwatch)
 			{
 				// The difference between how long we have to wait and how long we've actually waited
-				waitingTime = currentWaitTime - (int)stopwatch.ElapsedMilliseconds;
+				waitingTime = currentWaitTime - stopwatch.Elapsed;
 				stopwatch.Restart();
 			}
-			if (waitingTime <= 0)
+			if (waitingTime <= TimeSpan.Zero)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
 				currentWaitTime = Cooldown;

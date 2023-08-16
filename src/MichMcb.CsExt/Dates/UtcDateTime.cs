@@ -29,7 +29,7 @@
 		/// 9999-12-31 23:59:59.9999999
 		/// </summary>
 		public static readonly UtcDateTime MaxValue = new(DotNetTime.MaxTicks);
-		private UtcDateTime(DateTime dt)
+		internal UtcDateTime(DateTime dt)
 		{
 			_dt = dt;
 		}
@@ -168,7 +168,14 @@
 		/// </summary>
 		public void Deconstruct(out int year, out int month, out int day, out int hour, out int minute, out int second, out int millis, out int remainder)
 		{
-			DateTimePartsFromTicks(Ticks, out year, out month, out day, out hour, out minute, out second, out millis, out remainder);
+			year = Year;
+			month = Month;
+			day = Day;
+			hour = Hour;
+			minute = Minute;
+			second = Second;
+			millis = Millisecond;
+			remainder = (int)(Ticks % TimeSpan.TicksPerMillisecond);
 		}
 		/// <summary>
 		/// Adds the specified <paramref name="timeSpan"/> to this instance.

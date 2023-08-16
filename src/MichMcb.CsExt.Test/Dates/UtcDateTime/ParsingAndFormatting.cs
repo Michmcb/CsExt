@@ -119,7 +119,7 @@
 			Assert.Equal(new UtcDateTime(2020, 6, 15), UtcDateTime.TryParseIso8601String("2020-06-15", Tz.Utc).ValueOrException());
 
 			// Not allowed when we require a timezone
-			Assert.Equal("This ISO-8601 time was missing a timezone designator: 2020-06-15", UtcDateTime.TryParseIso8601String("2020-06-15").ErrorOr(null));
+			Assert.Equal("No timezone was found when parsing and no default timezone was provided. String: 2020-06-15", UtcDateTime.TryParseIso8601String("2020-06-15").ErrorOr(null));
 
 			// Non-digits
 			Assert.Equal("Failed to parse day because Found a non-latin digit in the string: X5. String: 202006X5", UtcDateTime.TryParseIso8601String("202006X5", Tz.Utc).ErrorOr(null));

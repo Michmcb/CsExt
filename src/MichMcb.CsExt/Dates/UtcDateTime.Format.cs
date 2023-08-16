@@ -78,10 +78,10 @@
 		/// <returns>A <see cref="UtcDateTime"/>  if parsing was successful, or an error message otherwise.</returns>
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str)
 		{
-			return TryParseIso8601String(str, default, false);
+			return TryParseIso8601String(str, null);
 		}
 		/// <summary>
-		/// Parses an ISO-8601 string as a <see cref="UtcDateTime"/> . Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// Parses an ISO-8601 string as a <see cref="UtcDateTime"/>. Only accurate to the millisecond (3 places); further accuracy is truncated.
 		/// A timezone designator is not required.
 		/// All parsed ISO-8601 strings are adjusted to UTC.
 		/// Any leading or trailing whitespace is ignored.
@@ -91,7 +91,47 @@
 		/// <returns>A <see cref="UtcDateTime"/>  if parsing was successful, or an error message otherwise.</returns>
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str, Tz timezoneWhenMissing)
 		{
-			return TryParseIso8601String(str, timezoneWhenMissing, true);
+			ReadOnlySpan<char> ts = str.Trim();
+			if (!Iso8601.Parse(ts).Success(out Iso8601? iso, out string? errMsg))
+			{
+				return errMsg;
+			}
+			if (iso.Date.Type == Iso8601DatePartType.None)
+			{
+				return "When parsing a UtcDateTime, a date part is required. If you only want to parse a time, use the Iso8601 class directly.";
+			}
+
+			return iso.GetUtcDateTime(timezoneWhenMissing);
+		}
+		/// <summary>
+		/// Parses an ISO-8601 string as a <see cref="UtcDateTime"/> . Only accurate to the millisecond (3 places); further accuracy is truncated.
+		/// A timezone designator is required.
+		/// All parsed ISO-8601 strings are adjusted to UTC.
+		/// Any leading or trailing whitespace is ignored.
+		/// </summary>
+		/// <param name="str">The string to parse</param>
+		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. If null, then the string MUST have a timezone designator.</param>
+		/// <returns>A <see cref="UtcDateTime"/>if parsing was successful, or an error message otherwise.</returns>
+		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str, Tz? timezoneWhenMissing)
+		{
+			ReadOnlySpan<char> ts = str.Trim();
+			if (!Iso8601.Parse(ts).Success(out Iso8601? iso, out string? errMsg))
+			{
+				return errMsg;
+			}
+			if (iso.Date.Type == Iso8601DatePartType.None)
+			{
+				return "When parsing a UtcDateTime, a date part is required. If you only want to parse a time, use the Iso8601 class directly.";
+			}
+
+			if (iso.TryGetUtcDateTime(timezoneWhenMissing).Success(out var udt, out var err))
+			{
+				return udt;
+			}
+			else
+			{
+				return Compat.StringConcat(err.AsSpan(), " String: ".AsSpan(), str);
+			}
 		}
 		/// <summary>
 		/// Parses an ISO-8601 string as a <see cref="UtcDateTime"/> . Only accurate to the millisecond (3 places); further accuracy is truncated.
@@ -103,54 +143,16 @@
 		/// <param name="timezoneWhenMissing">If the string is missing a timezone designator then this is the timezone assumed. Use <see cref="TimeZoneInfo.Local"/> if you want to interpret this as the local timezone.</param>
 		/// <param name="allowMissingTimezone">If true, a timezone designator is allowed to be missing, and will be assumed to be <paramref name="timezoneWhenMissing"/>. Otherwise, a timezone designator is required.</param>
 		/// <returns>A <see cref="UtcDateTime"/>  if parsing was successful, or an error message otherwise.</returns>
+		[Obsolete("Prefer using TryParseIso8601String which accept a Tz or Tz? instead.")]
 		public static Maybe<UtcDateTime, string> TryParseIso8601String(ReadOnlySpan<char> str, Tz timezoneWhenMissing, bool allowMissingTimezone)
 		{
-			ReadOnlySpan<char> ts = str.Trim();
-			if (!Iso8601.Parse(ts).Success(out Iso8601? iso, out string? errMsg))
+			if (allowMissingTimezone)
 			{
-				return errMsg;
-			}
-
-			if ((iso.PartsFound & Iso8601Parts.Mask_Date) == 0)
-			{
-				return "When parsing a UtcDateTime, a date part is required. If you only want to parse a time, use the Iso8601 class directly.";
-			}
-
-			Tz tz;
-			if (iso.Timezone == null)
-			{
-				if (!allowMissingTimezone)
-				{
-					return Compat.StringConcat("This ISO-8601 time was missing a timezone designator: ".AsSpan(), str);
-				}
-				else
-				{
-					tz = timezoneWhenMissing;
-				}
+				return TryParseIso8601String(str, timezoneWhenMissing);
 			}
 			else
 			{
-				tz = iso.Timezone.Value;
-			}
-
-			string err;
-			if ((iso.PartsFound & Iso8601Parts.Mask_Date) == Iso8601Parts.YearDay)
-			{
-				return TicksFromYearOrdinalDays(iso.Year, iso.Day).Success(out long tTicks, out err) && TicksFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dTicks, out err)
-					? new UtcDateTime(tTicks + dTicks)
-					: err;
-			}
-			else if ((iso.PartsFound & Iso8601Parts.Week) == Iso8601Parts.Week)
-			{
-				return TicksFromYearWeekDay(iso.Year, iso.MonthOrWeek, (IsoDayOfWeek)iso.Day).Success(out long tTicks, out err) && TicksFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dTicks, out err)
-					? new UtcDateTime(tTicks + dTicks)
-					: err;
-			}
-			else
-			{
-				return TicksFromYearMonthDay(iso.Year, iso.MonthOrWeek, iso.Day).Success(out long tTicks, out err) && TicksFromHourMinuteSecondMillisTimezoneOffset(iso.Hour, iso.Minute, iso.Second, iso.Millis, tz).Success(out long dTicks, out err)
-					? new UtcDateTime(tTicks + dTicks)
-					: err;
+				return TryParseIso8601String(str, null);
 			}
 		}
 		/// <summary>

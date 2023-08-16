@@ -378,7 +378,14 @@
 					? 0
 					: utcTicks;
 
-			UtcDateTime.DateTimePartsNoMillisFromTicks(utcTicks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
+			DateTime dt = new(utcTicks, DateTimeKind.Utc);
+			int year = dt.Year;
+			int month = dt.Month;
+			int day = dt.Day;
+			int hour = dt.Hour;
+			int minute = dt.Minute;
+			int second = dt.Second;
+			uint frac = (uint)(int)(utcTicks % TimeSpan.TicksPerSecond);
 
 			int i = 0;
 
@@ -386,7 +393,7 @@
 			if ((Format & Iso8601Parts.YearWeek) == Iso8601Parts.YearWeek)
 			{
 				// We know this will never fail because we got this out of the method above
-				IsoYearWeek isoYearWeek = IsoYearWeek.TryCreate(year, month, day).ValueOrException();
+				IsoYearWeek isoYearWeek = IsoYearWeek.CreateUnchecked(year, month, day);
 				Formatting.Write4Digits((uint)isoYearWeek.Year, destination, 0);
 				i += 4;
 				if (seps)
@@ -527,15 +534,16 @@
 			// yyyyMMddTHHmmss.sssZ
 			// 01234567890123456789
 
-			UtcDateTime.DateTimePartsNoMillisFromTicks(ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
-			Formatting.Write4Digits((uint)year, destination, 0);
-			Formatting.Write2Digits((uint)month, destination, 4);
-			Formatting.Write2Digits((uint)day, destination, 6);
+			DateTime dt = new(ticks, DateTimeKind.Utc);
+			Formatting.Write4Digits((uint)dt.Year, destination, 0);
+			Formatting.Write2Digits((uint)dt.Month, destination, 4);
+			Formatting.Write2Digits((uint)dt.Day, destination, 6);
 			destination[8] = 'T';
-			Formatting.Write2Digits((uint)hour, destination, 9);
-			Formatting.Write2Digits((uint)minute, destination, 11);
-			Formatting.Write2Digits((uint)second, destination, 13);
-			int i = 15 + WriteDecimalPlaces(destination, (uint)frac, decimalPlaces, 15);
+			Formatting.Write2Digits((uint)dt.Hour, destination, 9);
+			Formatting.Write2Digits((uint)dt.Minute, destination, 11);
+			Formatting.Write2Digits((uint)dt.Second, destination, 13);
+			uint frac = (uint)(int)(ticks % TimeSpan.TicksPerSecond);
+			int i = 15 + WriteDecimalPlaces(destination, frac, decimalPlaces, 15);
 			destination[i] = 'Z';
 			return len;
 		}
@@ -564,19 +572,20 @@
 			// 012345678901234567890123
 			// yyyy-MM-ddTHH:mm:ssZ
 
-			UtcDateTime.DateTimePartsNoMillisFromTicks(ticks, out int year, out int month, out int day, out int hour, out int minute, out int second, out int frac);
-			Formatting.Write4Digits((uint)year, destination, 0);
+			DateTime dt = new(ticks, DateTimeKind.Utc);
+			Formatting.Write4Digits((uint)dt.Year, destination, 0);
 			destination[4] = '-';
-			Formatting.Write2Digits((uint)month, destination, 5);
+			Formatting.Write2Digits((uint)dt.Month, destination, 5);
 			destination[7] = '-';
-			Formatting.Write2Digits((uint)day, destination, 8);
+			Formatting.Write2Digits((uint)dt.Day, destination, 8);
 			destination[10] = 'T';
-			Formatting.Write2Digits((uint)hour, destination, 11);
+			Formatting.Write2Digits((uint)dt.Hour, destination, 11);
 			destination[13] = ':';
-			Formatting.Write2Digits((uint)minute, destination, 14);
+			Formatting.Write2Digits((uint)dt.Minute, destination, 14);
 			destination[16] = ':';
-			Formatting.Write2Digits((uint)second, destination, 17);
-			int i = 19 + WriteDecimalPlaces(destination, (uint)frac, decimalPlaces, 19);
+			Formatting.Write2Digits((uint)dt.Second, destination, 17);
+			uint frac = (uint)(int)(ticks % TimeSpan.TicksPerSecond);
+			int i = 19 + WriteDecimalPlaces(destination, frac, decimalPlaces, 19);
 			destination[i] = 'Z';
 			return len;
 		}

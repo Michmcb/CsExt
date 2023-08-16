@@ -1,5 +1,6 @@
 ﻿namespace MichMcb.CsExt.Threads
 {
+	using System;
 	using System.Diagnostics;
 	using System.Threading;
 	using System.Threading.Tasks;
@@ -9,7 +10,7 @@
 	/// </summary>
 	public sealed class VariableCooldown
 	{
-		private int currentWaitTime;
+		private TimeSpan currentWaitTime;
 		private readonly Stopwatch stopwatch;
 		/// <summary>
 		/// Creates a new instance that is currently off cooldown, and so will not cause any delay on the first wait.
@@ -22,7 +23,17 @@
 		/// Creates a new instance that's currently cooling down, so the first wait will cause a delay of <paramref name="initialCooldown"/> milliseconds.
 		/// </summary>
 		/// <param name="initialCooldown">The initial cooldown in milliseconds.</param>
+		[Obsolete("Prefer the TimeSpan constructor instead")]
 		public VariableCooldown(int initialCooldown)
+		{
+			currentWaitTime = TimeSpan.FromMilliseconds(initialCooldown);
+			stopwatch = Stopwatch.StartNew();
+		}
+		/// <summary>
+		/// Creates a new instance that's currently cooling down, so the first wait will cause a delay of <paramref name="initialCooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="initialCooldown">The initial cooldown in milliseconds.</param>
+		public VariableCooldown(TimeSpan initialCooldown)
 		{
 			currentWaitTime = initialCooldown;
 			stopwatch = Stopwatch.StartNew();
@@ -31,16 +42,25 @@
 		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
 		/// </summary>
 		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		[Obsolete("Prefer passing a TimeSpan instead")]
 		public void Wait(int cooldown)
 		{
-			int waitingTime;
+			Wait(TimeSpan.FromMilliseconds(cooldown));
+		}
+		/// <summary>
+		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="cooldown">The cooldown.</param>
+		public void Wait(TimeSpan cooldown)
+		{
+			TimeSpan waitingTime;
 			lock (stopwatch)
 			{
 				// The difference between how long we have to wait and how long we've actually waited
-				waitingTime = currentWaitTime - (int)stopwatch.ElapsedMilliseconds;
+				waitingTime = currentWaitTime - stopwatch.Elapsed;
 				stopwatch.Restart();
 			}
-			if (waitingTime <= 0)
+			if (waitingTime <= TimeSpan.Zero)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
 				currentWaitTime = cooldown;
@@ -56,19 +76,28 @@
 			}
 		}
 		/// <summary>
-		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// Blocks the calling thread until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
 		/// </summary>
 		/// <param name="cooldown">The cooldown, in milliseconds.</param>
+		[Obsolete("Prefer passing a TimeSpan instead")]
 		public Task WaitAsync(int cooldown)
 		{
-			int waitingTime;
+			return WaitAsync(TimeSpan.FromMilliseconds(cooldown));
+		}
+		/// <summary>
+		/// Delays the calling task until the cooldown expires. Any subsequent callers will have to wait for <paramref name="cooldown"/> milliseconds.
+		/// </summary>
+		/// <param name="cooldown">The cooldown.</param>
+		public Task WaitAsync(TimeSpan cooldown)
+		{
+			TimeSpan waitingTime;
 			lock (stopwatch)
 			{
 				// The difference between how long we have to wait and how long we've actually waited
-				waitingTime = currentWaitTime - (int)stopwatch.ElapsedMilliseconds;
+				waitingTime = currentWaitTime - stopwatch.Elapsed;
 				stopwatch.Restart();
 			}
-			if (waitingTime <= 0)
+			if (waitingTime <= TimeSpan.Zero)
 			{
 				// If we've waited enough, then all is well; set the waiting time to the cooldown issued and restart the Stopwatch
 				currentWaitTime = cooldown;

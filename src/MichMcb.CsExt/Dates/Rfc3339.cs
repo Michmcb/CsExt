@@ -4,7 +4,7 @@
 
 	/// <summary>
 	/// A lexer/parser which picks out the ranges in an RFC3339 string. RFC3339 is a stricter form of ISO-8601; specifically, it is identical to the
-	/// ISO-8601 extended format, UTC, with or without milliseconds.
+	/// ISO-8601 extended format, with a mandatory timezone, with or without milliseconds.
 	/// If you want to write RFC3339 strings, use the format <see cref="Iso8601Format.ExtendedFormat_UtcTz"/>, or call the method <see cref="Iso8601Format.FormatExtendedFormatUtc"/>.
 	/// </summary>
 	public sealed class Rfc3339
@@ -12,7 +12,7 @@
 		/// <summary>
 		/// Creates a new instance.
 		/// </summary>
-		public Rfc3339(int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
+		private Rfc3339(int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
 		{
 			Year = year;
 			Month = month;
@@ -52,7 +52,7 @@
 		/// </summary>
 		public int Millis { get; }
 		/// <summary>
-		/// The timezone offset.
+		/// The timezone offset. Unlike <see cref="Iso8601"/>, this is required.
 		/// </summary>
 		public Tz Timezone { get; }
 		/// <summary>
@@ -61,7 +61,7 @@
 		/// </summary>
 		/// <param name="s">The string to parse.</param>
 		/// <param name="allowSpaceInsteadOfT">If true, an empty space is allowed instead of T or t to separate date/time. Otherwise, only T or t is allowed.</param>
-		/// <returns>A <see cref="Rfc3339"/> on success, or an error message on failure.</returns>
+		/// <returns>An <see cref="Rfc3339"/> on success, or an error message on failure.</returns>
 		public static Maybe<Rfc3339, string> Parse(ReadOnlySpan<char> s, bool allowSpaceInsteadOfT = false)
 		{
 #pragma warning disable IDE0057 // Use range operator
@@ -209,8 +209,36 @@
 					return Compat.StringConcat("Timezone designator is not Z, +, or -. String: ".AsSpan(), s);
 			}
 
-			return new Rfc3339(year, month, day, hour, minute, second, millis, timezone);
+			return TryCreate(year, month, day, hour, minute, second, millis, timezone);
 #pragma warning restore IDE0057 // Use range operator
+		}
+		/// <summary>
+		/// Attempts to create a new insance. Returns an error if any of the provided parameters fall outside the valid range.
+		/// </summary>
+		/// <returns>An <see cref="Rfc3339"/> on success, or an error message on failure.</returns>
+		public static Maybe<Rfc3339, string> TryCreate(int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
+		{
+			string? e = DateUtil.ValidateDate(year, month, day);
+			if (e != null) return e;
+			e = DateUtil.ValidateTime(hour, minute, second, millis);
+			if (e != null) return e;
+			return new Rfc3339(year, month, day, hour, minute, second, millis, timezone);
+		}
+		/// <summary>
+		/// Creates a new instance of <see cref="UtcDateTime"/> from this.
+		/// </summary>
+		/// <returns>A <see cref="UtcDateTime"/></returns>
+		public UtcDateTime GetUtcDateTime()
+		{
+			return new UtcDateTime(new DateTime(Year, Month, Day, Hour, Minute, Second, Millis, DateTimeKind.Utc).AddTicks(-Timezone.Ticks));
+		}
+		/// <summary>
+		/// Creates a new instance of <see cref="DateTimeOffset"/> from this.
+		/// </summary>
+		/// <returns>A <see cref="DateTimeOffset"/></returns>
+		public DateTimeOffset GetDateTimeOffset()
+		{ 
+			return new DateTimeOffset(Year, Month, Day, Hour, Minute, Second, Millis, Timezone.AsTimeSpan());
 		}
 	}
 }

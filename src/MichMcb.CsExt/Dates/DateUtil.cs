@@ -7,6 +7,87 @@
 	public static class DateUtil
 	{
 		/// <summary>
+		/// Checks to make sure <paramref name="year"/> and <paramref name="dayOfYear"/> are within the legal range.
+		/// </summary>
+		/// <returns>Null on success, erorr message otherwise.</returns>
+		public static string? ValidateOrdinalDays(int year, int dayOfYear)
+		{
+			if (year < 1 || year > 9999)
+			{
+				return "Year must be at least 1 and at most 9999";
+			}
+			int d = DateTime.IsLeapYear(year) ? 366 : 365;
+			if (dayOfYear < 1 || dayOfYear > d)
+			{
+				return "Day must be at least 1 and at most " + d;
+			}
+			return null;
+		}
+		/// <summary>
+		/// Checks to make sure <paramref name="year"/>, <paramref name="week"/>, and <paramref name="day"/> are within the legal range.
+		/// </summary>
+		/// <returns>Null on success, erorr message otherwise.</returns>
+		public static string? ValidateWeekDate(int year, int week, IsoDayOfWeek day)
+		{
+			if (year < 1 || year > 9999)
+			{
+				return "Year must be at least 1 and at most 9999";
+			}
+			if (week < 1 || week > 53)
+			{
+				return "Week must be at least 1 and at most 53";
+			}
+			if (day < IsoDayOfWeek.Monday || day > IsoDayOfWeek.Sunday)
+			{
+				return "Week Day must be at least 1 and at most 7";
+			}
+			return null;
+		}
+		/// <summary>
+		/// Checks to make sure <paramref name="year"/>, <paramref name="month"/>, and <paramref name="day"/> are within the legal range.
+		/// </summary>
+		/// <returns>Null on success, erorr message otherwise.</returns>
+		public static string? ValidateDate(int year, int month, int day)
+		{
+			if (year < 1 || year > 9999)
+			{
+				return "Year must be at least 1 and at most 9999";
+			}
+			if (month < 1 || month > 12)
+			{
+				return "Month must be at least 1 and at most 12";
+			}
+			if (day < 1 || day > DateTime.DaysInMonth(year, month))
+			{
+				return string.Concat("Day must be at least 1 and, for the provided month (", month, "), at most ", DateTime.DaysInMonth(year, month));
+			}
+			return null;
+		}
+		/// <summary>
+		/// Checks to make sure <paramref name="hour"/>, <paramref name="minute"/>, <paramref name="second"/>, and <paramref name="millis"/> are within the legal range.
+		/// </summary>
+		/// <returns>Null on success, erorr message otherwise.</returns>
+		public static string? ValidateTime(int hour, int minute, int second, int millis)
+		{
+			if (hour < 0 || hour > 23)
+			{
+				return "Hour must be at least 0 and at most 23";
+			}
+			if (minute < 0 || minute > 59)
+			{
+				return "Minute must be at least 0 and at most 59";
+			}
+			if (second < 0 || second > 59)
+			{
+				return "Second must be at least 0 and at most 59";
+			}
+			if (millis < 0 || millis > 999)
+			{
+				return "Millisecond must be at least 0 and at most 999";
+			}
+			return null;
+		}
+		/// <summary>
 		/// Converts a Unix time expressed as the number of <paramref name="seconds"/> that have elapsed since 1970-01-01 00:00:00 UTC.
 		/// </summary>
 		/// <param name="seconds">The seconds.</param>

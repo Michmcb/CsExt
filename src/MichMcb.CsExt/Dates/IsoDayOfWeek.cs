@@ -3,7 +3,7 @@
 	/// <summary>
 	/// Specifies the day of the week according to ISO-8601. You can cast this back and forth between <see cref="int"/> when doing calculations for ISO-8601 things.
 	/// </summary>
-	public enum IsoDayOfWeek
+	public enum IsoDayOfWeek : int
 	{
 		/// <summary>
 		/// Monday (1)

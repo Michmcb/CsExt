@@ -2,6 +2,8 @@
 {
 	using Xunit;
 	using MichMcb.CsExt.Dates;
+	using System;
+
 	public static class Parse
 	{
 		private static void Check(Rfc3339 r, int year, int month, int day, int hour, int minute, int second, int millis, Tz timezone)
@@ -14,6 +16,12 @@
 			Assert.Equal(second, r.Second);
 			Assert.Equal(millis, r.Millis);
 			Assert.Equal(timezone, r.Timezone);
+
+			UtcDateTime expectedUtc = new UtcDateTime(year, month, day, hour, minute, second, millis).AddTicks(-timezone.Ticks);
+			Assert.Equal(expectedUtc, r.GetUtcDateTime());
+
+			DateTimeOffset expectedOffset = new(year, month, day, hour, minute, second, millis, timezone.AsTimeSpan());
+			Assert.Equal(expectedOffset, r.GetDateTimeOffset());
 		}
 		[Fact]
 		public static void Ok()
@@ -94,6 +102,17 @@
 			Assert.Equal("Timezone hours out of range. Hours: -99 Minutes: 0", Rfc3339.Parse("1234-05-15T10:20:30.123-99:00").ErrorOr(null));
 
 			Assert.Equal("Timezone minutes out of range. Hours: 10 Minutes: 99", Rfc3339.Parse("1234-05-15T10:20:30.123+10:99").ErrorOr(null));
+
+
+			Assert.Equal("Year must be at least 1 and at most 9999", Rfc3339.Parse("0000-05-15T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Month must be at least 1 and at most 12", Rfc3339.Parse("1234-99-15T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Month must be at least 1 and at most 12", Rfc3339.Parse("1234-00-15T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Day must be at least 1 and, for the provided month (5), at most 31", Rfc3339.Parse("1234-05-00T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Day must be at least 1 and, for the provided month (5), at most 31", Rfc3339.Parse("1234-05-99T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Day must be at least 1 and, for the provided month (2), at most 28", Rfc3339.Parse("1234-02-31T10:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Hour must be at least 0 and at most 23", Rfc3339.Parse("1234-05-15T99:20:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Minute must be at least 0 and at most 59", Rfc3339.Parse("1234-05-15T10:99:30.321+10:00").ErrorOr(null));
+			Assert.Equal("Second must be at least 0 and at most 59", Rfc3339.Parse("1234-05-15T10:20:99.321+10:00").ErrorOr(null));
 		}
 	}
 }

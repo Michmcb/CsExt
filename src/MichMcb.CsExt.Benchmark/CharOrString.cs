@@ -2,7 +2,25 @@
 {
 	using BenchmarkDotNet.Attributes;
 	using BenchmarkDotNet.Jobs;
-	using MichMcb.CsExt.Dates;
+	using System;
+
+	[SimpleJob(RuntimeMoniker.Net70)]
+	[RPlotExporter]
+	public class NewVsToString
+	{
+		private readonly string s = "Hello World!";
+
+		[Benchmark]
+		public new string ToString()
+		{
+			return s.AsSpan().ToString();
+		}
+		[Benchmark]
+		public string NewString()
+		{
+			return new string(s.AsSpan());
+		}
+	}
 
 	[SimpleJob(RuntimeMoniker.Net60)]
 	[RPlotExporter]
